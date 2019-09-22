@@ -43,9 +43,9 @@ public:
 			case RIGHT:
 				return !(y < 0 && y > -1 && x < ROBOT_WIDTH && x > -ROBOT_WIDTH);
 			case BACKWARD:
-				return !(x < 0 && x > -1 && y < ROBOT_WIDTH && y > -ROBOT_WIDTH);;
+				return !(x < 0 && x > -1 && y < ROBOT_WIDTH && y > -ROBOT_WIDTH);
 			case LEFT:
-				return !(y > 0 && y < 1 && x < ROBOT_WIDTH && x > -ROBOT_WIDTH);;
+				return !(y > 0 && y < 1 && x < ROBOT_WIDTH && x > -ROBOT_WIDTH);
 		}
 	}
 
@@ -57,7 +57,7 @@ public:
 			float y_pos = radius*sin(currAngle);
 			if(!isSafeToGoForward(x_pos, y_pos)){
 				switchDirection();
-				continue;
+				break;
 			}
 			currAngle += scan.angle_increment;
 		}
