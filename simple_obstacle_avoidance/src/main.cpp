@@ -4,7 +4,7 @@
 #include <cmath>
 #define ROBOT_WIDTH 0.3
 #define MAX_SPEED 0.1
-
+#define DELAY 2.0
 enum Direction  {
 	FORWARD, LEFT, RIGHT, BACKWARD, STUCK
 };
@@ -15,8 +15,16 @@ public:
 	ros::Publisher velocityController;
 	ros::Subscriber laserScanSub;
 	Direction directionOfTraversal;
+	ros::Time changeTriggered;
+
+	bool shouldMove() {
+		ros::Time current = ros::Time::now();
+		ros::Duration timeTaken = current - changeTriggered;
+		return timeTaken.toSec() > DELAY;
+	}
 
 	void switchDirection() {
+		changeTriggered = ros::Time::now();
 		switch(directionOfTraversal) {
 			case FORWARD:
 				directionOfTraversal = RIGHT;
@@ -50,6 +58,7 @@ public:
 	}
 
 	void onLaserScan(sensor_msgs::LaserScan scan) {
+
 		float currAngle = scan.angle_min;
 		for(int  i = 0 ; i < scan.ranges.size(); i++) {
 			float radius = scan.ranges[i];
@@ -61,7 +70,24 @@ public:
 			}
 			currAngle += scan.angle_increment;
 		}
+
+		if(!shouldMove()) {
+			stop();
+			return;		
+		}
+
 		publishTwist();
+	}
+
+	void stop() {
+		geometry_msgs::Twist twist;
+		twist.linear.x = 0;
+		twist.linear.y = 0;
+		twist.linear.z = 0;
+		twist.angular.x = 0;
+		twist.angular.y = 0;
+		twist.angular.z = 0;
+		velocityController.publish(twist);
 	}
 
 	void publishTwist() {
