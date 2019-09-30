@@ -35,10 +35,6 @@ using LMStateVector = UKF::StateVector<
     UKF::Field<AngularVelocity, UKF::Vector<3>>
 >;
 
-using LMKalmanFilter = UKF::SquareRootCore<
-    LMStateVector,
-    UKF::IntegratorRK4
->;
 
 /**
  *  Process model for the robot motion. 
@@ -66,13 +62,25 @@ LMStateVector LMStateVector::derivative<>() const {
 /**
  * The core localization manager class
  */ 
+template<typename MeasurementVector>
 class LocalizationManager {
-    LMKalmanFilter filter;
+public:
+    UKF::SquareRootCore<LMStateVector, MeasurementVector, UKF::IntegratorRK4> filter;
+    MeasurementVector last_meas;
+    ros::Time last_update;
 
     LocalizationManager () {
+        filter.state.set_field<Position>(UKF::Vector<3>(0, 0, 0));
+        filter.state.set_field<Velocity>(UKF::Vector<3>(0, 0, 0));
+        filter.state.set_field<Attitude>(UKF::Quaternion(1, 0, 0, 0));
+        filter.state.set_field<AngularVelocity>(UKF::Vector<3>(0, 0, 0));
     }
 
-    void requestSensorUpdate (ros::Time timestamp) {
+    void requestSensorUpdate (ros::Time timestamp, int sensorName) {
+        if(last_update > timestamp) {
+            ROS_WARN("Dropping measurement from %s", sensorName);
+            return;
+        }
     }
 
     /**

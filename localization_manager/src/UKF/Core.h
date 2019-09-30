@@ -45,7 +45,7 @@ The attitude-related code makes use of the MRP method described in the paper
 "Unscented Filtering for Spacecraft Attitude Estimation" by John L. Crassidis
 and F. Landis Markley.
 */
-template <typename StateVectorType, typename IntegratorType>
+template <typename StateVectorType, typename MeasurementVectorType, typename IntegratorType>
 class Core {
 protected:
     typename StateVectorType::SigmaPointDistribution sigma_points;
@@ -203,7 +203,7 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.80.1421&rep=rep1&type=p
 The SR-UKF has a number of numerical and stability advantages over the
 standard UKF, and a lower computational cost.
 */
-template <typename StateVectorType, typename IntegratorType>
+template <typename StateVectorType, typename MeasurementVectorType, typename IntegratorType>
 class SquareRootCore {
 protected:
     typename StateVectorType::SigmaPointDistribution sigma_points;
@@ -244,7 +244,7 @@ public:
     typename MeasurementVectorType::CovarianceMatrix innovation_root_covariance;
 
     /* Top-level function used to carry out a filter step. */
-    template <typename MeasurementVectorType,  typename... U>
+    template <typename... U>
     void step(real_t delta, const MeasurementVectorType& z, const U&... input) {
         a_priori_step(delta, input...);
         innovation_step(z, input...);
