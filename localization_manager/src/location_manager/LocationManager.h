@@ -9,12 +9,16 @@
 #include <geometry_msgs/Twist.h>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include "UKF/Types.h"
 #include "UKF/Integrator.h"
 #include "UKF/StateVector.h"
 #include "UKF/MeasurementVector.h"
 #include "UKF/Core.h"
 
+namespace LocalizationManager {
+    std::unordered_set<int> recieved_data;
+};
 /**
  * Defines the robot state field
  */ 
@@ -63,7 +67,7 @@ LMStateVector LMStateVector::derivative<>() const {
  * The core localization manager class
  */ 
 template<typename MeasurementVector>
-class LocalizationManager {
+class LocationManager {
 public:
     UKF::SquareRootCore<LMStateVector, MeasurementVector, UKF::IntegratorRK4> filter;
     MeasurementVector last_meas;
@@ -76,11 +80,13 @@ public:
         filter.state.set_field<AngularVelocity>(UKF::Vector<3>(0, 0, 0));
     }
 
-    void requestSensorUpdate (ros::Time timestamp, int sensorName) {
+    template<typename SensorData>
+    void requestSensorUpdate (ros::Time timestamp, int sensorName, SensorData data) {
         if(last_update > timestamp) {
             ROS_WARN("Dropping measurement from %s", sensorName);
             return;
         }
+        last_meas
     }
 
     /**
