@@ -86,7 +86,6 @@ public:
             ROS_WARN("Dropping measurement from %s", sensorName);
             return;
         }
-        last_meas
     }
 
     /**
