@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package format="2">
+  <name>rqt_example</name>
+  <version>0.3.10</version>
+  <description>rqt_example provides a GUI plugin to ...</description>
+
+  <maintainer email="todo@todo.com">todo</maintainer>
+  <license>TODO</license>
+  <!-- <url type="website">http://www.bla.com</url> -->
+  <author email="todo@todo.com">todo</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rqt_gui</depend>
+  <depend>rqt_gui_cpp</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+
+
+  <export>
+    <rqt_gui plugin="${prefix}/plugin.xml"/>
+  </export>
+</package>

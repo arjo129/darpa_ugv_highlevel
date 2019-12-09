@@ -1,0 +1,30 @@
+<launch>
+
+    <include file="$(find gazebo_ros)/launch/willowgarage_world.launch" ></include>
+    <param name="robot_description" command="$(find xacro)/xacro '$(find husky_description)/urdf/husky.urdf.xacro'
+    --inorder
+    laser_enabled:=true
+    kinect_enabled:=true
+    " />
+    <group ns="/husky1">
+        <param name="tf_prefix" value="husky1" />
+        <include file="$(find husky_gazebo)/launch/spawn_husky.launch">
+            <arg name="robot_namespace" value="husky1"/>
+            <arg name="laser_enabled" value="true"/>
+            <arg name="kinect_enabled" value="true"/>
+            <arg name="multimaster" value="true"/>
+        </include>
+    </group>
+
+    
+    <group ns="/husky2">
+        <param name="tf_prefix" value="husky2" />
+        <include file="$(find husky_gazebo)/launch/spawn_husky.launch">
+            <arg name="y" value="-2"/>
+            <arg name="robot_namespace" value="husky2"/>
+            <arg name="laser_enabled" value="true"/>
+            <arg name="kinect_enabled" value="true"/>
+            <arg name="multimaster" value="true"/>
+        </include>
+    </group>
+</launch>
