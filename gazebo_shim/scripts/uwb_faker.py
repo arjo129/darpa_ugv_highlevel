@@ -13,7 +13,6 @@ class UWBSimulationShim:
         self.sub = rospy.Subscriber("/gazebo/model_states", ModelStates, self.on_gazebo_update)
         self.uwb_poses = {}
         self.publishers = {}
-        self.noise_provider = np.random.normal(0, 0.4)
     
     def on_gazebo_update(self, msg: ModelStates):
         for index, name in enumerate(msg.name):
@@ -36,7 +35,12 @@ class UWBSimulationShim:
                 if other == name:
                     continue
 
-                print(self.get_distance(name, other))
+                msg = uwb()
+                msg.header.frame_id = name+"/base_link"
+                msg.header.stamp = rospy.Time()
+                msg.name.data = other
+                msg.distance.data = self.get_distance(name, other) + np.random.normal(0, 0.4)
+                self.publishers[name].publish(msg)
 
     def get_distance(self, this, other):
         this_pos = self.uwb_poses[this].position
@@ -48,8 +52,8 @@ class UWBSimulationShim:
 
 if __name__ == "__main__":
     rospy.init_node("UWB_simulator")
-    uwb = UWBSimulationShim()
+    simulation = UWBSimulationShim()
     hz = rospy.Rate(10)
     while not rospy.is_shutdown():
         hz.sleep()
-        uwb.publish_results()
+        simulation.publish_results()
