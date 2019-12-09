@@ -46,6 +46,7 @@ find_package(catkin REQUIRED message_generation std_msgs)
 add_message_files(
     FILES
     uwb.msg
+    LoraPacket.msg
 #   Message2.msg
  )
 
