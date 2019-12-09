@@ -1,0 +1,35 @@
+<launch>
+    <!-- Replace with URDF -->
+    <node pkg="tf" type="static_transform_publisher" name="baselink2laser" args="0 0 0 0 0 1 0 base_link laser 100" />
+    <node pkg="tf" type="static_transform_publisher" name="baselink2camera" args="0.05 0 -0.10 0 0 0 1 base_link camera_link 100" />
+
+    <!--Convert depth map to point cloud-->
+    <node pkg="nodelet" type="nodelet" name="manager"  args="manager" output="screen"/>
+    <node pkg="nodelet" type="nodelet" name="Plus"
+            args="load depth_image_proc/point_cloud_xyz manager"  output="screen">
+        <remap from="camera_info" to="/camera/depth/camera_info"/>
+        <remap from="image_rect" to="/camera/depth/image_rect_raw"/>
+    </node>
+    
+    <!-- Lidar based odometry -->
+    <node pkg="rf2o_laser_odometry" type="rf2o_laser_odometry_node" name="lidar_odometry" output="screen">
+    </node>
+
+    <!-- Lidar based occupancy grid-->
+    <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping">
+    </node>
+
+    <node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+        <param name="resolution" value="0.1" />
+        
+        <!--common frame id fixed map frame (set to 'map' if SLAM or localization running!) -->
+        <param name="frame_id" type="string" value="map" />
+        
+        <!-- maximum range to integrate (speedup!) -->
+        <param name="sensor_model/max_range" value="2.0" />
+        
+        <!-- data source to integrate (PointCloud2) -->
+        <!--remap from="cloud_in" to="/narrow_stereo/points_filtered2" /-->
+        <remap from="cloud_in" to="/points"/>
+    </node>
+</launch>
