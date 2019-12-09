@@ -29,4 +29,5 @@
     </group>
 
     <node name="uwb_simulator_plugin" pkg="gazebo_shim" type="uwb_faker.py"/> 
+    <node name="lora_simulator_plugin" pkg="gazebo_shim" type="lora_faker.py"/> 
 </launch>
