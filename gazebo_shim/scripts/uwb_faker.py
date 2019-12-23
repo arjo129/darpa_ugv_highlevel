@@ -30,6 +30,11 @@ class UWBSimulationShim:
         self.fetch_publishers()
 
         for name in self.uwb_poses:
+            msg = uwb()
+            msg.header.frame_id = name+"/base_link"
+            msg.name.data = "home_beacon"
+            msg.distance.data = self.get_distance_from_home(name) + np.random.normal(0, 0.4)
+            self.publishers[name].publish(msg)
             for other in self.uwb_poses:
                 
                 if other == name:
@@ -48,6 +53,11 @@ class UWBSimulationShim:
         this_pos = np.array([this_pos.x, this_pos.y, this_pos.z])
         other_pos = np.array([other_pos.x, other_pos.y, other_pos.z])
         return np.linalg.norm(other_pos - this_pos)
+
+    def get_distance_from_home(self, this):
+        this_pos = self.uwb_poses[this].position
+        this_pos = np.array([this_pos.x, this_pos.y, this_pos.z])
+        return np.linalg.norm(this_pos)
         
 
 if __name__ == "__main__":

@@ -3,9 +3,9 @@
 #include <geometry_msgs/Point.h>
 #include <sensor_msgs/LaserScan.h>
 #include <cmath>
-#define ROBOT_WIDTH 0.3
-#define ROBOT_FRONT 0.15
-#define ROBOT_BACK -0.47
+#define ROBOT_WIDTH 0.5
+#define ROBOT_FRONT 0.5
+#define ROBOT_BACK  0
 #define ROBOT_WIDTH_NEW 0.5
 #define MAX_SPEED 0.1
 #define DELAY 2.0
@@ -18,80 +18,6 @@ enum MotionState {
 };
 
 MotionState mstate = STRAIGHT;
-
-sensor_msgs::LaserScan distanceTraversible(sensor_msgs::LaserScan scan, double robot_width) {
-	double curr_angle = scan.range_min;
-	double scan_increment = scan.angle_increment;
-	
-	std::vector<geometry_msgs::Point> points;
-	
-	for(int i = 0; i < scan.ranges.size(); i++) {
-		float range  = scan.ranges[i];
-		if(range > scan.range_max)
-			continue;
-		geometry_msgs::Point point;
-		point.x = range*cos(curr_angle);
-		point.y = range*sin(curr_angle);
-		points.push_back(point);
-		curr_angle += scan_increment;
-	}
-
-	sensor_msgs::LaserScan traversibility;
-	traversibility.angle_increment = scan.angle_increment;
-	traversibility.angle_increment = scan.angle_min;
-	traversibility.angle_max = scan.angle_max;
-	traversibility.header = scan.header;
-	traversibility.scan_time = scan.scan_time;
-	traversibility.time_increment = scan.time_increment;
-	traversibility.range_min = scan.range_min;
-	traversibility.range_max = scan.range_max;
- 	float angle = scan.range_min;
-	
-	for(int i = 0; i < scan.ranges.size(); i++) {
-
-		float min_dist = std::numeric_limits<float>::infinity();
-		
-		geometry_msgs::Point robot_left;
-		geometry_msgs::Point robot_right;
-
-		robot_left.x = -robot_width/2*cos(angle);
-		robot_left.y = -robot_width/2*sin(angle);
-
-		robot_right.x = robot_width/2*cos(angle+M_PI);
-		robot_right.y = robot_width/2*sin(angle+M_PI);
-
-		for(geometry_msgs::Point point : points) {
-
-			float dx1 = -(point.x - robot_right.x);
-			float dy1 = -(point.y - robot_right.y);
-
-			float dx2 = -(point.x - robot_left.x);
-			float dy2 = -(point.y - robot_left.y);
-
-			float dot_product = dx1*dx2 + dy1*dy2;
-			float radius = sqrt(point.x*point.x + point.y*point.y);
-
-			std::cout << dot_product << ", " << radius << ", "<< point.x << ", " << point.y << "," << (dot_product > robot_width || dot_product < 0) << ", " << angle <<std::endl;
-
-			
-
-			if(dot_product > robot_width || dot_product < 0)
-				continue;
-			
-			if(min_dist > radius) {
-				min_dist = radius;
-				std::cout << "radius "<< radius << std::endl;
-			}
-			
-		}
-		std::cout << "got " << min_dist << std::endl;
-		traversibility.ranges.push_back(min_dist);
-		traversibility.intensities.push_back(47);
-		angle += scan.angle_increment;
-	}
-
-	return traversibility;
-}
 
 class LaserScanObstacles {
 	bool obstacles[4];
@@ -111,15 +37,15 @@ public:
 			float y_pos = radius*sin(currAngle);
 
 			if(y_pos < ROBOT_WIDTH && y_pos > -ROBOT_WIDTH && radius < 1) {
-				if(x_pos < 0)
+				if(x_pos > 0)
 					obstacles[FORWARD] = true;
 				else
 					obstacles[BACKWARD] = true;
 			}
-			else if(y_pos < 0 && x_pos < ROBOT_FRONT && x_pos > ROBOT_BACK ) {
+			else if(y_pos < 0 && x_pos < ROBOT_FRONT && x_pos > ROBOT_BACK && radius < 1) {
 				obstacles[LEFT] = true;
 			}
-			else if(y_pos > 0 && x_pos < ROBOT_FRONT && x_pos > ROBOT_BACK ) {
+			else if(y_pos > 0 && x_pos < ROBOT_FRONT && x_pos > ROBOT_BACK && radius < 1) {
 				obstacles[RIGHT] = true;
 			}
 		}
@@ -180,6 +106,7 @@ public:
 	bool turn_enable = false;
 	void wallFollow(LaserScanObstacles& obstacles) {
 		if((ros::Time::now() - last_turn).sec < 5 && turn_enable == true) {
+			std::cout << "left turn in progress" <<std::endl;
 			return;
 		}
 		turn_enable = false;
@@ -201,7 +128,7 @@ public:
 			velocityController.publish(twist);
 			std::cout << "Following wall" << std::endl;
 		} else {
-			//turn right if left and right are obstructed.
+			//turn right if left and front are obstructed.
 			geometry_msgs::Twist twist;
 			mstate = SPOT_TURN;
 			twist.linear.x = 0;
@@ -213,7 +140,7 @@ public:
 	}
 	void onLaserScan(sensor_msgs::LaserScan scan) {
 		LaserScanObstacles obsmap(scan);
-		traversibilityMap.publish(distanceTraversible(scan, ROBOT_WIDTH_NEW));
+		//traversibilityMap.publish(distanceTraversible(scan, ROBOT_WIDTH_NEW));
 		std::cout << "current state " << state << std::endl;
 		if(state == OBSTACLE_SEARCH)
 			obstacleSearch(obsmap);
@@ -224,9 +151,9 @@ public:
 
 	SimpleObstacleAvoidance(ros::NodeHandle nh) {
 		state = OBSTACLE_SEARCH;
-		velocityController = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 100);
-		laserScanSub = nh.subscribe<sensor_msgs::LaserScan>("/scan", 10, &SimpleObstacleAvoidance::onLaserScan, this);
-		traversibilityMap = nh.advertise<sensor_msgs::LaserScan>("/out/scan", 10);
+		velocityController = nh.advertise<geometry_msgs::Twist>("husky1/husky_velocity_controller/cmd_vel", 100);
+		laserScanSub = nh.subscribe<sensor_msgs::LaserScan>("husky1/scan", 10, &SimpleObstacleAvoidance::onLaserScan, this);
+		traversibilityMap = nh.advertise<sensor_msgs::LaserScan>("husky1/out/scan", 10);
 	}
 
 };
