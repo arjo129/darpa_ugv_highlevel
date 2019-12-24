@@ -223,8 +223,8 @@ void CLaserOdometry2DNode::publish()
     odom_trans.header.stamp = last_odom_time;
     odom_trans.header.frame_id = odom_frame_id;
     odom_trans.child_frame_id = base_frame_id;
-    odom_trans.transform.translation.x = -robot_pose_.translation()(0);
-    odom_trans.transform.translation.y = -robot_pose_.translation()(1);
+    odom_trans.transform.translation.x = robot_pose_.translation()(0);
+    odom_trans.transform.translation.y = robot_pose_.translation()(1);
     odom_trans.transform.translation.z = 0.0;
     odom_trans.transform.rotation = tf::createQuaternionMsgFromYaw(rf2o::getYaw(robot_pose_.rotation()));
     //send the transform

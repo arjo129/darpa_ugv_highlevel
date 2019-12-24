@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <tf/tf.h>
 #include <wireless_msgs/uwb.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/Imu.h>
@@ -44,23 +45,24 @@ public:
         float z_stdev = odom.pose.covariance[14];
         std::normal_distribution<double> x_noise(0, 0.2);
         std::normal_distribution<double> y_noise(0, 0.2);
-        std::normal_distribution<double> z_noise(0, 0.2);
+        std::normal_distribution<double> z_noise(0, 0.1);
         this->frame_id = odom.header.frame_id;
         for(int i = 0; i < this->particles.size(); i++) {
-            Eigen::Vector3f noise(x_noise(generator), y_noise(generator), 0/*z_noise(generator)*/);
-            this->particles[i] -= movement + noise;
+            Eigen::Vector3f noise(x_noise(generator), y_noise(generator), z_noise(generator));
+            this->particles[i] += noise;
             this->weights[i] *= getProbGivenNormalDistribution(noise.x(), 0, 0.2);
             this->weights[i] *= getProbGivenNormalDistribution(noise.y(), 0, 0.2);
             //this->weights[i] *= getProbGivenNormalDistribution(noise.z(), 0, 0.2);
         }
         this->prevPosition = currentPose;
-        return true;
+        return true; 
     }
 
     void spawnParticles(nav_msgs::Odometry odom, float distance) {
         Eigen::Vector3f currentPose(odom.pose.pose.position.x, odom.pose.pose.position.y, odom.pose.pose.position.z);
         this->prevPosition = currentPose;
         this->frame_id = odom.header.frame_id;
+        this->robot_frame = odom.child_frame_id;
 
         std::normal_distribution<double> normalDistribution(distance, this->sigma);
         std::uniform_real_distribution<double> uniform(-M_PI, M_PI);
@@ -69,7 +71,7 @@ public:
             double r = normalDistribution(generator);
             double theta = uniform(generator);
             double phi = uniform(generator);
-            Eigen::Vector3f particle(r*sin(theta)*cos(phi) - this->prevPosition.x(), r*sin(theta)*sin(phi) - this->prevPosition.y(), r*cos(theta) - this->prevPosition.z());
+            Eigen::Vector3f particle(r*sin(theta)*cos(phi) + this->prevPosition.x(), r*sin(theta)*sin(phi) + this->prevPosition.y(), r*cos(theta) + this->prevPosition.z());
             this->particles.push_back(particle);
             
             float z = r-distance/(1.414213*this->sigma);
@@ -96,7 +98,6 @@ public:
         for(int i  = 0; i < this->numParticles; i++) {
             this->weights[i] /= sum;
         }
-        //printf("%f\n",sum);
         std::uniform_real_distribution<float> uniform(0.00000001,1);
         float r = uniform(generator);
         float accumulator = this->weights[0];
@@ -109,10 +110,7 @@ public:
                 weight_index++;
                 accumulator += this->weights[weight_index%this->numParticles];
             }
-            /*printf("%f\t", u);
-            printf("%f\t", r);
-            printf("%f\t", accumulator);
-            printf("%d\n", weight_index);*/
+            
             resampled_particles.push_back(this->particles[weight_index%this->numParticles]);
             resampled_weights.push_back(this->weights[weight_index%this->numParticles]);
         }
@@ -171,7 +169,7 @@ class LocalizationManager {
         }
         this->uwb_trackers[uwb_msg.name.data].updateMeasurement(uwb_msg.distance.data);
         this->uwb_trackers[uwb_msg.name.data].resample();
-    }
+    } 
 
     void onOdometryRecieve(nav_msgs::Odometry odom) {
         this->currentOdom = odom;
@@ -182,6 +180,7 @@ class LocalizationManager {
         
     }
 
+
     void onImuRecieve(sensor_msgs::Imu imu_reading) {
 
     }
@@ -191,8 +190,11 @@ class LocalizationManager {
 public:
     void spin() {
         visualization_msgs::MarkerArray markers;
+        int id = 0;
         for(auto it: this->uwb_trackers) {
-            markers.markers.push_back(it.second.visuallizeParticles());
+            visualization_msgs::Marker marker = it.second.visuallizeParticles();
+            marker.id = id++;
+            markers.markers.push_back(marker);
         }
         pub.publish(markers);
     }
