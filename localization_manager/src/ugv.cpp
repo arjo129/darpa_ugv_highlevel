@@ -48,7 +48,7 @@ public:
         std::normal_distribution<double> z_noise(0, 0.1);
         this->frame_id = odom.header.frame_id;
         for(int i = 0; i < this->particles.size(); i++) {
-            Eigen::Vector3f noise(x_noise(generator), y_noise(generator), z_noise(generator));
+            Eigen::Vector3f noise(x_noise(generator), y_noise(generator), 0/*z_noise(generator)*/);
             this->particles[i] += noise;
             this->weights[i] *= getProbGivenNormalDistribution(noise.x(), 0, 0.2);
             this->weights[i] *= getProbGivenNormalDistribution(noise.y(), 0, 0.2);
@@ -57,7 +57,21 @@ public:
         this->prevPosition = currentPose;
         return true; 
     }
+    void respawnSomeParticles(int perc, float distance){
+        std::normal_distribution<double> normalDistribution(distance, this->sigma);
+        std::uniform_real_distribution<double> uniform(-M_PI, M_PI);
 
+        for(int i  = 0; i < this->numParticles; i+=perc) {
+            double r = normalDistribution(generator);
+            double theta = uniform(generator);
+            double phi = uniform(generator);
+            Eigen::Vector3f particle(r*sin(theta)*cos(phi) + this->prevPosition.x(), r*sin(theta)*sin(phi) + this->prevPosition.y(), r*cos(theta) + this->prevPosition.z());
+            this->particles[i] = particle;
+            
+            float z = r-distance/(1.414213*this->sigma);
+            this->weights[i] = exp(-(z*z))/sqrt(2*M_PI*this->sigma*this->sigma);
+        }
+    }
     void spawnParticles(nav_msgs::Odometry odom, float distance) {
         Eigen::Vector3f currentPose(odom.pose.pose.position.x, odom.pose.pose.position.y, odom.pose.pose.position.z);
         this->prevPosition = currentPose;
@@ -69,7 +83,7 @@ public:
 
         for(int i  = 0; i < this->numParticles; i++) {
             double r = normalDistribution(generator);
-            double theta = uniform(generator);
+            double theta = M_PI/2/*uniform(generator)*/;
             double phi = uniform(generator);
             Eigen::Vector3f particle(r*sin(theta)*cos(phi) + this->prevPosition.x(), r*sin(theta)*sin(phi) + this->prevPosition.y(), r*cos(theta) + this->prevPosition.z());
             this->particles.push_back(particle);
@@ -90,6 +104,19 @@ public:
         }
     }
     
+    float weightsVariance() {
+        float mean = 0;
+        for(int i = 0; i < this->numParticles; i++){
+            mean += this->weights[i];
+        }
+        mean /= this->numParticles;
+        float variance = 0;
+        for(int i = 0; i < this->numParticles; i++){
+            float v = this->weights[i] - mean;
+            variance += v*v;
+        }
+        return variance/this->numParticles; 
+    }
     void resample() {
         float sum = 0;
         for(int i  = 0; i < this->numParticles; i++) {
@@ -98,8 +125,8 @@ public:
         for(int i  = 0; i < this->numParticles; i++) {
             this->weights[i] /= sum;
         }
-        std::uniform_real_distribution<float> uniform(0.00000001,1);
-        float r = uniform(generator);
+        std::uniform_real_distribution<float> uniform(1e-20,1);
+        float r = uniform(generator); 
         float accumulator = this->weights[0];
         int weight_index = 0;
         std::vector<Eigen::Vector3f> resampled_particles;
@@ -165,9 +192,11 @@ class LocalizationManager {
             return;
         }
         if(!this->uwb_trackers[uwb_msg.name.data].applyMotionModel(this->currentOdom)){
+            this->uwb_trackers[uwb_msg.name.data].updateMeasurement(uwb_msg.distance.data);
             return;
         }
         this->uwb_trackers[uwb_msg.name.data].updateMeasurement(uwb_msg.distance.data);
+        //this->uwb_trackers[uwb_msg.name.data].respawnSomeParticles(200, uwb_msg.distance.data);
         this->uwb_trackers[uwb_msg.name.data].resample();
     } 
 
