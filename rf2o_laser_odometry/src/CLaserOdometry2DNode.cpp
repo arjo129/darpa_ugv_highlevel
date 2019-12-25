@@ -227,7 +227,8 @@ void CLaserOdometry2DNode::publish()
     odom_to_laser.setOrigin(tf::Vector3(robot_pose_.translation()(0), robot_pose_.translation()(1), 0));
     odom_to_laser.setRotation(tf::Quaternion(0, 0, rf2o::getYaw(robot_pose_.rotation())));
 
-    tf::Transform odom_to_base_link *= base_link_to_laser.inverse();
+    tf::Transform odom_to_base_link = odom_to_laser;
+    odom_to_base_link *= base_link_to_laser.inverse();
     //ROS_INFO("[rf2o] Publishing TF: [base_link] to [odom]");
     geometry_msgs::TransformStamped odom_trans;
     odom_trans.header.stamp = last_odom_time;
