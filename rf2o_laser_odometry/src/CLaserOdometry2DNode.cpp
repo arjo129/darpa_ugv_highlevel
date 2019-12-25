@@ -41,6 +41,7 @@ public:
   double freq;
 
   std::string         laser_scan_topic;
+  std::string         laser_frame_id;
   std::string         odom_topic;
   std::string         base_frame_id;
   std::string         odom_frame_id;
@@ -145,10 +146,10 @@ bool CLaserOdometry2DNode::setLaserPoseFromTf()
   Pose3d laser_tf(R);
 
   const tf::Vector3 &t = transform.getOrigin();
+  const tf::Quaternion tf_rot = transform.getRotation();
   laser_tf.translation()(0) = t[0];
   laser_tf.translation()(1) = t[1];
   laser_tf.translation()(2) = t[2];
-
   setLaserPose(laser_tf);
 
   return retrieved;
@@ -180,6 +181,7 @@ void CLaserOdometry2DNode::process(const ros::TimerEvent&)
 
 void CLaserOdometry2DNode::LaserCallBack(const sensor_msgs::LaserScan::ConstPtr& new_scan)
 {
+  laser_frame_id = new_scan->header.frame_id;
   if (GT_pose_initialized)
   {
     //Keep in memory the last received laser_scan
@@ -218,15 +220,26 @@ void CLaserOdometry2DNode::publish()
   //---------------------------------------
   if (publish_tf)
   {
+    tf::StampedTransform base_link_to_laser;
+    tf_listener.lookupTransform(base_frame_id, laser_frame_id, last_odom_time, base_link_to_laser);
+
+    tf::Transform odom_to_laser;
+    odom_to_laser.setOrigin(tf::Vector3(robot_pose_.translation()(0), robot_pose_.translation()(1), 0));
+    odom_to_laser.setRotation(tf::Quaternion(0, 0, rf2o::getYaw(robot_pose_.rotation())));
+
+    tf::Transform odom_to_base_link *= base_link_to_laser.inverse();
     //ROS_INFO("[rf2o] Publishing TF: [base_link] to [odom]");
     geometry_msgs::TransformStamped odom_trans;
     odom_trans.header.stamp = last_odom_time;
     odom_trans.header.frame_id = odom_frame_id;
     odom_trans.child_frame_id = base_frame_id;
-    odom_trans.transform.translation.x = robot_pose_.translation()(0);
-    odom_trans.transform.translation.y = robot_pose_.translation()(1);
+    odom_trans.transform.translation.x = odom_to_base_link.getOrigin().x();
+    odom_trans.transform.translation.y = odom_to_base_link.getOrigin().y();
     odom_trans.transform.translation.z = 0.0;
-    odom_trans.transform.rotation = tf::createQuaternionMsgFromYaw(rf2o::getYaw(robot_pose_.rotation()));
+    odom_trans.transform.rotation.x = odom_to_base_link.getRotation().x();
+    odom_trans.transform.rotation.y = odom_to_base_link.getRotation().y();
+    odom_trans.transform.rotation.z = odom_to_base_link.getRotation().z();
+    odom_trans.transform.rotation.w = odom_to_base_link.getRotation().w();
     //send the transform
     odom_broadcaster.sendTransform(odom_trans);
   }
