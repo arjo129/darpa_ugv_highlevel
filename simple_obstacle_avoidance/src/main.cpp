@@ -1,12 +1,11 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
-#include <geometry_msgs/Point.h>
 #include <sensor_msgs/LaserScan.h>
+#include <std_msgs/String.h>
 #include <cmath>
-#define ROBOT_WIDTH 0.5
-#define ROBOT_FRONT 0.5
-#define ROBOT_BACK  0
-#define ROBOT_WIDTH_NEW 0.5
+#define ROBOT_WIDTH 0.3
+#define ROBOT_FRONT 0.15
+#define ROBOT_BACK -0.47
 #define MAX_SPEED 0.1
 #define DELAY 2.0
 enum Direction  {
@@ -16,41 +15,77 @@ enum Direction  {
 enum MotionState {
         SPOT_TURN= 0,  STRAIGHT = 1
 };
-
 MotionState mstate = STRAIGHT;
-
 class LaserScanObstacles {
 	bool obstacles[4];
 	bool updating = false;
 public:
+	float left_wall_radius;
+	float front_dist;
+	bool is_left_turn_possible;
 	LaserScanObstacles(sensor_msgs::LaserScan scan) {
 		updating = true;
+		is_left_turn_possible = false;
 		for(int i = 0; i < 4; i++){
 			obstacles[i] = false;
 		}
 		float currAngle = scan.angle_min;
+		float left_opening_start_x, left_opening_start_y;
+		bool wasOpen = false;
+		float maxAngleRadius = -1;
+		float maxAngle = 1;
 		for(int  i = 0 ; i < scan.ranges.size(); i++) {
 			float radius = scan.ranges[i];
 			currAngle += scan.angle_increment;
-
+			//std::cout << radius <<std::endl;
+			if(-1.58 < currAngle && currAngle < -1.57) {
+				left_wall_radius =  radius;
+			}
+			if(currAngle > 0.01 && currAngle < 0.01) {
+				front_dist = radius;
+			}
 			float x_pos = radius*cos(currAngle);
 			float y_pos = radius*sin(currAngle);
-
 			if(y_pos < ROBOT_WIDTH && y_pos > -ROBOT_WIDTH && radius < 1) {
-				if(x_pos > 0)
+				if(x_pos < 0)
 					obstacles[FORWARD] = true;
 				else
 					obstacles[BACKWARD] = true;
 			}
-			else if(y_pos < 0 && x_pos < ROBOT_FRONT && x_pos > ROBOT_BACK && radius < 1) {
+			else if(y_pos < 0 && x_pos < ROBOT_FRONT && x_pos > ROBOT_BACK ) {
 				obstacles[LEFT] = true;
 			}
-			else if(y_pos > 0 && x_pos < ROBOT_FRONT && x_pos > ROBOT_BACK && radius < 1) {
+			else if(y_pos > 0 && x_pos < ROBOT_FRONT && x_pos > ROBOT_BACK ) {
 				obstacles[RIGHT] = true;
 			}
+			
+			/*if(radius > 1 && currAngle < 0 && currAngle > -1.57&& !wasOpen) {
+				wasOpen = true;
+				std::cout << "starting at " << currAngle << ","<< radius <<std::endl;
+				left_opening_start_x = x_pos; 
+				
+				left_opening_start_y = y_pos;
+			}
+			if(wasOpen && (radius < 1 || currAngle > 0)) {
+				std::cout << "locking at " << currAngle << ","<< radius <<std::endl;
+				float dist_x = x_pos - left_opening_start_x;
+				float dist_y = y_pos - left_opening_start_y;
+				if(dist_x*dist_x +dist_y*dist_y > 0.5) {
+					is_left_turn_possible = true;
+				}
+				wasOpen = false;
+			}*/
+			if(maxAngleRadius < radius &&currAngle < -1.57 && currAngle > -3.1415 && radius <  30.0f ) {
+				maxAngleRadius = radius;
+				maxAngle = currAngle;
+				std::cout << "got radius" << radius <<std::endl;	
+			}
 		}
+		std::cout << maxAngle<<","<< maxAngleRadius<<std::endl;
+		is_left_turn_possible = (maxAngle < 0 && maxAngleRadius > 0.5);
 		updating = false;
 	}
+
 	bool containsObstacle(Direction direction){
 		while(updating) {}
 		return obstacles[direction];
@@ -61,6 +96,7 @@ public:
 				<< "Left : " << containsObstacle(LEFT)
 				<< "Right : " << containsObstacle(RIGHT)
 				<< "Back : " << containsObstacle(BACKWARD)
+				<< " can I turn left?" << is_left_turn_possible 
 				<< std::endl;
 	}
 };
@@ -73,10 +109,12 @@ class SimpleObstacleAvoidance {
 public:
 	ros::NodeHandle nh;
 	ros::Publisher velocityController;
-	ros::Publisher traversibilityMap;
 	ros::Subscriber laserScanSub;
+	ros::Subscriber enabled;
 	ros::Time changeTriggered;
+	bool stop = false;
 	State state;
+
 
 
 	void obstacleSearch(LaserScanObstacles& obstacles) {
@@ -85,7 +123,7 @@ public:
 			mstate = SPOT_TURN;
 			geometry_msgs::Twist twist;
 			twist.linear.x = 0;
-			twist.angular.z = -0.3;
+			twist.angular.z = -0.1;
 			velocityController.publish(twist);
 			std::cout << "searching for obstacle" << std::endl;
 		}
@@ -95,7 +133,7 @@ public:
 		}
 		else {
 			mstate = STRAIGHT;
-			std::cout << "searching for obstacle" << std::endl;
+			std::cout << "searchin for obstacle" << std::endl;
 			geometry_msgs::Twist twist;
 			twist.linear.x = 0.1;
 			twist.angular.z = 0;
@@ -106,7 +144,6 @@ public:
 	bool turn_enable = false;
 	void wallFollow(LaserScanObstacles& obstacles) {
 		if((ros::Time::now() - last_turn).sec < 5 && turn_enable == true) {
-			std::cout << "left turn in progress" <<std::endl;
 			return;
 		}
 		turn_enable = false;
@@ -117,30 +154,46 @@ public:
 			geometry_msgs::Twist twist;
 			mstate = SPOT_TURN;
 			twist.linear.x = 0;
-			twist.angular.z = 0.3;
+			twist.angular.z = 0.1;
 			velocityController.publish(twist);
 			std::cout << "Turning left - no obstacle on left" << std::endl;
 		} else if (!obstacles.containsObstacle(FORWARD)) {
+			std::cout << "" << std::endl;
 			geometry_msgs::Twist twist;
 			mstate = STRAIGHT;
 			twist.linear.x = 0.1;
 			twist.angular.z = 0;
+			if(obstacles.left_wall_radius > 0.7)
+				twist.angular.z = 0.1;
+			else if(obstacles.left_wall_radius <0.5)
+				twist.angular.z = -0.1;
 			velocityController.publish(twist);
 			std::cout << "Following wall" << std::endl;
-		} else {
-			//turn right if left and front are obstructed.
+		} else if (obstacles.front_dist < 1){
+			//turn right if left and right are obstructed.
 			geometry_msgs::Twist twist;
 			mstate = SPOT_TURN;
 			twist.linear.x = 0;
+			//if(!obstacles.is_left_turn_possible)
 			twist.angular.z = -0.3;
-			velocityController.publish(twist);
-			std::cout << "Evasive maneuver" << std::endl;
+	velocityController.publish(twist);
+			/*else
+			twist.angular.z = 0.1;
+			elocityController.publish(twist);
+			std::cout << "Evasive maneuver" << std::endl;*/
 
 		}
 	}
 	void onLaserScan(sensor_msgs::LaserScan scan) {
+		if(stop){
+			geometry_msgs::Twist twist;
+			twist.linear.x = 0;
+			twist.linear.y = 0;
+			twist.angular.z = 0;
+			velocityController.publish(twist);
+			return;
+		}
 		LaserScanObstacles obsmap(scan);
-		//traversibilityMap.publish(distanceTraversible(scan, ROBOT_WIDTH_NEW));
 		std::cout << "current state " << state << std::endl;
 		if(state == OBSTACLE_SEARCH)
 			obstacleSearch(obsmap);
@@ -149,11 +202,17 @@ public:
 		obsmap.debugPrint();
 	}
 
+	void onEStop(std_msgs::String msg) {
+		//STOP THE MACHINi
+		stop = true;
+		std::cout << "ESTOP ACTIVATED" << std::endl;
+	}
+
 	SimpleObstacleAvoidance(ros::NodeHandle nh) {
 		state = OBSTACLE_SEARCH;
-		velocityController = nh.advertise<geometry_msgs::Twist>("husky1/husky_velocity_controller/cmd_vel", 100);
-		laserScanSub = nh.subscribe<sensor_msgs::LaserScan>("husky1/scan", 10, &SimpleObstacleAvoidance::onLaserScan, this);
-		traversibilityMap = nh.advertise<sensor_msgs::LaserScan>("husky1/out/scan", 10);
+		velocityController = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 100);
+		laserScanSub = nh.subscribe<sensor_msgs::LaserScan>("/scan", 10, &SimpleObstacleAvoidance::onLaserScan, this);
+		enabled = nh.subscribe<std_msgs::String>("e_stop", 10, &SimpleObstacleAvoidance::onEStop, this);
 	}
 
 };
