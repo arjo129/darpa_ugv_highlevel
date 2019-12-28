@@ -6,8 +6,6 @@ bool PhysicalChunk::operator<(const PhysicalChunk& other) const{
     return this->sequenceNumber < other.sequenceNumber; 
 }
 
-PacketSequencer::PacketSequencer() {
-}
 
 std::vector<PhysicalChunk> data_compressor::toPhysicalChunks(ByteStream packet) {
     std::vector<PhysicalChunk> chunklist;

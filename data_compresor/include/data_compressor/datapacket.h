@@ -3,13 +3,14 @@
 
 #include <string>
 #include <vector>
-#include <wireless_msgs/LoraPacket.h>
 #include <queue>
+#include <set>
 #include <unordered_map>
 
 namespace data_compressor{
 
     const long MAX_PACKET_SIZE = 1000;
+    const int MAX_TIME_TO_HOLD_PACKET = 20;
 
     struct ByteStream {
         std::vector<uint8_t> data;
@@ -52,24 +53,24 @@ namespace data_compressor{
     /**
      * Packet Queue buffer
      */ 
-    class PacketSequencer {
+    class PacketRecieveQueue {
     private:
         std::unordered_map<long, std::set<PhysicalChunk>> incomingPacketQueue;
         std::priority_queue<std::pair<long, long>> packetTimeofArrival;
     public:
-        PacketSequencer();
-        void 
-        
-        fake();
+        PacketRecieveQueue();
         /**
-         * Sends a buffer
+         * Gets all complete packages
          */ 
-        //std::vector<wireless_msgs::LoraPacket> sendBuffer();
+        std::vector<ByteStream> getBuffer();
         /**
-         * Gets a buffer
+         * Adds a chunk to the buffer
          */ 
-        //std::vector<DataPacket> getBuffer();
-
+        void enqueuePacket(PhysicalChunk packet, int arrivalTime);
+        /**
+         * Remove incomplete transmissions in the buffer which are of a certain age 
+         */
+        void garbageCollect(int currentTime); 
     };
 }
 #endif

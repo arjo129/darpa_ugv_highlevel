@@ -106,7 +106,7 @@ find_package(ZLIB)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES data_compresor
-  CATKIN_DEPENDS wireless_msgs nav_msgs sensor_msgs
+  CATKIN_DEPENDS wireless_msgs nav_msgs sensor_msgs roscpp
 #  DEPENDS system_lib
 )
 
@@ -125,6 +125,7 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/devices/laserscan.cpp
   src/packet_sequencer/packet_sequence.cpp
+  src/packet_sequencer/packet_recieve_queue.cpp
 )
 
 ## Add cmake target dependencies of the library
