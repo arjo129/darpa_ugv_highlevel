@@ -1,9 +1,10 @@
 #include <data_compressor/devices/laserscan.h>
+#include <data_compressor/datapacket.h>
 #include <gtest/gtest.h>
 #include <random>
 #include <limits>
 
-TEST(LaserScan, is_compression_valid){
+TEST(LaserScan, isCmpressionValid){
     data_compressor::LaserScanCompressor compressor;
     data_compressor::DataPacket packet;
     sensor_msgs::LaserScan scan;
@@ -23,6 +24,68 @@ TEST(LaserScan, is_compression_valid){
     sensor_msgs::LaserScan res = compressor.decompress(packet);
     for(int i = 0; i < res.ranges.size(); i++) {
         ASSERT_TRUE(res.ranges[i] == scan.ranges[i]);
+    }
+}
+
+TEST(PacketSequencer, isPacketCompleteCheckValid){
+    using namespace data_compressor;
+    ByteStream packet;
+    std::default_random_engine generator;
+    std::uniform_int_distribution<uint8_t> distr(0,255);
+    
+    for(int i = 0; i < 5*MAX_PACKET_SIZE; i++){
+        packet.data.push_back(distr(generator));
+    }
+
+    std::vector<PhysicalChunk> chunks;
+    chunks = toPhysicalChunks(packet);
+    std::set<PhysicalChunk> test_queue;
+    for(PhysicalChunk chunk: chunks){
+        ASSERT_FALSE(isPacketComplete(test_queue));
+        test_queue.insert(chunk);
+    }
+    ASSERT_TRUE(data_compressor::isPacketComplete(test_queue));
+}
+
+TEST(PacketSequencer, isPacketSizeBelowMaxChunk){
+    using namespace data_compressor;
+    ByteStream packet;
+    std::default_random_engine generator;
+    std::uniform_int_distribution<uint8_t> distr(0,255);
+    
+    for(int i = 0; i < 5*MAX_PACKET_SIZE; i++){
+        packet.data.push_back(distr(generator));
+    }
+
+    std::vector<PhysicalChunk> chunks;
+    chunks = toPhysicalChunks(packet);
+    for(PhysicalChunk chunk: chunks){
+        ASSERT_FALSE(chunk.data.size() > MAX_PACKET_SIZE);
+    }
+}
+
+TEST(PacketSequencer, isSplittingAndReconstructionConsistent){
+    using namespace data_compressor;
+    ByteStream packet;
+    std::default_random_engine generator;
+    std::uniform_int_distribution<uint8_t> distr(0,255);
+    
+    for(int i = 0; i < 5*MAX_PACKET_SIZE; i++){
+        packet.data.push_back(distr(generator));
+    }
+
+    std::vector<PhysicalChunk> chunks;
+    chunks = toPhysicalChunks(packet);
+    std::set<PhysicalChunk> test_queue;
+    for(PhysicalChunk chunk: chunks){
+        test_queue.insert(chunk);
+    }
+
+    ByteStream stream = reassemblePacket(test_queue);
+
+    ASSERT_TRUE(stream.data.size() == packet.data.size());
+    for(int i = 0; i < stream.data.size(); i++){
+        ASSERT_TRUE(stream.data[i] == packet.data[i]);
     }
 }
 int main(int argc, char **argv){

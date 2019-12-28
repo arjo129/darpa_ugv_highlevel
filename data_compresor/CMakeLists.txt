@@ -104,9 +104,9 @@ find_package(ZLIB)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES data_compresor
-#  CATKIN_DEPENDS amapper nav_msgs sensor_msgs
+  INCLUDE_DIRS include
+  LIBRARIES data_compresor
+  CATKIN_DEPENDS wireless_msgs nav_msgs sensor_msgs
 #  DEPENDS system_lib
 )
 
@@ -124,6 +124,7 @@ include_directories(
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
   src/devices/laserscan.cpp
+  src/packet_sequencer/packet_sequence.cpp
 )
 
 ## Add cmake target dependencies of the library
