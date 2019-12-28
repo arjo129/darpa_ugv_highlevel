@@ -62,6 +62,6 @@ sensor_msgs::LaserScan LaserScanCompressor::decompress(DataPacket dp) {
         fconverter.data[3] = decompressedByteStream[i+3];
         scan.ranges.push_back(fconverter.float_value);
     }
-
+    delete decompressedByteStream;
     return scan;
 }
