@@ -122,6 +122,20 @@ TEST(PhysicalChunk, loraConversionValid) {
     ASSERT_TRUE(pchunk1 == pchunk2);
 }
 
+TEST(DataPacket, bytestreamConversionValid) {
+    data_compressor::DataPacket dp;
+    std::default_random_engine generator;
+    std::uniform_int_distribution<uint8_t> distr(0,255);
+    dp.packet_type = data_compressor::MessageType::LASER_SCAN;
+    dp.uncompressed_size = 1000;
+    for(int i = 0; i < 100; i++){
+        dp.data.push_back(distr(generator));
+    }
+    data_compressor::ByteStream bs = dp.serialize();
+    data_compressor::DataPacket dpRes = data_compressor::fromByteStream(bs);
+    ASSERT_TRUE(dp == dpRes);
+}
+
 int main(int argc, char **argv){
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

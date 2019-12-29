@@ -6,7 +6,7 @@ DataPacket::DataPacket(const DataPacket& other) {
     this->estimated_pose = geometry_msgs::Pose(other.estimated_pose);
     this->packet_type = other.packet_type;
     this->uncompressed_size = other.uncompressed_size;
-    this->data = std::vector(other.data);
+    this->data = std::vector<uint8_t>(other.data);
 }
 
 ByteStream DataPacket::serialize() {

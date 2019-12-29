@@ -3,9 +3,10 @@
 
 #include <stdint.h>
 #include <vector>
-
+namespace data_compressor {
 struct ByteStream {
     std::vector<uint8_t> data;
 };
+}
 
 #endif
