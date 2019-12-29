@@ -17,6 +17,9 @@ namespace data_compressor {
         MessageType packet_type;
         long uncompressed_size;
         std::vector<uint8_t> data;
+        DataPacket() {};
+        DataPacket(const DataPacket& other);
+        bool operator==(const DataPacket& other);
         /**
          * Serialize a ros datapacket to C
          */ 

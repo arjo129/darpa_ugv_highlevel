@@ -2,6 +2,13 @@
 
 using namespace data_compressor;
 
+DataPacket::DataPacket(const DataPacket& other) {
+    this->estimated_pose = geometry_msgs::Pose(other.estimated_pose);
+    this->packet_type = other.packet_type;
+    this->uncompressed_size = other.uncompressed_size;
+    this->data = std::vector(other.data);
+}
+
 ByteStream DataPacket::serialize() {
     ByteStream bs;
     union {
@@ -138,4 +145,38 @@ DataPacket data_compressor::fromByteStream(ByteStream bs) {
     }
 
     return dp;
+}
+
+bool DataPacket::operator==(const DataPacket& other) {
+    if(this->estimated_pose.position.x != other.estimated_pose.position.x) {
+        return false;
+    }
+    if(this->estimated_pose.position.y != other.estimated_pose.position.y) {
+        return false;
+    }
+    if(this->estimated_pose.position.z != other.estimated_pose.position.z) {
+        return false;
+    }
+    if(this->estimated_pose.orientation.x != other.estimated_pose.orientation.x) {
+        return false;
+    }
+    if(this->estimated_pose.orientation.y != other.estimated_pose.orientation.y) {
+        return false;
+    }
+    if(this->estimated_pose.orientation.z != other.estimated_pose.orientation.z) {
+        return false;
+    }
+    if(this->estimated_pose.orientation.w != other.estimated_pose.orientation.w) {
+        return false;
+    }
+    if(this->packet_type != other.packet_type) {
+        return false;
+    }
+    if(this->uncompressed_size != other.uncompressed_size) {
+        return false;
+    }
+    if(this->data != other.data) {
+        return false;
+    }
+    return true;
 }
