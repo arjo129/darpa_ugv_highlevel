@@ -6,6 +6,7 @@
 #include <queue>
 #include <set>
 #include <unordered_map>
+#include <wireless_msgs/LoraPacket.h>
 
 namespace data_compressor{
 
@@ -28,13 +29,23 @@ namespace data_compressor{
      * If messages need to be split up
      */ 
     struct PhysicalChunk {
-        long packetId;
-        int sequenceNumber;
-        int maxCount;
+        uint64_t packetId;
+        int32_t sequenceNumber;
+        int32_t maxCount;
         std::vector<uint8_t> data;
+        PhysicalChunk() {};
+        PhysicalChunk(const PhysicalChunk& other);
         bool operator< (const PhysicalChunk& other) const;
+        bool operator== (const PhysicalChunk& other) const;
+        /**
+         * Convert to LoRA message
+         */ 
+        wireless_msgs::LoraPacket toLoRa(std::string sender);
     };
-
+    /**
+     * Create physical chunk from LoRa message
+     */ 
+    PhysicalChunk toPhysicalChunk(wireless_msgs::LoraPacket& packet);
     /**
      * Splits a packet into multiple physical chunks
      */ 
@@ -72,5 +83,27 @@ namespace data_compressor{
          */
         void garbageCollect(int currentTime); 
     };
+    
+    
+    /**
+     * Packet Queue send buffer
+     */ 
+    class PacketSendQueue {
+    private:
+        long packetCounter = 0;
+        std::string localAddress;
+    public:
+        PacketSendQueue(std::string myaddress){
+            localAddress = myaddress;
+        }
+        /**
+         * Prepare a packet for sending
+         */ 
+        std::vector<wireless_msgs::LoraPacket> send(ByteStream bs, std::string to);
+    };
+
+    /**
+     * Packet reciever
+     */ 
 }
 #endif

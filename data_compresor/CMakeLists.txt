@@ -126,6 +126,8 @@ add_library(${PROJECT_NAME}
   src/devices/laserscan.cpp
   src/packet_sequencer/packet_sequence.cpp
   src/packet_sequencer/packet_recieve_queue.cpp
+  src/packet_sequencer/packet_send_sequence.cpp
+  src/packet_sequencer/physicalchunk.cpp
 )
 
 ## Add cmake target dependencies of the library
