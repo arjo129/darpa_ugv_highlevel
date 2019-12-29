@@ -7,6 +7,7 @@
 #include <set>
 #include <unordered_map>
 #include <wireless_msgs/LoraPacket.h>
+#include <geometry_msgs/Pose.h>
 
 namespace data_compressor{
 
@@ -14,16 +15,20 @@ namespace data_compressor{
     const int MAX_TIME_TO_HOLD_PACKET = 20;
 
     struct ByteStream {
-        std::vector<uint8_t> data;
+         std::vector<uint8_t> data;
     };
     /**
-     * Compressed messages
+     * Compressed messages. Consist of data and a pose estimate.
      */ 
     struct DataPacket {
+        geometry_msgs::Pose estimated_pose;
         std::string packet_type;
         std::vector<uint8_t> data;
         long uncompressed_size;
+        ByteStream serialize();
     };
+
+    DataPacket fromByteStream(ByteStream);
 
     /**
      * If messages need to be split up

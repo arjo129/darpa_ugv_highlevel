@@ -12,7 +12,7 @@ namespace data_compressor {
     class LaserScanCompressor: public Device<sensor_msgs::LaserScan> {
     public:
         LaserScanCompressor();
-        std::string handlesDataPacket();
+        MessageType handlesDataPacket();
         DataPacket compress(sensor_msgs::LaserScan message);
         sensor_msgs::LaserScan decompress(DataPacket message);
     };

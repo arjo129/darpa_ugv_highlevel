@@ -8,8 +8,8 @@ void floatToBytes(float x, uint8_t* char_array) {
 
 LaserScanCompressor::LaserScanCompressor() {}
 
-std::string LaserScanCompressor::handlesDataPacket(){
-    return "laserscan";
+MessageType LaserScanCompressor::handlesDataPacket(){
+    return MessageType::LASER_SCAN;
 }
 
 DataPacket LaserScanCompressor::compress(sensor_msgs::LaserScan sc) {
