@@ -121,6 +121,7 @@ TEST(PhysicalChunk, loraConversionValid) {
     pchunk2 = data_compressor::toPhysicalChunk(lorapacket);
     ASSERT_TRUE(pchunk1 == pchunk2);
 }
+
 int main(int argc, char **argv){
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

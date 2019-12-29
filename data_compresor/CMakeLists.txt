@@ -128,6 +128,7 @@ add_library(${PROJECT_NAME}
   src/packet_sequencer/packet_recieve_queue.cpp
   src/packet_sequencer/packet_send_sequence.cpp
   src/packet_sequencer/physicalchunk.cpp
+  src/ros_abstraction_layer/datapacket.cpp
 )
 
 ## Add cmake target dependencies of the library
