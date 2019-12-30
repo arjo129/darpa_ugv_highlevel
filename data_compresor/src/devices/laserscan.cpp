@@ -14,17 +14,23 @@ MessageType LaserScanCompressor::handlesDataPacket(){
 
 DataPacket LaserScanCompressor::compress(sensor_msgs::LaserScan sc) {
     
-    uint8_t* data = new uint8_t[sc.ranges.size()*4];
-    uint8_t* compressed = new uint8_t[sc.ranges.size()*4];
+    uint8_t* data = new uint8_t[sc.ranges.size()*8+1];
+    uint8_t* compressed = new uint8_t[sc.ranges.size()*8+1];
 
     for(int i =0; i < sc.ranges.size(); i++){
         floatToBytes(sc.ranges[i], &(data[i*4]));
     }
 
-    unsigned long compressedLength;
-    compress2(compressed, &compressedLength, data, sc.ranges.size()*4, Z_BEST_COMPRESSION);
+    unsigned long compressedLength =sc.ranges.size()*8+1;
+    int err = compress2(compressed, &compressedLength, data, sc.ranges.size()*4, Z_BEST_COMPRESSION);
+    if(err == Z_BUF_ERROR) {
+        std::cout << "failed to allocate compressed error"<< compressedLength << std::endl;
+    } else if(err ==Z_MEM_ERROR) {
+        std::cout << "Z_MEMORY ERROR"<< compressedLength << std::endl;
+    } else if(err== Z_STREAM_ERROR) {
+         std::cout << "Z_STREAM ERROR"<< compressedLength << std::endl;
+    }
     delete data;
-    
     DataPacket packet;
     
     for(unsigned long i = 0; i < compressedLength; i++){
@@ -32,6 +38,7 @@ DataPacket LaserScanCompressor::compress(sensor_msgs::LaserScan sc) {
     }
 
     packet.uncompressed_size = sc.ranges.size()*4;
+    packet.packet_type = this->handlesDataPacket();
 
     delete compressed;
     return packet;

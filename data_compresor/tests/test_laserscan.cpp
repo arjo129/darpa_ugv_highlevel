@@ -22,9 +22,8 @@ TEST(LaserScan, isCmpressionValid){
     }
     packet = compressor.compress(scan);
     sensor_msgs::LaserScan res = compressor.decompress(packet);
-    for(int i = 0; i < res.ranges.size(); i++) {
-        ASSERT_TRUE(res.ranges[i] == scan.ranges[i]);
-    }
+    ASSERT_TRUE(scan.ranges.size() > 0);
+    ASSERT_TRUE(res.ranges == scan.ranges);
 }
 
 TEST(PacketSequencer, isPacketCompleteCheckValid){
@@ -64,6 +63,7 @@ TEST(PacketSequencer, isPacketSizeBelowMaxChunk){
     }
 }
 
+// PhysicalChunk <=> Bytestream
 TEST(PacketSequencer, isSplittingAndReconstructionConsistent){
     using namespace data_compressor;
     ByteStream packet;
@@ -105,7 +105,7 @@ TEST(PhysicalChunk, equalityCheck) {
     pchunk1.data[0] = tmp-1;
     ASSERT_FALSE(pchunk1 == pchunk2);
 }
-
+// LoRA <=> PhysicalChunk
 TEST(PhysicalChunk, loraConversionValid) {
     std::default_random_engine generator;
     std::uniform_int_distribution<uint8_t> distr(0,255);
@@ -121,7 +121,7 @@ TEST(PhysicalChunk, loraConversionValid) {
     pchunk2 = data_compressor::toPhysicalChunk(lorapacket);
     ASSERT_TRUE(pchunk1 == pchunk2);
 }
-
+// ByteStream <=> DataPacket
 TEST(DataPacket, bytestreamConversionValid) {
     data_compressor::DataPacket dp;
     std::default_random_engine generator;
