@@ -14,8 +14,8 @@ MessageType LaserScanCompressor::handlesDataPacket(){
 
 DataPacket LaserScanCompressor::compress(sensor_msgs::LaserScan sc) {
     
-    uint8_t* data = new uint8_t[sc.ranges.size()*8+1];
-    uint8_t* compressed = new uint8_t[sc.ranges.size()*8+1];
+    uint8_t* data = new uint8_t[sc.ranges.size()*8+100];
+    uint8_t* compressed = new uint8_t[sc.ranges.size()*8+100];
 
     for(int i =0; i < sc.ranges.size(); i++){
         floatToBytes(sc.ranges[i], &(data[i*4]));
@@ -68,6 +68,7 @@ sensor_msgs::LaserScan LaserScanCompressor::decompress(DataPacket dp) {
         fconverter.data[2] = decompressedByteStream[i+2];
         fconverter.data[3] = decompressedByteStream[i+3];
         scan.ranges.push_back(fconverter.float_value);
+        scan.intensities.push_back(47);
     }
     delete decompressedByteStream;
     return scan;

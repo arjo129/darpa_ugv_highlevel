@@ -45,10 +45,10 @@ public:
         float z_stdev = odom.pose.covariance[14];
         std::normal_distribution<double> x_noise(0, 0.2);
         std::normal_distribution<double> y_noise(0, 0.2);
-        std::normal_distribution<double> z_noise(0, 0.1);
+        std::normal_distribution<double> z_noise(0, 0.01);
         this->frame_id = odom.header.frame_id;
         for(int i = 0; i < this->particles.size(); i++) {
-            Eigen::Vector3f noise(x_noise(generator), y_noise(generator), 0/*z_noise(generator)*/);
+            Eigen::Vector3f noise(x_noise(generator), y_noise(generator), z_noise(generator));
             //std::cout << noise <<"added"<<std::endl;
             this->particles[i] += noise;
             this->weights[i] *= getProbGivenNormalDistribution(noise.x(), 0, 0.2);

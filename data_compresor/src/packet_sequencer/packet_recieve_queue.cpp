@@ -15,6 +15,7 @@ std::vector<ByteStream> PacketRecieveQueue::getBuffer() {
         bs.push_back(reassemblePacket(packets.second));
         toBeRemoved.push_back(packets.first);
     }
+    
     for(long packet: toBeRemoved){
         this->incomingPacketQueue.erase(packet);
     }
@@ -30,10 +31,13 @@ void PacketRecieveQueue::enqueuePacket(PhysicalChunk packet, int arrivalTime) {
 void PacketRecieveQueue::garbageCollect(int currentTime) {
 
     while(true) {
+        if(this->packetTimeofArrival.size() == 0)
+            break;
         std::pair<long,long> packetRecvd = this->packetTimeofArrival.top();
         if((currentTime - (-packetRecvd.first)) < MAX_TIME_TO_HOLD_PACKET)
             break;
         this->packetTimeofArrival.pop();
-        this->incomingPacketQueue.erase(packetRecvd.second);
+        if(this->incomingPacketQueue.count(packetRecvd.second) > 0)
+            this->incomingPacketQueue.erase(packetRecvd.second);
     }
 }
