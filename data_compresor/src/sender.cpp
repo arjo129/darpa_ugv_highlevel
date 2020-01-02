@@ -15,8 +15,10 @@ class CompressedTelemetrySender {
 
     void compressScan(sensor_msgs::LaserScan scan){
         data_compressor::DataPacket pkt = scanCompressor.compress(scan);
+        std::cout << pkt.data.size()  << ":" << scan.ranges.size()<<std::endl;
+        std::cout << scanCompressor.decompress(pkt).ranges.size() <<std::endl;
         tf::StampedTransform trans;
-        try {
+        /*try {
             this->tfListener->lookupTransform("odom", "base_link", scan.header.stamp, trans);
             pkt.estimated_pose.position.x = trans.getOrigin().x();
             pkt.estimated_pose.position.y = trans.getOrigin().y();
@@ -25,21 +27,24 @@ class CompressedTelemetrySender {
             pkt.estimated_pose.orientation.y = trans.getRotation().y();
             pkt.estimated_pose.orientation.z = trans.getRotation().z();
             pkt.estimated_pose.orientation.w = trans.getRotation().w();
-            data_compressor::ByteStream bs = pkt.serialize();
             this->latestPacket = sendQueue.send(bs,"base_station");
         } catch (tf::TransformException ex) {
 
-        }
+        }*/
+                    data_compressor::ByteStream bs = pkt.serialize();
+
+        this->latestPacket = sendQueue.send(bs,"base_station");
     }
 
 public:
     CompressedTelemetrySender(ros::NodeHandle& nh, std::string address): sendQueue(address) {
-        this->laserscan = nh.subscribe("/husky1/scan", 10, &CompressedTelemetrySender::compressScan, this);   
-        this->loraPub = nh.advertise<wireless_msgs::LoraPacket>("/husky1/tx", 10);
+        this->laserscan = nh.subscribe("/scan", 10, &CompressedTelemetrySender::compressScan, this);   
+        this->loraPub = nh.advertise<wireless_msgs::LoraPacket>("/tx", 10);
         this->tfListener = new tf::TransformListener();
     }
 
     void publish(){
+        std::cout << "publishing" << this->latestPacket.size()<< std::endl;
         for(wireless_msgs::LoraPacket& pkt: this->latestPacket){
             this->loraPub.publish(pkt);
         }

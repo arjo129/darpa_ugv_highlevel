@@ -15,14 +15,16 @@ class Reciever {
     tf::TransformBroadcaster tfBroadcaster;
 
     void routeDecompression(std::string sender, data_compressor::DataPacket packet){
-        geometry_msgs::TransformStamped tstamped;
+        
+       /* geometry_msgs::TransformStamped tstamped;
         tstamped.transform.translation.x = packet.estimated_pose.position.x;
         tstamped.transform.translation.y = packet.estimated_pose.position.y;
         tstamped.transform.translation.z = packet.estimated_pose.position.z;
         tstamped.transform.rotation = packet.estimated_pose.orientation;
         tstamped.header.frame_id = sender+"/odom";
         tstamped.child_frame_id = sender+"/base_link";
-        tfBroadcaster.sendTransform(tstamped);
+        tfBroadcaster.sendTransform(tstamped);*/
+
         switch(packet.packet_type) {
             case data_compressor::MessageType::LASER_SCAN:
                 sensor_msgs::LaserScan scan = lscan.decompress(packet);
@@ -41,12 +43,13 @@ class Reciever {
 
 public:
     Reciever(ros::NodeHandle _nh, std::string _namespace): nh(_nh) {
-        sub = nh.subscribe(_namespace+"/rx", 10, &Reciever::onLoraPacketRecieved, this);
+        sub = nh.subscribe(_namespace+"/lora/rx", 10, &Reciever::onLoraPacketRecieved, this);
         this->nameSpace = _namespace;
     }
 
     void onLoraPacketRecieved(wireless_msgs::LoraPacket packet) {
-        this->recvQueues[packet.from.data].enqueuePacket(data_compressor::toPhysicalChunk(packet), ros::Time::now().sec); 
+        data_compressor::PhysicalChunk pchunk = data_compressor::toPhysicalChunk(packet);
+        this->recvQueues[packet.from.data].enqueuePacket(pchunk, ros::Time::now().sec); 
     }
 
     void publish(){
@@ -57,7 +60,7 @@ public:
                 data_compressor::DataPacket packet = fromByteStream(bs[i]);
                 routeDecompression(sender, packet);
             }
-            
+            queue.second.garbageCollect(ros::Time::now().sec);
         }
     }
 };

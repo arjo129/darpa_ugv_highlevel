@@ -19,5 +19,8 @@ void LaserScanner::plotgrid(tf::Transform tf, Grid& grid, sensor_msgs::LaserScan
         Eigen::Vector2f endPoint(input.ranges[i]*cos(beam_angle + yaw_offset), input.ranges[i]*sin(beam_angle + yaw_offset));
         raytracer->rayTrace(grid, centroid, endPoint);
         beam_angle += input.angle_increment;
+        int endX = grid.toXIndex(endPoint.x());
+        int endY = grid.toYIndex(endPoint.y());
+        grid.data[endY][endX] = 100;
     }
 }
