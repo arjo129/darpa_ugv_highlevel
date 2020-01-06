@@ -73,6 +73,8 @@ class SerialParser {
         for(int i =0; i < this->packetLength; i++){
             wpacket.data.push_back(this->packet[i + 3]);
         }
+        this->state = ParserState::AWAITING_START; 
+        this->packet.clear();
         return wpacket;
     }
 

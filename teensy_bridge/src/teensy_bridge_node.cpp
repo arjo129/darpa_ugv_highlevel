@@ -15,8 +15,8 @@
 
 
 
-int openSerialPort() {
-    int serial_port = open("/dev/ttyACM0", O_RDWR);
+int openSerialPort(const char* port) {
+    int serial_port = open(port, O_RDWR);
 
     // Create new termios struc, we call it 'tty' for convention
     struct termios tty;
@@ -72,28 +72,63 @@ void writeSerialPort(int serial_port, uint8_t* buffer, int length) {
     }
 }
 
+class TeensyBridgeNode {
+    ros::NodeHandle nh;
+    ros::Publisher pub;
+    ros::Subscriber sub;
+    std::shared_ptr<NameRecords> names;
+    WirelessMessageHandler handler;
+    int serialPort;
+    SerialParser parser;
+    void onWirelessMessageRecieved(wireless_msgs::LoraPacket pkt) {
+        uint8_t buffer[255];
+        int length = handler.serializeMessage(pkt, buffer);
+        std::cout << "sending " <<std::endl;
+        for (int i = 0; i < length; i++){
+            std::cout << " " <<(int) buffer[i] ;
+        }
+        std::cout << std::endl;
+        writeSerialPort(serialPort, buffer, length);
+    }
+
+   
+public:
+
+    void spin() {
+        char buffer[260];
+        int length = read(serialPort, buffer, 255);
+        if(length == 0) {
+            std::cout << "no data recv" << std::endl;
+        }
+        for (int i = 0; i < length; i++){
+            
+            if(parser.addByteToPacket(buffer[i])){
+                wireless_msgs::LoraPacket pkt = parser.retrievePacket();
+                pub.publish(pkt);
+            }
+        }
+    }
+
+    TeensyBridgeNode(ros::NodeHandle _nh): nh(_nh), names(new NameRecords), handler(names), parser(names){
+        pub = this->nh.advertise<wireless_msgs::LoraPacket>("/rx",10);
+        sub = this->nh.subscribe("/tx", 10, &TeensyBridgeNode::onWirelessMessageRecieved, this);
+        std::string port;
+        this->nh.getParam("serial_port", port);
+        serialPort = openSerialPort("/dev/ttyACM0");
+        names->addNameRecord("husky1", 1);
+    }
+};
+
 int main(int argc, char** argv) {
-    std::shared_ptr<NameRecords> name(new NameRecords);
-    WirelessMessageHandler handler(name);
-    name->addNameRecord("husky1", 1);
-    wireless_msgs::LoraPacket packet;
-    packet.to.data = "husky1";
-    for(int i = 0; i< 61; i++)
-        packet.data.push_back('a');
-  
-    uint8_t buffer[255];
-    int length = handler.serializeMessage(packet, buffer);
-    std::cout <<  "buffer length "<< length <<std::endl;
-    int serial_port = openSerialPort();
-    //std::thread reader(readThread, serial_port);
-    for(char j = 0; j  < 10; j++){
-        
-        char readString[255];
-        int length = read(serial_port, readString, 255);
-        if(length > 0)
-            std::cout << readString;
-        else
-            std::cout<< "no response" <<std::endl;
-     }
+
+    ros::init(argc, argv, "teensy_bridge");
+    ros::NodeHandle nh("~");
+    TeensyBridgeNode node(nh);
+    ros::Rate rate(100);
+    while(ros::ok()){
+        ros::spinOnce();
+        node.spin();
+        rate.sleep();
+    }
     return 0;
 }
