@@ -20,12 +20,12 @@ int main(int argc, char** argv) {
 
     while(ros::ok()){
         rate.sleep();
-	Mat img1(160, 120, CV_8UC3, Scalar(0, 0, 0));
-	Mat img2(160, 120, CV_8UC3, Scalar(0, 0, 0));
-	getThermalImage(img1, img2);
+	    cv::Mat img1(160, 120, CV_8UC3, cv::Scalar(0, 0, 0));
+	    cv::Mat img2(160, 120, CV_8UC3, cv::Scalar(0, 0, 0));
+	    //getThermalImage(img1, img2);
         cv_ptr1->image = img1;
-	cv_ptr2->image = img2;
+	    cv_ptr2->image = img2;
         pub1.publish(cv_ptr1->toImageMsg());
-	pub2.publish(cv_ptr2->toImageMsg());
+	    pub2.publish(cv_ptr2->toImageMsg());
     }
 }
