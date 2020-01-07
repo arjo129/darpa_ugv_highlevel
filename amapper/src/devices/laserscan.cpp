@@ -16,11 +16,14 @@ void LaserScanner::plotgrid(tf::Transform tf, Grid& grid, sensor_msgs::LaserScan
     float yaw_offset = qt.getAngle();
     float beam_angle = input.angle_min;
     for(int i  = 0; i < input.ranges.size(); i++){
+        if(input.ranges[i] > 20)
+            continue;
         Eigen::Vector2f endPoint(input.ranges[i]*cos(beam_angle + yaw_offset), input.ranges[i]*sin(beam_angle + yaw_offset));
         raytracer->rayTrace(grid, centroid, endPoint);
         beam_angle += input.angle_increment;
         int endX = grid.toXIndex(endPoint.x());
         int endY = grid.toYIndex(endPoint.y());
+        if(endY < grid.gridSize && endX < grid.gridSize && endX >= 0 && endY >= 0)
         grid.data[endY][endX] = 100;
     }
 }
