@@ -2,12 +2,15 @@
 #include <geometry_msgs/Twist.h>
 #include <sensor_msgs/LaserScan.h>
 #include <std_msgs/String.h>
+#include <tf/transform_listener.h>
 #include <cmath>
 #define ROBOT_WIDTH 0.3
 #define ROBOT_FRONT 0.15
 #define ROBOT_BACK -0.47
 #define MAX_SPEED 0.1
 #define DELAY 2.0
+#define BASE_LINK "husky1/base_link"
+
 enum Direction  {
 	FORWARD = 0, LEFT = 1, RIGHT = 2, BACKWARD = 3
 };
@@ -23,7 +26,7 @@ public:
 	float left_wall_radius;
 	float front_dist;
 	bool is_left_turn_possible;
-	LaserScanObstacles(sensor_msgs::LaserScan scan) {
+	LaserScanObstacles(sensor_msgs::LaserScan scan, tf::TransformListener& listener) {
 		updating = true;
 		is_left_turn_possible = false;
 		for(int i = 0; i < 4; i++){
@@ -46,8 +49,17 @@ public:
 			}
 			float x_pos = radius*cos(currAngle);
 			float y_pos = radius*sin(currAngle);
+			
+			tf::Vector3 pt(x_pos, y_pos, 0);
+			tf::Stamped<tf::Vector3> out;
+			tf::Stamped<tf::Vector3> stampedPt(pt, scan.header.stamp, scan.header.frame_id);
+			listener.transformPoint(BASE_LINK, stampedPt, out);
+
+			x_pos = out.x();
+			y_pos = out.y();
+
 			if(y_pos < ROBOT_WIDTH && y_pos > -ROBOT_WIDTH && radius < 1) {
-				if(x_pos < 0)
+				if(x_pos > 0)
 					obstacles[FORWARD] = true;
 				else
 					obstacles[BACKWARD] = true;
@@ -112,6 +124,7 @@ public:
 	ros::Subscriber laserScanSub;
 	ros::Subscriber enabled;
 	ros::Time changeTriggered;
+	tf::TransformListener* listener;
 	bool stop = false;
 	State state;
 
@@ -176,7 +189,7 @@ public:
 			twist.linear.x = 0;
 			//if(!obstacles.is_left_turn_possible)
 			twist.angular.z = -0.3;
-	velocityController.publish(twist);
+			velocityController.publish(twist);
 			/*else
 			twist.angular.z = 0.1;
 			elocityController.publish(twist);
@@ -193,7 +206,7 @@ public:
 			velocityController.publish(twist);
 			return;
 		}
-		LaserScanObstacles obsmap(scan);
+		LaserScanObstacles obsmap(scan, *listener);
 		std::cout << "current state " << state << std::endl;
 		if(state == OBSTACLE_SEARCH)
 			obstacleSearch(obsmap);
@@ -213,6 +226,7 @@ public:
 		velocityController = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 100);
 		laserScanSub = nh.subscribe<sensor_msgs::LaserScan>("/scan", 10, &SimpleObstacleAvoidance::onLaserScan, this);
 		enabled = nh.subscribe<std_msgs::String>("e_stop", 10, &SimpleObstacleAvoidance::onEStop, this);
+		listener = new tf::TransformListener();
 	}
 
 };
