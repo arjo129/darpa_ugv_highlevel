@@ -52,11 +52,11 @@ namespace AMapper {
         }
 
         inline float fromXIndex(int xValue) {
-            return xValue*resolution + yAnchor;
+            return (xValue-this->gridSize/2)*resolution + xAnchor;
         }
 
         inline float fromYIndex(int yValue) {
-            return yValue*resolution + yAnchor;
+            return (yValue-this->gridSize/2)*resolution + yAnchor;
         }
 
         void clear();
