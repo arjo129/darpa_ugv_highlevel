@@ -24,6 +24,11 @@ namespace AMapper {
          * Size of the grid. Units in cells.
          */ 
         int gridSize;
+
+        /**
+         * Size of the grid. Units in meters.
+         */ 
+        double gridMetricSize;
         /**
          * Raw data per grid. Making it public allows other 
          * functions to manipulate the data. Note the access is
@@ -45,6 +50,24 @@ namespace AMapper {
          * Convert to occupancy grid
          */ 
         nav_msgs::OccupancyGrid toOccupancyGrid();
+
+
+        /**
+         * Some helper functions to help with grid indexing
+         */
+        inline bool isWithin(double val_to_test, double min_val, double max_val) {
+            return val_to_test >= min_val && val_to_test <= max_val;
+        }
+
+        inline bool isWithinMetricMap(double x, double y) {
+            return isWithin(x, xAnchor - gridMetricSize / 2.0, xAnchor + gridMetricSize / 2.0) && 
+                isWithin(y, yAnchor - gridMetricSize / 2.0, yAnchor + gridMetricSize / 2.0);
+        }
+
+        inline bool isWithinGridCellMap(int x_idx, int y_idx) {
+            return isWithin(x_idx, 0, gridSize - 1) && 
+                   isWithin(y_idx, 0, gridSize - 1);
+        }
 
         inline int toYIndex(float yValue) {
             return this->gridSize/2 + (int)round((yValue-yAnchor)/resolution);

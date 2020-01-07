@@ -9,6 +9,7 @@ Grid::Grid(float xanchor, float yanchor, int gridsize, float resolution) {
     this->yAnchor = yanchor;
     this->resolution = resolution;
     this->gridSize = gridsize;
+    this->gridMetricSize = gridsize * resolution;
 
     this->data = new int16_t*[this->gridSize];
     for(int i =0;i < this->gridSize;i++){
@@ -23,6 +24,7 @@ Grid::Grid(Grid& grid) {
     this->yAnchor = grid.yAnchor;
     this->resolution = grid.resolution;
     this->gridSize = grid.gridSize;
+    this->gridMetricSize = grid.gridSize * grid.resolution;
 
     this->data = new int16_t*[this->gridSize];
     for(int i =0;i < this->gridSize;i++){
@@ -35,6 +37,7 @@ Grid::Grid(nav_msgs::OccupancyGrid occupancyGrid) {
     this->resolution = occupancyGrid.info.resolution;
     this->frameId = occupancyGrid.header.frame_id;
     this->gridSize = (int)round(sqrt(occupancyGrid.data.size()));
+    this->gridMetricSize = this->gridSize * this->resolution;
     this->xAnchor = occupancyGrid.info.origin.position.x + this->gridSize/2*resolution;
     this->yAnchor = occupancyGrid.info.origin.position.y + this->gridSize/2*resolution;
     
