@@ -13,11 +13,14 @@ find_package(catkin REQUIRED COMPONENTS
   wireless_msgs
   sensor_msgs
   tf
+  amapper
 )
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system iostreams)
 find_package(ZLIB)
+find_package( OpenCV REQUIRED )
+find_package(Eigen3 REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -120,6 +123,8 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+   ${EIGEN3_INCLUDE_DIR}
+
 )
 
 ## Declare a C++ library
@@ -142,6 +147,7 @@ add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(compressor_node src/sender.cpp)
 add_executable(decompressor_node src/reciever.cpp)
+add_executable(laserscanpng src/laserscanpng_compress.cpp)
 
 
 ## Rename C++ executable without prefix
@@ -154,6 +160,7 @@ add_executable(decompressor_node src/reciever.cpp)
 ## same as for the library above
 add_dependencies(compressor_node ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(decompressor_node ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(laserscanpng ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(compressor_node
@@ -166,6 +173,13 @@ target_link_libraries(decompressor_node
    ${catkin_LIBRARIES}
    ${Boost_LIBRARIES}
    ${PROJECT_NAME}
+)
+
+target_link_libraries(laserscanpng
+   ${catkin_LIBRARIES}
+   ${Boost_LIBRARIES}
+   ${PROJECT_NAME}
+    ${OpenCV_LIBS}
 )
 
 target_link_libraries( ${PROJECT_NAME}

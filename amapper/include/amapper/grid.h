@@ -3,9 +3,6 @@
 
 #include <math.h>
 #include <nav_msgs/OccupancyGrid.h>
-#include <pcl/point_types.h>
-#include <pcl/PCLPointCloud2.h>
-#include <pcl_conversions/pcl_conversions.h>
 
 namespace AMapper {
 

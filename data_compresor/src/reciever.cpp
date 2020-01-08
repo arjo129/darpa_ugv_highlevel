@@ -43,7 +43,7 @@ class Reciever {
 
 public:
     Reciever(ros::NodeHandle _nh, std::string _namespace): nh(_nh) {
-        sub = nh.subscribe(_namespace+"/lora/rx", 10, &Reciever::onLoraPacketRecieved, this);
+        sub = nh.subscribe("/rx", 10, &Reciever::onLoraPacketRecieved, this);
         this->nameSpace = _namespace;
     }
 
