@@ -7,9 +7,7 @@ MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), rosthread(_nh) {
     ui = new Ui::MainWindow();
     ui->setupUi(this);
     scene = new QGraphicsScene();
-    QGraphicsTextItem *text = scene->addText("Hello world");
     ui->graphicsView->setScene(scene);
-    text->setFlag(QGraphicsItem::ItemIsMovable);
     qRegisterMetaType<QPixmap>("QPixmap");
     connect(&rosthread, &ROSThread::scanRecieved, this, &MainWindow::addPixmap);
 }
@@ -22,5 +20,6 @@ MainWindow::~MainWindow() {
 void MainWindow::addPixmap(const QPixmap& map, int x, int y, float theta){
     QGraphicsPixmapItem* item = scene->addPixmap(map);
     item->setPos(x,y);
-    item->setRotation(theta);
+    item->setTransformOriginPoint(map.rect().center());
+    item->setRotation(theta*57.29);
 }

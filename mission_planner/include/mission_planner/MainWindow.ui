@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>848</width>
-    <height>483</height>
+    <width>918</width>
+    <height>516</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -88,6 +88,38 @@
       <widget class="QGraphicsView" name="graphicsView"/>
      </widget>
     </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QSlider" name="horizontalSlider">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="returnDraw">
+        <property name="text">
+         <string>Return</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton">
+        <property name="text">
+         <string>Rotate</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="moveButton">
+        <property name="text">
+         <string>Move</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -95,7 +127,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>848</width>
+     <width>918</width>
      <height>22</height>
     </rect>
    </property>
@@ -106,6 +138,14 @@
     <addaction name="actionArtifacts"/>
     <addaction name="actionRobots"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>E&amp;dit</string>
+    </property>
+    <addaction name="actionUndo"/>
+    <addaction name="actionRedo"/>
+   </widget>
+   <addaction name="menuEdit"/>
    <addaction name="menuView"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -117,6 +157,16 @@
   <action name="actionRobots">
    <property name="text">
     <string>&amp;Robots</string>
+   </property>
+  </action>
+  <action name="actionUndo">
+   <property name="text">
+    <string>Undo</string>
+   </property>
+  </action>
+  <action name="actionRedo">
+   <property name="text">
+    <string>Redo</string>
    </property>
   </action>
  </widget>
