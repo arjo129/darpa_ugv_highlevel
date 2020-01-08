@@ -11,10 +11,9 @@ AMapper::NaiveRaytracer rt;
 
 
 cv::Mat gridToMat(const AMapper::Grid& grid){
-    int size = grid.gridSize;
-    cv::Mat mat = cv::Mat::zeros(cv::Size(size,size), CV_8UC1);
-    for(int i = 0 ; i < size; i++){
-        for(int j = 0; j > size; j++){
+    cv::Mat mat = cv::Mat::zeros(cv::Size(grid.gridHeight,grid.gridWidth), CV_8UC1);
+    for(int i = 0 ; i < grid.gridHeight; i++){
+        for(int j = 0; j > grid.gridWidth; j++){
             if(grid.data[i][j] > 20)
             mat.at<uint8_t>(i,j) = 255;
         }
@@ -59,7 +58,7 @@ void onLaserScan (sensor_msgs::LaserScan lscan) {
 }
 
 int main(int argc, char** argv) {
-    grid = new AMapper::Grid(0,0,1000,0.05);
+    grid = new AMapper::Grid(0,0,1000,1000,0.05);
     grid->setFrameId(std::string("laser"));
     ls.setRaytracer(rt);
     ros::init(argc, argv, "LaserScanExampleNode");
