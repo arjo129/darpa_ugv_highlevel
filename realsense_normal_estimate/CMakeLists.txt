@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   image_transport
   pcl_ros
+  amapper
 )
 
 ## System dependencies are found with CMake's conventions

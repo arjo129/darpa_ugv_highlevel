@@ -23,7 +23,7 @@ void LaserScanner::plotgrid(tf::Transform tf, Grid& grid, sensor_msgs::LaserScan
         beam_angle += input.angle_increment;
         int endX = grid.toXIndex(endPoint.x());
         int endY = grid.toYIndex(endPoint.y());
-        if(endY < grid.gridSize && endX < grid.gridSize && endX >= 0 && endY >= 0)
+        if(endY < grid.gridHeight && endX < grid.gridWidth&& endX >= 0 && endY >= 0)
         grid.data[endY][endX] = 100;
     }
 }

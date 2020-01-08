@@ -18,7 +18,7 @@ void RayTracer::rayTrace(Grid& grid, Eigen::Vector2f center, Eigen::Vector2f end
     if(deltaErr > 1) {
         int x = startX;
         for(int y = startY; y != endY; y+=signdY){
-            if(y >= 0 and x >= 0 and y < grid.gridSize and x < grid.gridSize){
+            if(y >= 0 and x >= 0 and y < grid.gridHeight and x < grid.gridWidth){
                 plotFreeSpace(grid, Eigen::Vector2i(startX, startY), x, y);
             }
                 
@@ -32,7 +32,7 @@ void RayTracer::rayTrace(Grid& grid, Eigen::Vector2f center, Eigen::Vector2f end
     else{
         int y = startY;
         for(int x = startX; x != endX; x+=signdX) {     
-            if(y >= 0 and x >= 0 and y < grid.gridSize and x < grid.gridSize)
+            if(y >= 0 and x >= 0 and y < grid.gridHeight and x < grid.gridWidth)
                 plotFreeSpace(grid, Eigen::Vector2i(startX, startY), x, y);
             error+= deltaErr;
             if(abs(error) >= 0.5){
