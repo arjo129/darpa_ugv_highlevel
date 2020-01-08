@@ -11,7 +11,8 @@ namespace AMapper {
 
     /**
      * Grid class: Essentially stores a grid. 
-     * Has an implementation of bressenham for fast ray tracing
+     * Has an implementation of bressenham for fast ray tracing. 
+     * Follows ROS ENU Convention.
      */ 
     class Grid {
     private:
@@ -22,13 +23,14 @@ namespace AMapper {
         
         /**
          * Size of the grid. Units in cells.
+         * Width is in x direction (east), height is in y direction (north).
          */ 
-        int gridSize;
+        int16_t gridWidth, gridHeight;
 
         /**
          * Size of the grid. Units in meters.
          */ 
-        double gridMetricSize;
+        double gridMetricWidth, gridMetricHeight;
         /**
          * Raw data per grid. Making it public allows other 
          * functions to manipulate the data. Note the access is
@@ -37,7 +39,7 @@ namespace AMapper {
         int16_t** data;
 
         Grid();
-        Grid(float xAnchor, float yAnchor, int gridSize, float resolution);
+        Grid(float xAnchor, float yAnchor, int16_t gridWidth, int16_t gridHeight, float resolution);
         Grid(Grid& grid);
         Grid(nav_msgs::OccupancyGrid occupancyGrid);
 
@@ -60,29 +62,29 @@ namespace AMapper {
         }
 
         inline bool isWithinMetricMap(double x, double y) {
-            return isWithin(x, xAnchor - gridMetricSize / 2.0, xAnchor + gridMetricSize / 2.0) && 
-                isWithin(y, yAnchor - gridMetricSize / 2.0, yAnchor + gridMetricSize / 2.0);
+            return isWithin(x, xAnchor - gridMetricWidth / 2.0, xAnchor + gridMetricWidth / 2.0) && 
+                isWithin(y, yAnchor - gridMetricHeight / 2.0, yAnchor + gridMetricHeight / 2.0);
         }
 
         inline bool isWithinGridCellMap(int x_idx, int y_idx) {
-            return isWithin(x_idx, 0, gridSize - 1) && 
-                   isWithin(y_idx, 0, gridSize - 1);
+            return isWithin(x_idx, 0, gridWidth - 1) && 
+                   isWithin(y_idx, 0, gridHeight - 1);
         }
 
         inline int toYIndex(float yValue) {
-            return this->gridSize/2 + (int)round((yValue-yAnchor)/resolution);
+            return this->gridHeight/2 + (int)round((yValue-yAnchor)/resolution);
         }
 
         inline int toXIndex(float xValue) {
-            return this->gridSize/2 + (int)round((xValue-xAnchor)/resolution);
+            return this->gridWidth/2 + (int)round((xValue-xAnchor)/resolution);
         }
 
         inline float fromXIndex(int xValue) {
-            return (xValue-this->gridSize/2)*resolution + xAnchor;
+            return (xValue-this->gridWidth/2)*resolution + xAnchor;
         }
 
         inline float fromYIndex(int yValue) {
-            return (yValue-this->gridSize/2)*resolution + yAnchor;
+            return (yValue-this->gridHeight/2)*resolution + yAnchor;
         }
 
         void clear();

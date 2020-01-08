@@ -18,7 +18,7 @@ void onLaserScan (sensor_msgs::LaserScan lscan) {
 }
 
 int main(int argc, char** argv) {
-    grid = new AMapper::Grid(0,0,400,0.1);
+    grid = new AMapper::Grid(0,0,400,400,0.1);
     grid->setFrameId(std::string("husky1/base_laser"));
     ls.setRaytracer(rt);
     ros::init(argc, argv, "LaserScanExampleNode");
