@@ -103,8 +103,10 @@ public:
         for (int i = 0; i < length; i++){
             
             if(parser.addByteToPacket(buffer[i])){
-                wireless_msgs::LoraPacket pkt = parser.retrievePacket();
-                pub.publish(pkt);
+                if(parser.getMessageType() == SerialResponseMessageType::PACKET_RECIEVED) {
+                    wireless_msgs::LoraPacket pkt = parser.retrievePacket();
+                    pub.publish(pkt);
+                }
             }
         }
     }

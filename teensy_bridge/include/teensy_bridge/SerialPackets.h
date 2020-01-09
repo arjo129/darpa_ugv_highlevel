@@ -43,6 +43,7 @@ enum class SerialResponseMessageType: uint8_t {
 
 class SerialParser {
     ParserState state;
+    SerialResponseMessageType messageType;
     std::shared_ptr<NameRecords> name;
     std::vector<uint8_t> packet;
     int packetLength;
@@ -51,20 +52,29 @@ class SerialParser {
         this->name = _name;
         this->state = ParserState::AWAITING_START; 
     };
+
+    /**
+     * Add a byte as it comes in to the parser. 
+     * @returns true if the packet is complete. False otherwise
+     */ 
     bool addByteToPacket(uint8_t byte){
-        if(this->state == ParserState::AWAITING_START && byte == 0xFA){
+        if(this->state == ParserState::AWAITING_START && byte == (uint8_t)SerialResponseMessageType::PACKET_RECIEVED){ //Starting state. Check for LoRA
             this->state = ParserState::DETERMINED_PACKETTYPE;
+            this->messageType = SerialResponseMessageType::PACKET_RECIEVED;
             return false;
         }
         packet.push_back(byte);
-        if(packet.size() == 3) {
-            this->packetLength = packet[1];
-            this->packetLength <<= 8;
-            this->packetLength = packet[2];  
-        }
-        if(packet.size() > 3 && packet.size() == this->packetLength+4)
-            return true;
-        return false;        
+
+        if(this->messageType == SerialResponseMessageType::PACKET_RECIEVED) { //Parsing for LoRA packets
+            if(packet.size() == 3) {
+                this->packetLength = packet[1];
+                this->packetLength <<= 8;
+                this->packetLength = packet[2];  
+            }
+            if(packet.size() > 3 && packet.size() == this->packetLength+4)
+                return true; //Return true if packet is complete
+            return false;   
+        }     
     }
     wireless_msgs::LoraPacket retrievePacket() {
         wireless_msgs::LoraPacket wpacket;
@@ -77,6 +87,8 @@ class SerialParser {
         this->packet.clear();
         return wpacket;
     }
-
+    SerialResponseMessageType getMessageType() {
+        return this->messageType;
+    }
 };
 #endif

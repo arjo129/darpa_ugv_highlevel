@@ -22,11 +22,17 @@ class MainWindow : public QMainWindow {
         std::vector<QGraphicsPixmapItem*> laserscans;
         SliderState sliderState;
         EditorState editorState;
+        int currentIndex = 0;
+        double prevYaw = 0;
+        QPointF prevPos;
     public:
         MainWindow(ros::NodeHandle nh);
         ~MainWindow();
     public slots:
         void addPixmap(const QPixmap& map, int x, int y, float theta);
         void sliderMoved(int value);
+        void propagateChanges();
+        void enterRotateMode();
+        void enterMoveMode();
 };
 #endif

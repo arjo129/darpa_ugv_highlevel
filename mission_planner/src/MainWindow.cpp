@@ -11,6 +11,9 @@ MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), rosthread(_nh) {
     qRegisterMetaType<QPixmap>("QPixmap");
     connect(&rosthread, &ROSThread::scanRecieved, this, &MainWindow::addPixmap);
     connect(ui->progressSlider, &QSlider::sliderMoved, this, &MainWindow::sliderMoved);
+    connect(ui->returnDraw, &QPushButton::pressed, this, &MainWindow::propagateChanges);
+    connect(ui->rotateMode, &QPushButton::pressed, this, &MainWindow::enterRotateMode);
+    connect(ui->rotateMode, &QPushButton::pressed, this, &MainWindow::enterMoveMode);
     this->sliderState = SliderState::LIVE_VIEW;
     this->editorState = EditorState::MOVE;
 }
@@ -49,4 +52,21 @@ void MainWindow::sliderMoved(int value) {
     laserscans[value]->setVisible(true);
     laserscans[value]->setFlag(QGraphicsItem::GraphicsItemFlag::ItemIsMovable, true);
     laserscans[value]->setFlag(QGraphicsItem::GraphicsItemFlag::ItemIsSelectable, true);
+    prevPos = laserscans[value]->pos();
+    prevYaw = laserscans[value]->rotation();
+    currentIndex = value;
+}
+
+void MainWindow::propagateChanges() {
+    if(sliderState != SliderState::EDITING)
+        return;
+    
+}
+
+void MainWindow::enterRotateMode() {
+    std::cout << "rotate mode" << std::endl;
+}
+
+void MainWindow::enterMoveMode() {
+    std::cout << "move mode" << std::endl;
 }
