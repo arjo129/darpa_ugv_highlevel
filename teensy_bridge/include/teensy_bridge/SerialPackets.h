@@ -63,6 +63,11 @@ class SerialParser {
             this->messageType = SerialResponseMessageType::PACKET_RECIEVED;
             return false;
         }
+        if(this->state == ParserState::AWAITING_START && byte == (uint8_t)SerialResponseMessageType::CO2_SENSOR_READING){ //Starting state. Check for LoRA
+            this->state = ParserState::DETERMINED_PACKETTYPE;
+            this->messageType = SerialResponseMessageType::CO2_SENSOR_READING;
+            return false;
+        }
         packet.push_back(byte);
 
         if(this->messageType == SerialResponseMessageType::PACKET_RECIEVED) { //Parsing for LoRA packets
@@ -75,6 +80,12 @@ class SerialParser {
                 return true; //Return true if packet is complete
             return false;   
         }     
+        if(this->messageType == SerialResponseMessageType::CO2_SENSOR_READING) {
+            if(packet.size() == 12) {
+
+            }
+        }
+        return false;
     }
     wireless_msgs::LoraPacket retrievePacket() {
         wireless_msgs::LoraPacket wpacket;
@@ -87,6 +98,7 @@ class SerialParser {
         this->packet.clear();
         return wpacket;
     }
+    
     SerialResponseMessageType getMessageType() {
         return this->messageType;
     }
