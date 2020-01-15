@@ -12,7 +12,7 @@
 
 namespace data_compressor{
 
-    const long MAX_PACKET_SIZE = 1000;
+    const long MAX_PACKET_SIZE = 100;
     const int MAX_TIME_TO_HOLD_PACKET = 20;
 
     /**

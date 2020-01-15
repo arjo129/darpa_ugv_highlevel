@@ -61,13 +61,19 @@ class SerialParser {
         if(this->state == ParserState::AWAITING_START && byte == (uint8_t)SerialResponseMessageType::PACKET_RECIEVED){ //Starting state. Check for LoRA
             this->state = ParserState::DETERMINED_PACKETTYPE;
             this->messageType = SerialResponseMessageType::PACKET_RECIEVED;
+                    packet.push_back(byte);
+
             return false;
         }
         if(this->state == ParserState::AWAITING_START && byte == (uint8_t)SerialResponseMessageType::CO2_SENSOR_READING){ //Starting state. Check for LoRA
             this->state = ParserState::DETERMINED_PACKETTYPE;
             this->messageType = SerialResponseMessageType::CO2_SENSOR_READING;
+                    packet.push_back(byte);
+
             return false;
         }
+        if(this->state == ParserState::AWAITING_START)
+            return false;
         packet.push_back(byte);
 
         if(this->messageType == SerialResponseMessageType::PACKET_RECIEVED) { //Parsing for LoRA packets
@@ -82,11 +88,27 @@ class SerialParser {
         }     
         if(this->messageType == SerialResponseMessageType::CO2_SENSOR_READING) {
             if(packet.size() == 12) {
-
+                union{
+                uint16_t value;
+                uint8_t halves[2];
+                } lower;
+                lower.halves[0] =  packet[2];
+                lower.halves[1] = packet[3];
+                int concentration = lower.value;
+                float humidity;
+                memcpy(&humidity, packet.data()+4,4);
+                float temp;
+                memcpy(&temp, packet.data()+8,4);
+                std::cout << "got CO2 packet" << concentration << ", " <<humidity  << ", " << temp << std::endl;
+                std::cout <<std::endl;
+                packet.clear();
+                this->state = ParserState::AWAITING_START;
+                return true;
             }
         }
         return false;
     }
+    
     wireless_msgs::LoraPacket retrievePacket() {
         wireless_msgs::LoraPacket wpacket;
         wpacket.from.data = name->getName(this->packet[0]);

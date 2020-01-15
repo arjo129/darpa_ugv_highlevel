@@ -129,12 +129,14 @@ include_directories(
 
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
-  src/devices/laserscan.cpp
+  src/parser/parser.cpp
+  src/compression/zip.cpp
   src/packet_sequencer/packet_sequence.cpp
   src/packet_sequencer/packet_recieve_queue.cpp
   src/packet_sequencer/packet_send_sequence.cpp
   src/packet_sequencer/physicalchunk.cpp
   src/ros_abstraction_layer/datapacket.cpp
+  src/laserscan_compressor.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -147,7 +149,7 @@ add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(compressor_node src/sender.cpp)
 add_executable(decompressor_node src/reciever.cpp)
-add_executable(laserscanpng src/laserscanpng_compress.cpp)
+
 
 
 ## Rename C++ executable without prefix
@@ -160,7 +162,7 @@ add_executable(laserscanpng src/laserscanpng_compress.cpp)
 ## same as for the library above
 add_dependencies(compressor_node ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(decompressor_node ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(laserscanpng ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(compressor_node
@@ -175,12 +177,7 @@ target_link_libraries(decompressor_node
    ${PROJECT_NAME}
 )
 
-target_link_libraries(laserscanpng
-   ${catkin_LIBRARIES}
-   ${Boost_LIBRARIES}
-   ${PROJECT_NAME}
-    ${OpenCV_LIBS}
-)
+
 
 target_link_libraries( ${PROJECT_NAME}
    ${ZLIB_LIBRARIES}

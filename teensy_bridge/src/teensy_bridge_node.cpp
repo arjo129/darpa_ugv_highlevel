@@ -79,7 +79,7 @@ class TeensyBridgeNode {
     std::shared_ptr<NameRecords> names;
     WirelessMessageHandler handler;
     int serialPort;
-    SerialParser parser;
+   
     void onWirelessMessageRecieved(wireless_msgs::LoraPacket pkt) {
         uint8_t buffer[255];
         int length = handler.serializeMessage(pkt, buffer);
@@ -95,6 +95,7 @@ class TeensyBridgeNode {
 public:
 
     void spin() {
+        SerialParser parser(names);
         char buffer[260];
         int length = read(serialPort, buffer, 255);
         if(length == 0) {
@@ -111,7 +112,7 @@ public:
         }
     }
 
-    TeensyBridgeNode(ros::NodeHandle _nh): nh(_nh), names(new NameRecords), handler(names), parser(names){
+    TeensyBridgeNode(ros::NodeHandle _nh): nh(_nh), names(new NameRecords), handler(names) {
         pub = this->nh.advertise<wireless_msgs::LoraPacket>("/rx",10);
         sub = this->nh.subscribe("/tx", 10, &TeensyBridgeNode::onWirelessMessageRecieved, this);
         std::string port;
