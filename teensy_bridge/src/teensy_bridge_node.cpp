@@ -79,8 +79,13 @@ class TeensyBridgeNode {
     std::shared_ptr<NameRecords> names;
     WirelessMessageHandler handler;
     int serialPort;
+    bool messageQueueEmpty = false;
    
     void onWirelessMessageRecieved(wireless_msgs::LoraPacket pkt) {
+        if(pkt.data.size() > 255){
+            ROS_ERROR("packet size greater than 255. Not sending.");
+            return;
+        }
         uint8_t buffer[255];
         int length = handler.serializeMessage(pkt, buffer);
         std::cout << "sending " <<std::endl;
@@ -88,7 +93,8 @@ class TeensyBridgeNode {
             std::cout << " " <<(int) buffer[i] ;
         }
         std::cout << std::endl;
-        writeSerialPort(serialPort, buffer, length);
+        if(this->messageQueueEmpty)
+            writeSerialPort(serialPort, buffer, length);
     }
 
    
@@ -107,6 +113,9 @@ public:
                 if(parser.getMessageType() == SerialResponseMessageType::PACKET_RECIEVED) {
                     wireless_msgs::LoraPacket pkt = parser.retrievePacket();
                     pub.publish(pkt);
+                }
+                if(parser.getMessageType() == SerialResponseMessageType::LORA_STATUS_READY) {
+                    this->messageQueueEmpty = true;
                 }
             }
         }

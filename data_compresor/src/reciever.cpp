@@ -1,12 +1,15 @@
+/***
+ * Decodes packets coming in via LoRA and sends heartbeat status signal to all robots
+ * 
+ */  
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 #include <sensor_msgs/LaserScan.h>
 #include <geometry_msgs/TransformStamped.h>
-#include <wireless_msgs/LoraPacket.h>
-
+#include <wireless_msgs/LoraPacket.h> 
 class BaseStationRelay {
 
-}
+};
 
 int main(int argc, char** argv) {
     ros::init(argc, argv, "basestation_relay");

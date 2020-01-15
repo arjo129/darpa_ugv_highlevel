@@ -72,6 +72,10 @@ class SerialParser {
 
             return false;
         }
+        if(this->state == ParserState::AWAITING_START && byte == (uint8_t)SerialResponseMessageType::LORA_STATUS_READY) {
+            this->messageType = SerialResponseMessageType::LORA_STATUS_READY;
+            return true;
+        }
         if(this->state == ParserState::AWAITING_START)
             return false;
         packet.push_back(byte);
