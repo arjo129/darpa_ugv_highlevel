@@ -140,11 +140,13 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node 
     src/main.cpp
-    include/mission_planner/MainWindow.h
     src/MainWindow.cpp
     src/RosThread.cpp
     src/Robot.cpp
-    include/mission_planner/RosThread.h)
+    src/CustomGraphicsScene.cpp
+    include/mission_planner/MainWindow.h
+    include/mission_planner/RosThread.h
+    include/mission_planner/CustomGraphicsScene.h)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

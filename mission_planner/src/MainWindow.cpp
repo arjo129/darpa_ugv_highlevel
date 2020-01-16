@@ -1,21 +1,24 @@
 #include <mission_planner/MainWindow.h>
-#include <qgraphicsscene.h>
-#include <qgraphicsitem.h>
+
+#define ROTATION_INCREMENT 1 // 1 degree increment per signal from onRotate()
 
 MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), rosthread(_nh) {
     rosthread.start();
     ui = new Ui::MainWindow();
     ui->setupUi(this);
-    scene = new QGraphicsScene();
+    scene = new CustomGraphicsScene();
     ui->graphicsView->setScene(scene);
     qRegisterMetaType<QPixmap>("QPixmap");
+    qRegisterMetaType<RotateState>("RotateState");
     connect(&rosthread, &ROSThread::scanRecieved, this, &MainWindow::addPixmap);
     connect(ui->progressSlider, &QSlider::sliderMoved, this, &MainWindow::sliderMoved);
     connect(ui->returnDraw, &QPushButton::pressed, this, &MainWindow::propagateChanges);
     connect(ui->rotateMode, &QPushButton::pressed, this, &MainWindow::enterRotateMode);
-    connect(ui->rotateMode, &QPushButton::pressed, this, &MainWindow::enterMoveMode);
+    connect(ui->moveMode, &QPushButton::pressed, this, &MainWindow::enterMoveMode);
+    connect(scene, &CustomGraphicsScene::onRotate, this, &MainWindow::rotatePixMap);
     this->sliderState = SliderState::LIVE_VIEW;
     this->editorState = EditorState::MOVE;
+    ROS_INFO("Starting UI");
 }
 
 MainWindow::~MainWindow() {
@@ -23,17 +26,17 @@ MainWindow::~MainWindow() {
     delete ui;
 }
 
-void MainWindow::addPixmap(const QPixmap& map, int x, int y, float theta){
+void MainWindow::addPixmap(const QPixmap& map, int x, int y, float theta) {
     QGraphicsPixmapItem* item = scene->addPixmap(map);
     laserscans.push_back(item);
     item->setPos(x,y);
     item->setTransformOriginPoint(map.rect().center());
     item->setRotation(theta*57.29);
-    if(sliderState == SliderState::LIVE_VIEW){
+    if (sliderState == SliderState::LIVE_VIEW) {
         ui->progressSlider->setValue(laserscans.size());
         item->setVisible(true);
     }
-    else{
+    else {
         item->setVisible(false);
     }
     ui->progressSlider->setRange(0, laserscans.size());
@@ -69,4 +72,19 @@ void MainWindow::enterRotateMode() {
 
 void MainWindow::enterMoveMode() {
     std::cout << "move mode" << std::endl;
+}
+
+void MainWindow::rotatePixMap(RotateState rotateState) {
+    if (sliderState == SliderState::EDITING) {
+        qreal rotationAngle = laserscans[currentIndex]->rotation();
+        if (rotateState == RotateState::CLOCKWISE) {
+            rotationAngle += ROTATION_INCREMENT;
+        }
+        else if (rotateState == RotateState::ANTI_CLOCKWISE) {
+            rotationAngle -= ROTATION_INCREMENT;
+        }
+
+        laserscans[currentIndex]->setRotation(rotationAngle);
+    }
+    
 }
