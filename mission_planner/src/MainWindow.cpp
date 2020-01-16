@@ -64,6 +64,18 @@ void MainWindow::propagateChanges() {
     if(sliderState != SliderState::EDITING)
         return;
     
+    QPointF centerPoint = laserscans[currentIndex]->pos();
+    QPointF translation = centerPoint - prevPos;
+    float rotation = laserscans[currentIndex]->rotation();
+    float amountRotated = rotation - prevYaw;
+
+    for(int i = currentIndex ; i < laserscans.size(); i++) {
+        /*for(laserscans[i]){
+            QPointF newPoint = translation + laserscans[i]->pos();
+            QPointf displacementFromRootNode = newPoint - centerPoint;
+            //displacement
+        }*/
+    }
 }
 
 void MainWindow::enterRotateMode() {
