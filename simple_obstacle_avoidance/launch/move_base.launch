@@ -3,4 +3,5 @@
         <rosparam file="$(find simple_obstacle_avoidance)/config/move_base.yml" command="load" /> 
         <remap from="cmd_vel" to="/X1/cmd_vel"/>
     </node>
+    <node pkg="localization_manager" type="odom_repub" respawn="false" name="odom_repub" output="screen"/>
 </launch>
