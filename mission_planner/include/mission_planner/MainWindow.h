@@ -2,8 +2,11 @@
 #define MAIN_WINDOW_H
 
 #include <mission_planner/RosThread.h>
+#include <mission_planner/CustomGraphicsScene.h>
 #include <QPixmap>
+#include <qgraphicsitem.h>
 #include "ui_MainWindow.h"
+
 enum class SliderState {
     EDITING,
     LIVE_VIEW
@@ -16,7 +19,7 @@ enum class EditorState {
 class MainWindow : public QMainWindow {
     private:
         Ui::MainWindow* ui;
-        QGraphicsScene* scene;
+        CustomGraphicsScene* scene;
         ros::NodeHandle nh;
         ROSThread rosthread;
         std::vector<QGraphicsPixmapItem*> laserscans;
@@ -34,5 +37,6 @@ class MainWindow : public QMainWindow {
         void propagateChanges();
         void enterRotateMode();
         void enterMoveMode();
+        void rotatePixMap(RotateState rotateState);
 };
 #endif
