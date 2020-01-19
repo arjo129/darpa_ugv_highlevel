@@ -1,5 +1,8 @@
 #include <ros/ros.h>
 #include <wireless_msgs/LoraPacket.h>
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/image_encodings.h>
 #include <unordered_map>
 #include <iostream>
 #include <fstream>
@@ -76,16 +79,12 @@ class TeensyBridgeNode {
     ros::NodeHandle nh;
     ros::Publisher pub;
     ros::Subscriber sub;
+    image_transport::Publisher pubThermal;
     std::shared_ptr<NameRecords> names;
     WirelessMessageHandler handler;
     int serialPort;
-    bool messageQueueEmpty = false;
-   
+    SerialParser parser;
     void onWirelessMessageRecieved(wireless_msgs::LoraPacket pkt) {
-        if(pkt.data.size() > 255){
-            ROS_ERROR("packet size greater than 255. Not sending.");
-            return;
-        }
         uint8_t buffer[255];
         int length = handler.serializeMessage(pkt, buffer);
         std::cout << "sending " <<std::endl;
@@ -93,15 +92,13 @@ class TeensyBridgeNode {
             std::cout << " " <<(int) buffer[i] ;
         }
         std::cout << std::endl;
-        if(this->messageQueueEmpty)
-            writeSerialPort(serialPort, buffer, length);
+        writeSerialPort(serialPort, buffer, length);
     }
 
    
 public:
 
     void spin() {
-        SerialParser parser(names);
         char buffer[260];
         int length = read(serialPort, buffer, 255);
         if(length == 0) {
@@ -114,20 +111,26 @@ public:
                     wireless_msgs::LoraPacket pkt = parser.retrievePacket();
                     pub.publish(pkt);
                 }
-                if(parser.getMessageType() == SerialResponseMessageType::LORA_STATUS_READY) {
-                    this->messageQueueEmpty = true;
+                if (parser.getMessageType() == SerialResponseMessageType::THERMAL_FRONT) {
+                    std::cout << "retrieve packet" << std::endl;
+                    cv::Mat img = parser.retrieveThermalPacket();
+                    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", img).toImageMsg();
+		            pubThermal.publish(msg);                
                 }
             }
         }
     }
 
-    TeensyBridgeNode(ros::NodeHandle _nh): nh(_nh), names(new NameRecords), handler(names) {
+    TeensyBridgeNode(ros::NodeHandle _nh): nh(_nh), names(new NameRecords), handler(names), parser(names){
         pub = this->nh.advertise<wireless_msgs::LoraPacket>("/rx",10);
         sub = this->nh.subscribe("/tx", 10, &TeensyBridgeNode::onWirelessMessageRecieved, this);
         std::string port;
         this->nh.getParam("serial_port", port);
         serialPort = openSerialPort("/dev/ttyACM0");
         names->addNameRecord("husky1", 1);
+        //thermal camera image publishing stuff
+        image_transport::ImageTransport it(nh);
+	    pubThermal = it.advertise("/thermal_front/image_raw", 1);
     }
 };
 
