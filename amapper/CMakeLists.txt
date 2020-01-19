@@ -129,8 +129,11 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/${PROJECT_NAME}/grid.cpp
   src/${PROJECT_NAME}/RayTracer.cpp
+  src/${PROJECT_NAME}/cluster.cpp
+  src/${PROJECT_NAME}/blur.cpp
   src/devices/laserscan.cpp
   src/raytracers/NaiveRayTracer.cpp
+  src/raytracers/NoClearing.cpp
 )
 
 ## Add cmake target dependencies of the library

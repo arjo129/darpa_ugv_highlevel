@@ -9,7 +9,7 @@
 #define ROBOT_BACK -0.47
 #define MAX_SPEED 0.1
 #define DELAY 2.0
-#define BASE_LINK "husky1/base_link"
+#define BASE_LINK "X1/base_link"
 
 enum Direction  {
 	FORWARD = 0, LEFT = 1, RIGHT = 2, BACKWARD = 3
@@ -53,18 +53,19 @@ public:
 			tf::Vector3 pt(x_pos, y_pos, 0);
 			tf::Stamped<tf::Vector3> out;
 			tf::Stamped<tf::Vector3> stampedPt(pt, scan.header.stamp, scan.header.frame_id);
+			listener.waitForTransform(stampedPt.frame_id_, BASE_LINK, stampedPt.stamp_, ros::Duration(1.0));
 			listener.transformPoint(BASE_LINK, stampedPt, out);
 
 			x_pos = out.x();
 			y_pos = out.y();
 
-			if(y_pos < ROBOT_WIDTH && y_pos > -ROBOT_WIDTH && radius < 1) {
+			if(y_pos < ROBOT_WIDTH && y_pos > -ROBOT_WIDTH && radius < 2) {
 				if(x_pos > 0)
 					obstacles[FORWARD] = true;
 				else
 					obstacles[BACKWARD] = true;
 			}
-			else if(y_pos < 0 && x_pos < ROBOT_FRONT && x_pos > ROBOT_BACK ) {
+			else if(y_pos < 0 && x_pos < ROBOT_FRONT && x_pos > ROBOT_BACK && radius < 2) {
 				obstacles[LEFT] = true;
 			}
 			else if(y_pos > 0 && x_pos < ROBOT_FRONT && x_pos > ROBOT_BACK ) {
@@ -176,10 +177,10 @@ public:
 			mstate = STRAIGHT;
 			twist.linear.x = 0.1;
 			twist.angular.z = 0;
-			if(obstacles.left_wall_radius > 0.7)
+			/*if(obstacles.left_wall_radius > 0.7)
 				twist.angular.z = 0.1;
 			else if(obstacles.left_wall_radius <0.5)
-				twist.angular.z = -0.1;
+				twist.angular.z = -0.1;*/
 			velocityController.publish(twist);
 			std::cout << "Following wall" << std::endl;
 		} else if (obstacles.front_dist < 1){

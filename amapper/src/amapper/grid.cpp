@@ -21,7 +21,7 @@ Grid::Grid(float xanchor, float yanchor, int16_t gridWidth, int16_t gridHeight, 
     this->frameId = "";
 }
 
-Grid::Grid(Grid& grid) {
+Grid::Grid(const Grid& grid) {
     this->xAnchor = grid.xAnchor;
     this->yAnchor = grid.yAnchor;
     this->resolution = grid.resolution;
@@ -56,6 +56,10 @@ Grid::Grid(nav_msgs::OccupancyGrid occupancyGrid) {
 
 void Grid::setFrameId(std::string frame_id){
     this->frameId = std::string(frame_id);
+}
+
+std::string Grid::getFrameId(){
+    return this->frameId;
 }
 
 nav_msgs::OccupancyGrid Grid::toOccupancyGrid() {

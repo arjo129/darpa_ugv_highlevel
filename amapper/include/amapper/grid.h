@@ -37,13 +37,17 @@ namespace AMapper {
 
         Grid();
         Grid(float xAnchor, float yAnchor, int16_t gridWidth, int16_t gridHeight, float resolution);
-        Grid(Grid& grid);
+        Grid(const Grid& grid);
         Grid(nav_msgs::OccupancyGrid occupancyGrid);
 
         /**
          * Set the tf frame in which grid is in
          */ 
         void setFrameId(std::string frame_id);
+        /**
+         * Set the tf frame in which grid is in
+         */
+        std::string getFrameId();
         
         /**
          * Convert to occupancy grid
@@ -89,6 +93,10 @@ namespace AMapper {
         bool operator ==(const Grid &b) const;
     };
 
+    /**
+     * Inflates an occupancy grid
+     */ 
+    Grid* inflate(Grid& grid, int radius);
 };
 
 #endif
