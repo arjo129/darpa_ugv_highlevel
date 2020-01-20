@@ -4,7 +4,8 @@
 #include <mission_planner/RosThread.h>
 #include <mission_planner/CustomGraphicsScene.h>
 #include <QPixmap>
-#include <qgraphicsitem.h>
+#include <QGraphicsItem>
+#include <stack>
 #include "ui_MainWindow.h"
 
 enum class SliderState {
@@ -16,6 +17,15 @@ enum class EditorState {
     MOVE,
     ROTATE
 };
+
+// Struct to store data of the applied transform between laser scans
+typedef struct {
+    uint32_t startIdx;
+    uint32_t endIdx;
+    QPointF translationOffset;
+    qreal rotationOffset;
+} offsetState;
+
 class MainWindow : public QMainWindow {
     private:
         Ui::MainWindow* ui;
@@ -23,9 +33,10 @@ class MainWindow : public QMainWindow {
         ros::NodeHandle nh;
         ROSThread rosthread;
         std::vector<QGraphicsPixmapItem*> laserscans;
+        std::stack<offsetState> offsetStack;
         SliderState sliderState;
         EditorState editorState;
-        int currentIndex = 0;
+        uint32_t currentIndex = 0;
         double prevYaw = 0;
         QPointF prevPos;
     public:

@@ -18,6 +18,8 @@ MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), rosthread(_nh) {
     connect(scene, &CustomGraphicsScene::onRotate, this, &MainWindow::rotatePixMap);
     this->sliderState = SliderState::LIVE_VIEW;
     this->editorState = EditorState::MOVE;
+    offsetState initialState = {0, 0, QPointF(0.0, 0.0), 0.0};
+    offsetStack.push(initialState); // initially no transform applied to map
     ROS_INFO("Starting UI");
 }
 
@@ -28,10 +30,12 @@ MainWindow::~MainWindow() {
 
 void MainWindow::addPixmap(const QPixmap& map, int x, int y, float theta) {
     QGraphicsPixmapItem* item = scene->addPixmap(map);
-    laserscans.push_back(item);
-    item->setPos(x,y);
+    // apply latest transform to all incoming maps
+    x += offsetStack.top().translationOffset.x();
+    y += offsetStack.top().translationOffset.y();
+    item->setPos(x ,y);
     item->setTransformOriginPoint(map.rect().center());
-    item->setRotation(theta*57.29);
+    item->setRotation(theta*57.29 + offsetStack.top().rotationOffset);
     if (sliderState == SliderState::LIVE_VIEW) {
         ui->progressSlider->setValue(laserscans.size());
         item->setVisible(true);
@@ -40,9 +44,11 @@ void MainWindow::addPixmap(const QPixmap& map, int x, int y, float theta) {
         item->setVisible(false);
     }
     ui->progressSlider->setRange(0, laserscans.size());
+    laserscans.push_back(item);
 }
 
 void MainWindow::sliderMoved(int value) {
+    ROS_INFO("Map Editing Mode");
     sliderState = SliderState::EDITING;
     for (int i = 0; i < value; i++) {
         laserscans[i]->setVisible(true);
@@ -63,19 +69,19 @@ void MainWindow::sliderMoved(int value) {
 void MainWindow::propagateChanges() {
     if(sliderState != SliderState::EDITING)
         return;
-    
-    QPointF centerPoint = laserscans[currentIndex]->pos();
-    QPointF translation = centerPoint - prevPos;
-    float rotation = laserscans[currentIndex]->rotation();
-    float amountRotated = rotation - prevYaw;
 
-    for(int i = currentIndex ; i < laserscans.size(); i++) {
-        /*for(laserscans[i]){
-            QPointF newPoint = translation + laserscans[i]->pos();
-            QPointf displacementFromRootNode = newPoint - centerPoint;
-            //displacement
-        }*/
-    }
+    ROS_INFO("Propagating Map Changes");
+    
+    // update latest map transform from the UI and save on the stack
+    QPointF centerPoint = laserscans[currentIndex]->pos();
+    QPointF translation = (centerPoint - prevPos) + offsetStack.top().translationOffset;
+    float rotation = std::fmod(laserscans[currentIndex]->rotation() - prevYaw + offsetStack.top().rotationOffset, 360);
+    float amountRotated = rotation - prevYaw;
+    offsetState changes = {currentIndex, 0, translation, rotation};
+    offsetStack.top().endIdx = currentIndex - 1;
+    offsetStack.push(changes);
+
+    sliderState = SliderState::LIVE_VIEW;
 }
 
 void MainWindow::enterRotateMode() {
