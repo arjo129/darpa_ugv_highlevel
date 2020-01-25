@@ -1,12 +1,6 @@
-cmake_minimum_required(VERSION 3.1.0)
-project(mission_planner)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
+cmake_minimum_required(VERSION 2.8.3)
+project(interface_protocol)
 
-if(CMAKE_VERSION VERSION_LESS "3.7.0")
-    set(CMAKE_INCLUDE_CURRENT_DIR ON)
-endif()
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
@@ -14,11 +8,12 @@ endif()
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  cv_bridge
-  roscpp
-  sensor_msgs
+  rospy
+  std_msgs
+  message_generation
+  rospy_message_converter
 )
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -60,11 +55,12 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+    FILES
+    GetStatus.srv
+    MappingUpdate.srv
+    PostReport.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -74,10 +70,10 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   sensor_msgs
-# )
+generate_messages(
+    DEPENDENCIES
+    std_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -110,8 +106,8 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES mission_planner
-#  CATKIN_DEPENDS cv_bridge roscpp sensor_msgs
+#  LIBRARIES interface_protocol
+   CATKIN_DEPENDS rospy std_msgs message_runtime message_generation
 #  DEPENDS system_lib
 )
 
@@ -122,12 +118,13 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include
+# include
   ${catkin_INCLUDE_DIRS}
 )
+
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/mission_planner.cpp
+#   src/${PROJECT_NAME}/interface_protocol.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -138,15 +135,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node 
-    src/main.cpp
-    src/MainWindow.cpp
-    src/RosThread.cpp
-    src/Robot.cpp
-    src/CustomGraphicsScene.cpp
-    include/mission_planner/MainWindow.h
-    include/mission_planner/RosThread.h
-    include/mission_planner/CustomGraphicsScene.h)
+# add_executable(${PROJECT_NAME}_node src/interface_protocol_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -159,10 +148,9 @@ add_executable(${PROJECT_NAME}_node
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_node
-  ${catkin_LIBRARIES}
-  Qt5::Widgets
-)
+# target_link_libraries(${PROJECT_NAME}_node
+#   ${catkin_LIBRARIES}
+# )
 
 #############
 ## Install ##
@@ -211,7 +199,7 @@ target_link_libraries(${PROJECT_NAME}_node
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_mission_planner.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_interface_protocol.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

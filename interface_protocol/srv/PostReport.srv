@@ -1,0 +1,6 @@
+int64 x
+int64 y
+int64 z
+string type
+---
+std_msgs/String result
