@@ -64,11 +64,11 @@ int openSerialPort(const char* port) {
  * Temporary TEENSY 4.0 workaround
  */ 
 void writeSerialPort(int serial_port, uint8_t* buffer, int length) {
-    for(int i = 0; i <length; i+=64){
-        if(length < i+64)
-            write(serial_port, buffer+i, length-i*64);
+    for(int i = 0; i <length; i+=63){
+        if(length < i+63)
+            write(serial_port, buffer+i, length-i);
         else
-            write(serial_port, buffer+i, 64);
+            write(serial_port, buffer+i, 63);
     }
 }
 
@@ -78,30 +78,35 @@ class TeensyBridgeNode {
     ros::Subscriber sub;
     std::shared_ptr<NameRecords> names;
     WirelessMessageHandler handler;
+    wireless_msgs::LoraPacket mostRecentPacket;
     int serialPort;
     bool messageQueueEmpty = false;
+    bool new_msg = false;
    
     void onWirelessMessageRecieved(wireless_msgs::LoraPacket pkt) {
         if(pkt.data.size() > 255){
             ROS_ERROR("packet size greater than 255. Not sending.");
             return;
         }
+        mostRecentPacket = pkt;
+        new_msg = true;
+    }
+
+    void sendMsg() {
         uint8_t buffer[255];
-        int length = handler.serializeMessage(pkt, buffer);
-        std::cout << "sending " <<std::endl;
-        for (int i = 0; i < length; i++){
-            std::cout << " " <<(int) buffer[i] ;
-        }
-        std::cout << std::endl;
-        if(this->messageQueueEmpty)
+        int length = handler.serializeMessage(mostRecentPacket, buffer);
+        if(this->messageQueueEmpty & new_msg){
             writeSerialPort(serialPort, buffer, length);
+            this->messageQueueEmpty =false;
+            new_msg = false;
+        }
     }
 
    
 public:
 
     void spin() {
-        SerialParser parser(names);
+        static SerialParser parser(names);
         char buffer[260];
         int length = read(serialPort, buffer, 255);
         if(length == 0) {
@@ -116,9 +121,11 @@ public:
                 }
                 if(parser.getMessageType() == SerialResponseMessageType::LORA_STATUS_READY) {
                     this->messageQueueEmpty = true;
+                    parser.reset();
                 }
             }
         }
+        sendMsg();
     }
 
     TeensyBridgeNode(ros::NodeHandle _nh): nh(_nh), names(new NameRecords), handler(names) {

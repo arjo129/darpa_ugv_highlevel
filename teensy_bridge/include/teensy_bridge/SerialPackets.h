@@ -58,6 +58,7 @@ class SerialParser {
      * @returns true if the packet is complete. False otherwise
      */ 
     bool addByteToPacket(uint8_t byte){
+        if(byte!=252) std::cout << (int) byte << std::endl;
         if(this->state == ParserState::AWAITING_START && byte == (uint8_t)SerialResponseMessageType::PACKET_RECIEVED){ //Starting state. Check for LoRA
             this->state = ParserState::DETERMINED_PACKETTYPE;
             this->messageType = SerialResponseMessageType::PACKET_RECIEVED;
@@ -81,12 +82,12 @@ class SerialParser {
         packet.push_back(byte);
 
         if(this->messageType == SerialResponseMessageType::PACKET_RECIEVED) { //Parsing for LoRA packets
-            if(packet.size() == 3) {
-                this->packetLength = packet[1];
+            if(packet.size() == 4) {
+                this->packetLength = packet[2];
                 this->packetLength <<= 8;
-                this->packetLength = packet[2];  
+                this->packetLength = packet[3];  
             }
-            if(packet.size() > 3 && packet.size() == this->packetLength+4)
+            if(packet.size() > 4 && packet.size() == this->packetLength+5)
                 return true; //Return true if packet is complete
             return false;   
         }     
@@ -116,13 +117,18 @@ class SerialParser {
     wireless_msgs::LoraPacket retrievePacket() {
         wireless_msgs::LoraPacket wpacket;
         wpacket.from.data = name->getName(this->packet[0]);
-        wpacket.rssi = this->packet[this->packet.size()-1];
+        wpacket.rssi = (int8_t)this->packet[this->packet.size()-1];
         for(int i =0; i < this->packetLength; i++){
-            wpacket.data.push_back(this->packet[i + 3]);
+            wpacket.data.push_back(this->packet[i + 4]);
         }
         this->state = ParserState::AWAITING_START; 
         this->packet.clear();
         return wpacket;
+    }
+
+    void reset() {
+        this->state = ParserState::AWAITING_START; 
+        this->packet.clear();
     }
     
     SerialResponseMessageType getMessageType() {
