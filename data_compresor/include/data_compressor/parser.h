@@ -18,7 +18,7 @@ struct ParseException : public std::exception {
       return msg.c_str();
    }
 };
-
+uint64_t expectUInt64t(PacketParser& parser, std::vector<uint8_t>& data);
 int expectInt(PacketParser& parser, std::vector<uint8_t>& data);
 uint16_t expectUInt16(PacketParser& parser, std::vector<uint8_t>& data);
 int16_t expectInt16t(PacketParser& parser, std::vector<uint8_t>& data);
@@ -30,4 +30,5 @@ void encodeUInt8t(std::vector<uint8_t>& packet, uint8_t data);
 void encodeUInt16t(std::vector<uint8_t>& packet, uint16_t data);
 void encodeInt16t(std::vector<uint8_t>& packet, int16_t data);
 void encodeInt(std::vector<uint8_t>& packet, int data);
+void encodeUInt64t(std::vector<uint8_t>& packet, uint64_t data);
 #endif

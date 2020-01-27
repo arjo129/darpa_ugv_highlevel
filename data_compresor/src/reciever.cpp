@@ -12,6 +12,7 @@
 #include <data_compressor/msgs/laserscan.h>
 
 ros::Publisher pub;
+ros::Subscriber loraSub;
 void handleLaserScan(std::string from, std::vector<uint8_t> data) {
     AdaptiveTelemetryScan scan = decodeScan(data);
     sensor_msgs::LaserScan lscan = toLaserScan(scan);
@@ -40,6 +41,7 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh;
     ros::Rate rate(10);
     pub = nh.advertise<sensor_msgs::LaserScan>("/recieved/scan", 10);
+    loraSub = nh.subscribe("/lora/rx", 10, &onRecieveRx);
     while(ros::ok()){
         ros::spinOnce();  
         rate.sleep();
