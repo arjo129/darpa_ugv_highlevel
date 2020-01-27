@@ -32,5 +32,5 @@ What are you working on? If you are working one the following these are the pack
 
 * Networking: `wireless_msgs`, `data_compressor`, `teensy_bridge`
 * Peripherals and drivers: `teensy_bridge`
-* Integration with DARPA: `apriltag_coordinates`
+* Integration with DARPA: `apriltag_coordinates`, `interface_protocol`, `xbee-estop`
 * Obstacle avoidance, frontier exploration: `simple_obstacle_avoidance`, `amapper`
