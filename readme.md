@@ -6,6 +6,7 @@ This is the software that runs on the UDOOs and on our computers. For firmware t
 You need `apriltags_ros` apart from a standard `ros-melodic-full-desktop` install to build this repository.
 
 # Developer Guide
+This is a rough overview of which folder does what
 - `amapper` - This package contains a utility library useful for handling navigation stuff.
 - `apriltag_coordinates` - This package is responsible for getting our baseline calibration to the `DARPA` world frame.
 - `data_compressor` - The data compressor utility that enables us top transmit compressed telemetry back to the base station
