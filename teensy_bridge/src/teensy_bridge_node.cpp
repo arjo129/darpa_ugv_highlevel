@@ -74,7 +74,7 @@ void writeSerialPort(int serial_port, uint8_t* buffer, int length) {
 
 class TeensyBridgeNode {
     ros::NodeHandle nh;
-    ros::Publisher pub;
+    ros::Publisher pub, addressPublisher;
     ros::Subscriber sub;
     image_transport::Publisher pubThermal;
     std::shared_ptr<NameRecords> names;
@@ -130,18 +130,22 @@ public:
                     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", img).toImageMsg();
 		            pubThermal.publish(msg);                
                 }
+                if (parser.getMessageType() == SerialResponseMessageType::PHYSICAL_ADDRESS) {
+                    addressPublisher.publish(parser.retrieveLoraInfo());
+                }
             }
         }
         sendMsg();
     }
 
     TeensyBridgeNode(ros::NodeHandle _nh): nh(_nh), names(new NameRecords), handler(names) {
-        pub = this->nh.advertise<wireless_msgs::LoraPacket>("/rx",10);
-        sub = this->nh.subscribe("/tx", 10, &TeensyBridgeNode::onWirelessMessageRecieved, this);
+        pub = this->nh.advertise<wireless_msgs::LoraPacket>("/lora/rx",10);
+        addressPublisher = this->nh.advertise<wireless_msgs::LoraInfo>("/lora/info",10);
+        sub = this->nh.subscribe("/lora/tx", 10, &TeensyBridgeNode::onWirelessMessageRecieved, this);
         std::string port;
         this->nh.getParam("serial_port", port);
         serialPort = openSerialPort("/dev/ttyACM0");
-        names->addNameRecord("husky1", 1);
+        names->addNameRecord("base_station", 0);
         //thermal camera image publishing stuff
         image_transport::ImageTransport it(nh);
 	    pubThermal = it.advertise("/thermal_front/image_raw", 1);

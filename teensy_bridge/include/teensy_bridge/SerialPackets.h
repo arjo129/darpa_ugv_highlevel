@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <wireless_msgs/LoraPacket.h>
+#include <wireless_msgs/LoraInfo.h>
 #include <teensy_bridge/NameRecord.h>
 #include <memory>
 #include <opencv2/highgui/highgui.hpp>
@@ -35,15 +36,16 @@ enum class ParserState {
 };
 
 enum class SerialResponseMessageType: uint8_t {
-    PACKET_RECIEVED = 0xFA,
-    PACKET_SENT = 0xFB,
-    LORA_STATUS_READY = 0xFC,
-    LORA_STATUS_BUSY = 0xFD,
-    CO2_SENSOR_READING = 0xFE,
-    THERMAL_FRONT = 0xFF,
-    THERMAL_TOP = 0xF1,
-    DEBUG = 0xF2
-};
+        PACKET_RECIEVED = 0xFA,
+        PACKET_SENT = 0xFB,
+        LORA_STATUS_READY = 0xFC,
+        LORA_STATUS_BUSY = 0xFD,
+        CO2_SENSOR_READING = 0xFE,
+        THERMAL_FRONT = 0xFF,
+        THERMAL_TOP = 0xF1,
+        DEBUG = 0xF2,
+        PHYSICAL_ADDRESS = 0xF0
+    };
 
 class SerialParser {
     ParserState state;
@@ -67,22 +69,25 @@ class SerialParser {
         if(this->state == ParserState::AWAITING_START && byte == (uint8_t)SerialResponseMessageType::PACKET_RECIEVED){ //Starting state. Check for LoRA
             this->state = ParserState::DETERMINED_PACKETTYPE;
             this->messageType = SerialResponseMessageType::PACKET_RECIEVED;
-                    packet.push_back(byte);
-
+            packet.push_back(byte);
             return false;
         }
         if(this->state == ParserState::AWAITING_START && byte == (uint8_t)SerialResponseMessageType::CO2_SENSOR_READING){ //Starting state. Check for LoRA
             this->state = ParserState::DETERMINED_PACKETTYPE;
             this->messageType = SerialResponseMessageType::CO2_SENSOR_READING;
-                    packet.push_back(byte);
-
+            packet.push_back(byte);
             return false;
         }
         if(this->state == ParserState::AWAITING_START && byte == (uint8_t)SerialResponseMessageType::THERMAL_FRONT){ //Starting state. Check for LoRA
             this->state = ParserState::DETERMINED_PACKETTYPE;
             this->messageType = SerialResponseMessageType::THERMAL_FRONT;
-                    packet.push_back(byte);
-
+            packet.push_back(byte);
+            return false;
+        }
+        if(this->state == ParserState::AWAITING_START && byte == (uint8_t)SerialResponseMessageType::PHYSICAL_ADDRESS){ //Starting state. Check for LoRA
+            this->state = ParserState::DETERMINED_PACKETTYPE;
+            this->messageType = SerialResponseMessageType::PHYSICAL_ADDRESS;
+            packet.push_back(byte);
             return false;
         }
         if (this->state == ParserState::AWAITING_START) {
@@ -127,7 +132,13 @@ class SerialParser {
                 return true;
             }
             return false;
-        }   
+        }
+        if(this->messageType == SerialResponseMessageType::PHYSICAL_ADDRESS) {
+            if(packet.size() == 2) {
+                return true;
+            }
+            return false;
+        } 
         return false;
     }
 
@@ -141,6 +152,12 @@ class SerialParser {
         this->state = ParserState::AWAITING_START; 
         this->packet.clear();
         return wpacket;
+    }
+
+    wireless_msgs::LoraInfo retrieveLoraInfo() {
+        wireless_msgs::LoraInfo loraInfo;
+        loraInfo.address = packet[1];
+        this->reset();
     }
 
     cv::Mat retrieveThermalPacket() {
