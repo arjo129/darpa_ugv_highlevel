@@ -1,6 +1,6 @@
 # UGV + Base Station software
 
-This is the software that runs on the UDOOs and on our computers. For firmware that runs on the teensies/arduinos see (https://github.com/lekoook/darpasubt/tree/custom_proto)[here].
+This is the software that runs on the UDOOs and on our computers. For firmware that runs on the teensies/arduinos see [here](https://github.com/lekoook/darpasubt/tree/custom_proto).
 
 # Requirements
 You need `apriltags_ros` apart from a standard `ros-melodic-full-desktop` install to build this repository.
