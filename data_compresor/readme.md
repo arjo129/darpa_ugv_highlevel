@@ -13,6 +13,10 @@ Additionally the following items are sent via LoRA from the base station
 * Start
 * End
 
+## Dependencies
+- Eigen
+- Zlib
+
 # Overall Network Architecture
 Packets must be less than 240bytes. Each packet is represented by a `wireless_msgs/LoraPacket` message. The data field in the packet is encoded using
 ZLIB compression. Once the packet is uncompressed, the first byte refers to the message type. These can be found in `include/data_compressor/protocol.h`.
