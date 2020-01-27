@@ -1,5 +1,8 @@
 #include <ros/ros.h>
 #include <wireless_msgs/LoraPacket.h>
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/image_encodings.h>
 #include <unordered_map>
 #include <iostream>
 #include <fstream>
@@ -76,6 +79,7 @@ class TeensyBridgeNode {
     ros::NodeHandle nh;
     ros::Publisher pub;
     ros::Subscriber sub;
+    image_transport::Publisher pubThermal;
     std::shared_ptr<NameRecords> names;
     WirelessMessageHandler handler;
     wireless_msgs::LoraPacket mostRecentPacket;
@@ -123,6 +127,12 @@ public:
                     this->messageQueueEmpty = true;
                     parser.reset();
                 }
+                if (parser.getMessageType() == SerialResponseMessageType::THERMAL_FRONT) {
+                    std::cout << "retrieve packet" << std::endl;
+                    cv::Mat img = parser.retrieveThermalPacket();
+                    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", img).toImageMsg();
+		            pubThermal.publish(msg);                
+                }
             }
         }
         sendMsg();
@@ -135,6 +145,9 @@ public:
         this->nh.getParam("serial_port", port);
         serialPort = openSerialPort("/dev/ttyACM0");
         names->addNameRecord("husky1", 1);
+        //thermal camera image publishing stuff
+        image_transport::ImageTransport it(nh);
+	    pubThermal = it.advertise("/thermal_front/image_raw", 1);
     }
 };
 
