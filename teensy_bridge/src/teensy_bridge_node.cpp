@@ -15,9 +15,6 @@
 #include <unistd.h> 
 
 
-
-
-
 int openSerialPort(const char* port) {
     int serial_port = open(port, O_RDWR);
 
