@@ -47,10 +47,13 @@ It publishes the following topics
 # Launch files
 There are launch files provided for the UGV and base station respectively.
 
-# Develope guide(ish)
+# Developer guide(ish)
 A rough overview of the code here is given:
 - `src/laserscan.cpp` and `include/data_compressor/msgs/laserscan.h` - Compression tactic for laserscan. Sample only every n ranges to get a rough idea of what the surrounding looks like. With the 360 points given by rplidar. Also convert all floats to uint16_t.
 - `include/data_compressor/parser.h` and `src/parser/*` - Parser Utilities
 - `reciever.cpp` - The `decompressor_node` AKA base station node
-- `sender.cpp` - The `compressor_node` AKA what runs on each robot
+- `sender.cpp` - The `compressor_node` AKA what runs on each robot.
+- `include/data_compressor/zip.h` and `src/compression/*` - ZLib related stuff
+- `src/packet_sequencer` - Can be used to send larger packets than 240 bytes. NOT ADVISED.
+
 Unit tests may be found in the `test` directory
