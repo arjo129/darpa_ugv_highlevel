@@ -1,13 +1,16 @@
 # Data Compressor
 
-This package handles the compression of Data. Overall the following items are sent via telemetry:
-    - LaserScan + Position + time
-    - Artifact detections + Position + time
-    - Current status
+This package handles the compression of Data for transmission over our mesh network. 
+Overall the following items are sent via telemetry:
+
+- LaserScan + Position + time
+- Artifact detections + Position + time
+- Current status
 
 Additionally the following items are sent via LoRA from the base station
-    * Start
-    * End
+
+* Start
+* End
 
 # Overall Network Architecture
 Packets must be less than 240bytes. Each
