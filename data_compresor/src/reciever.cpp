@@ -22,7 +22,7 @@ void handleLaserScan(std::string from, std::vector<uint8_t> data) {
 }
 
 void handleCo2(std::string from, std::vector<uint8_t> data) {
-    Co2 co2 = decodeScan(data);
+    Co2 co2 = decodeCo2(data);
     wireless_msgs::Co2 msg = toCo2(co2);
     co2Pub.publish(msg);
 }
