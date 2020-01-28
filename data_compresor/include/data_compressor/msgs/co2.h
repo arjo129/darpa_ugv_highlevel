@@ -13,13 +13,13 @@ struct Co2 {
     bool operator ==(const Co2& other) const {
         if(this->timestamp != other.timestamp)
             return false;
-        if(this->id != other.id)
-            return false;
         if(this->x != other.x)
             return false;
         if(this->y != other.y)
             return false;
         if(this->z != other.z)
+            return false;
+        if(this->concentration != other.concentration)
             return false;
         return true;
     }
