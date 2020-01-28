@@ -46,6 +46,8 @@ This node runs on the robot and subscribes to the following topics:
 - `/scan` 
 - `/co2`
 - `/odom`
+
+
 It publishes the following topics
 - `/estop`
 - `/start`
