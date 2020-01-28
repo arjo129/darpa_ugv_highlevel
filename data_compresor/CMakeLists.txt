@@ -137,6 +137,7 @@ add_library(${PROJECT_NAME}
   src/packet_sequencer/physicalchunk.cpp
   src/ros_abstraction_layer/datapacket.cpp
   src/laserscan_compressor.cpp
+  src/co2_compressor.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -234,6 +235,11 @@ target_link_libraries( ${PROJECT_NAME}
 catkin_add_gtest(${PROJECT_NAME}-test tests/test_laserscan.cpp)
 if(TARGET ${PROJECT_NAME}-test)
   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
+endif()
+
+catkin_add_gtest(${PROJECT_NAME}-co2-test tests/test_co2.cpp)
+if(TARGET ${PROJECT_NAME}-co2-test)
+  target_link_libraries(${PROJECT_NAME}-co2-test ${PROJECT_NAME})
 endif()
 
 ## Add folders to be run by python nosetests
