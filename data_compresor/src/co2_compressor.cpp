@@ -18,10 +18,10 @@ std::vector<uint8_t> encodeCo2(Co2 co2) {
     std::vector<uint8_t>  bytestream;
     encodeUInt8t(bytestream, (uint8_t)MessageType::CO2_SIGNATURE); //1
     encodeUInt64t(bytestream, co2.timestamp); //9
-    encodeInt(bytestream, co2.x); //12
-    encodeInt(bytestream, co2.y); //16
-    encodeInt(bytestream, co2.z); //20
-    encodeUInt16t(bytestream, co2.concentration); //22
+    encodeInt(bytestream, co2.x); //13
+    encodeInt(bytestream, co2.y); //17
+    encodeInt(bytestream, co2.z); //21
+    encodeUInt16t(bytestream, co2.concentration); //23
     return bytestream;
 }
 
