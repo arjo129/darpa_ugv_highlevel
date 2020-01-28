@@ -6,6 +6,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <wireless_msgs/LoraPacket.h>
 #include <data_compressor/msgs/laserscan.h>
+#include <data_compressor/msgs/co2.h>
 #include <data_compressor/protocol.h>
 #include <data_compressor/parser.h>
 #include <data_compressor/zip.h>
@@ -14,7 +15,7 @@
 class CompressedTelemetrySender {
 
     ros::Publisher loraPub, estopPub, startPub;
-    ros::Subscriber laserscan, loraSubscriber;
+    ros::Subscriber laserscan, co2, loraSubscriber;
     tf::TransformListener* tfListener;
     wireless_msgs::LoraPacket scanPacket; 
     void compressScan(sensor_msgs::LaserScan scan) {
@@ -48,6 +49,7 @@ public:
     CompressedTelemetrySender(ros::NodeHandle& nh) {
         //Laser scan compressor
         this->laserscan = nh.subscribe("/scan", 10, &CompressedTelemetrySender::compressScan, this);
+        this->co2 = nh.subscribe("/co2", 10, &CompressedTelemetrySender::compressScan, this);
         this->loraSubscriber = nh.subscribe("/lora/rx", 10, &CompressedTelemetrySender::onRecieveLora, this);  
         this->loraPub = nh.advertise<wireless_msgs::LoraPacket>("/lora/tx", 10);
         this->estopPub = nh.advertise<std_msgs::String>("/estop", 10);
