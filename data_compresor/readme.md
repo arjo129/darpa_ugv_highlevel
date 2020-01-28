@@ -28,7 +28,7 @@ Two nodes are provided `decompressor_node` and `compressor_node`. `compressor_no
 ## `decompressor_node` AKA the "Base Station"
 For each robot, the decompressor node publishes the following topics:
 - `/robot_n/scan` - A compressed scan. Note: Laserscan compression is lossy [`sensor_msgs/LaserScan` message]
-- `/robot_n/wifi` - List of wifi Hotspots detected 
+- `/robot_n/wifi` - List of wifi Hotspots detected [`wifi_sensor/WifiArray` message]
 - `/robot_n/co2` - Current CO2 reading
 - `/robot_n/vents` - Thermal Vents
 - `/robot_n/manakin` - Manakin detections
