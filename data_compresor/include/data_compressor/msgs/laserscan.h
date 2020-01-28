@@ -7,6 +7,7 @@
 #include <wireless_msgs/LoraPacket.h>
 
 struct AdaptiveTelemetryScan {
+    uint64_t timestamp;
     uint16_t id;
     uint8_t sub_order;
     int x,y,z;
@@ -14,7 +15,9 @@ struct AdaptiveTelemetryScan {
     int length;
     uint16_t* distances;
 
-    bool operator ==(AdaptiveTelemetryScan &other) {
+    bool operator ==(const AdaptiveTelemetryScan& other) const {
+        if(this->timestamp != other.timestamp)
+            return false;
         if(this->id != other.id)
             return false;
         if(this->sub_order != other.sub_order)

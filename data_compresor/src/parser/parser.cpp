@@ -1,5 +1,28 @@
 #include <data_compressor/parser.h>
 
+uint64_t expectUInt64t(PacketParser& parser, std::vector<uint8_t>& data) {
+    uint64_t x  = 0;
+    if(parser.index > data.size()-8)
+        throw new ParseException("Expecting 8 bytes when parsing");
+    x |= data[parser.index] << 56;
+    parser.index++;
+    x |= data[parser.index] << 48;
+    parser.index++;    
+    x |= data[parser.index] << 40;
+    parser.index++;
+    x |= data[parser.index] << 32;
+    parser.index++; 
+    x |= data[parser.index] << 24;
+    parser.index++;
+    x |= data[parser.index] << 16;
+    parser.index++;    
+    x |= data[parser.index] << 8;
+    parser.index++;
+    x |= data[parser.index];
+    parser.index++;
+    return x;
+}
+
 int expectInt(PacketParser& parser, std::vector<uint8_t>& data) {
     int x  = 0;
     if(parser.index > data.size()-4)
@@ -74,6 +97,17 @@ void encodeInt16t(std::vector<uint8_t>& packet, int16_t data){
 }
   
 void encodeInt(std::vector<uint8_t>& packet, int data){
+    packet.push_back((data & 0xFF000000) >> 24);
+    packet.push_back((data & 0xFF0000) >> 16);
+    packet.push_back((data & 0xFF00) >> 8);
+    packet.push_back(data);
+}
+
+void encodeUInt64t(std::vector<uint8_t>& packet, uint64_t data){
+    packet.push_back((data & 0xFF00000000000000) >> 56);
+    packet.push_back((data & 0xFF000000000000) >> 48);
+    packet.push_back((data & 0xFF0000000000) >> 40);
+    packet.push_back((data & 0xFF00000000) >> 32);
     packet.push_back((data & 0xFF000000) >> 24);
     packet.push_back((data & 0xFF0000) >> 16);
     packet.push_back((data & 0xFF00) >> 8);

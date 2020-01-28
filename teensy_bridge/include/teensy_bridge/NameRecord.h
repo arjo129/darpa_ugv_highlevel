@@ -16,7 +16,10 @@ public:
         return name2id[name];
     }
     std::string getName(uint8_t id){
-        return id2name[id];
+        if(id2name.count(id) > 0)
+            return id2name[id];
+        else
+            return "";
     }
 };
 

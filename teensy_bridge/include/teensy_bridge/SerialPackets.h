@@ -3,8 +3,13 @@
 
 #include <vector>
 #include <wireless_msgs/LoraPacket.h>
+#include <wireless_msgs/LoraInfo.h>
 #include <teensy_bridge/NameRecord.h>
 #include <memory>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
+#define THRESHOLD 30
 class WirelessMessageHandler {
     std::shared_ptr<NameRecords> name;
 public:
@@ -31,15 +36,16 @@ enum class ParserState {
 };
 
 enum class SerialResponseMessageType: uint8_t {
-    PACKET_RECIEVED = 0xFA,
-    PACKET_SENT = 0xFB,
-    LORA_STATUS_READY = 0xFC,
-    LORA_STATUS_BUSY = 0xFD,
-    CO2_SENSOR_READING = 0xFE,
-    THERMAL_FRONT = 0xFF,
-    THERMAL_TOP = 0xF1,
-    DEBUG = 0xF2
-};
+        PACKET_RECIEVED = 0xFA,
+        PACKET_SENT = 0xFB,
+        LORA_STATUS_READY = 0xFC,
+        LORA_STATUS_BUSY = 0xFD,
+        CO2_SENSOR_READING = 0xFE,
+        THERMAL_FRONT = 0xFF,
+        THERMAL_TOP = 0xF1,
+        DEBUG = 0xF2,
+        PHYSICAL_ADDRESS = 0xF0
+    };
 
 class SerialParser {
     ParserState state;
@@ -58,35 +64,47 @@ class SerialParser {
      * @returns true if the packet is complete. False otherwise
      */ 
     bool addByteToPacket(uint8_t byte){
+
+        //Begin AWAITING_START state
         if(this->state == ParserState::AWAITING_START && byte == (uint8_t)SerialResponseMessageType::PACKET_RECIEVED){ //Starting state. Check for LoRA
             this->state = ParserState::DETERMINED_PACKETTYPE;
             this->messageType = SerialResponseMessageType::PACKET_RECIEVED;
-                    packet.push_back(byte);
-
+            packet.push_back(byte);
             return false;
         }
         if(this->state == ParserState::AWAITING_START && byte == (uint8_t)SerialResponseMessageType::CO2_SENSOR_READING){ //Starting state. Check for LoRA
             this->state = ParserState::DETERMINED_PACKETTYPE;
             this->messageType = SerialResponseMessageType::CO2_SENSOR_READING;
-                    packet.push_back(byte);
-
+            packet.push_back(byte);
             return false;
         }
-        if(this->state == ParserState::AWAITING_START && byte == (uint8_t)SerialResponseMessageType::LORA_STATUS_READY) {
-            this->messageType = SerialResponseMessageType::LORA_STATUS_READY;
-            return true;
-        }
-        if(this->state == ParserState::AWAITING_START)
+        if(this->state == ParserState::AWAITING_START && byte == (uint8_t)SerialResponseMessageType::THERMAL_FRONT){ //Starting state. Check for LoRA
+            this->state = ParserState::DETERMINED_PACKETTYPE;
+            this->messageType = SerialResponseMessageType::THERMAL_FRONT;
+            packet.push_back(byte);
             return false;
+        }
+        if(this->state == ParserState::AWAITING_START && byte == (uint8_t)SerialResponseMessageType::PHYSICAL_ADDRESS){ //Starting state. Check for LoRA
+            this->state = ParserState::DETERMINED_PACKETTYPE;
+            this->messageType = SerialResponseMessageType::PHYSICAL_ADDRESS;
+            packet.push_back(byte);
+            return false;
+        }
+        if (this->state == ParserState::AWAITING_START) {
+            return false;
+        }
+        //End AWAITING_START state
         packet.push_back(byte);
-
+        
+        
+        //Begin parsing individual packet types parsing
         if(this->messageType == SerialResponseMessageType::PACKET_RECIEVED) { //Parsing for LoRA packets
-            if(packet.size() == 3) {
-                this->packetLength = packet[1];
+            if(packet.size() == 4) {
+                this->packetLength = packet[2];
                 this->packetLength <<= 8;
-                this->packetLength = packet[2];  
+                this->packetLength = packet[3];  
             }
-            if(packet.size() > 3 && packet.size() == this->packetLength+4)
+            if(packet.size() > 4 && packet.size() == this->packetLength+5)
                 return true; //Return true if packet is complete
             return false;   
         }     
@@ -103,28 +121,70 @@ class SerialParser {
                 memcpy(&humidity, packet.data()+4,4);
                 float temp;
                 memcpy(&temp, packet.data()+8,4);
-                std::cout << "got CO2 packet" << concentration << ", " <<humidity  << ", " << temp << std::endl;
-                std::cout <<std::endl;
                 packet.clear();
                 this->state = ParserState::AWAITING_START;
                 return true;
             }
+            return false;
         }
+        if(this->messageType == SerialResponseMessageType::THERMAL_FRONT) {
+            if(packet.size() == 779) {
+                return true;
+            }
+            return false;
+        }
+        if(this->messageType == SerialResponseMessageType::PHYSICAL_ADDRESS) {
+            if(packet.size() == 2) {
+                return true;
+            }
+            return false;
+        } 
         return false;
     }
-    
+
     wireless_msgs::LoraPacket retrievePacket() {
         wireless_msgs::LoraPacket wpacket;
         wpacket.from.data = name->getName(this->packet[0]);
-        wpacket.rssi = this->packet[this->packet.size()-1];
+        wpacket.rssi = (int8_t)this->packet[this->packet.size()-1];
         for(int i =0; i < this->packetLength; i++){
-            wpacket.data.push_back(this->packet[i + 3]);
+            wpacket.data.push_back(this->packet[i + 4]);
         }
         this->state = ParserState::AWAITING_START; 
         this->packet.clear();
         return wpacket;
     }
-    
+
+    wireless_msgs::LoraInfo retrieveLoraInfo() {
+        wireless_msgs::LoraInfo loraInfo;
+        loraInfo.address = packet[1];
+        this->reset();
+    }
+
+    cv::Mat retrieveThermalPacket() {
+        //check that they are all thermal packets
+        std::cout << "Processing thermal packets" << std::endl;
+        this->packet.erase(this->packet.begin() + 585, this->packet.begin() + 588);
+        this->packet.erase(this->packet.begin() + 390, this->packet.begin() + 393);
+        this->packet.erase(this->packet.begin() + 195, this->packet.begin() + 198);
+        this->packet.erase(this->packet.begin(), this->packet.begin() + 3);
+        uint8_t* res = &this->packet[0];
+        cv::Mat img(24, 32, CV_8UC1, cv::Scalar(0));
+        for (int i = 0; i < 24; i++) {
+            std::cout << std::endl;
+            for (int j = 0; j < 32; j++) {
+                std::cout << (int)res[i*32 + j] << "|";
+                    img.at<uchar>(i,j) = (int)res[i*32 + j];
+            }
+        }
+        this->state = ParserState::AWAITING_START;
+        this->packet.clear();
+        return img;
+    }
+
+    void reset() {
+        this->state = ParserState::AWAITING_START; 
+        this->packet.clear();
+    } 
     SerialResponseMessageType getMessageType() {
         return this->messageType;
     }

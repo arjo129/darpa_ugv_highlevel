@@ -7,6 +7,7 @@ std::vector<AdaptiveTelemetryScan> convertLaserScan(sensor_msgs::LaserScan scan,
     static uint16_t lastId;
     std::vector<AdaptiveTelemetryScan> scanFragments(skip_vector);
     for(int i = 0; i < skip_vector; i++) {
+        scanFragments[i].timestamp = ros::Time::now().toNSec();
         scanFragments[i].id = lastId;
         scanFragments[i].sub_order = i;
         scanFragments[i].distances = new uint16_t[scan.ranges.size()/skip_vector];
@@ -56,15 +57,16 @@ sensor_msgs::LaserScan toLaserScan(AdaptiveTelemetryScan cscan) {
 std::vector<uint8_t> encodeScan(AdaptiveTelemetryScan scan) {
     std::vector<uint8_t>  bytestream;
     encodeUInt8t(bytestream, (uint8_t)MessageType::LASER_SCAN); //1
-    encodeUInt16t(bytestream, scan.id); //3
-    encodeUInt8t(bytestream, scan.sub_order); //4
-    encodeInt(bytestream, scan.x); //8
-    encodeInt(bytestream, scan.y); //12
-    encodeInt(bytestream, scan.z); //16
-    encodeInt16t(bytestream, scan.rotateX); //18
-    encodeInt16t(bytestream, scan.rotateY); //20
-    encodeInt16t(bytestream, scan.rotateZ); //22
-    encodeInt16t(bytestream, scan.rotateW); //24
+    encodeUInt64t(bytestream, scan.timestamp); //9
+    encodeUInt16t(bytestream, scan.id); //11
+    encodeUInt8t(bytestream, scan.sub_order); //12
+    encodeInt(bytestream, scan.x); //16
+    encodeInt(bytestream, scan.y); //20
+    encodeInt(bytestream, scan.z); //24
+    encodeInt16t(bytestream, scan.rotateX); //26
+    encodeInt16t(bytestream, scan.rotateY); //28
+    encodeInt16t(bytestream, scan.rotateZ); //30
+    encodeInt16t(bytestream, scan.rotateW); //32
     for(int i = 0; i < scan.length; i++){
         encodeInt16t(bytestream, scan.distances[i]);
     }
@@ -74,15 +76,15 @@ std::vector<uint8_t> encodeScan(AdaptiveTelemetryScan scan) {
 AdaptiveTelemetryScan decodeScan(std::vector<uint8_t> packet) {
     PacketParser state;
     AdaptiveTelemetryScan scan;
-    scan.length = (packet.size() - 24)/2;
+    scan.length = (packet.size() - 32)/2;
     scan.distances = new uint16_t[scan.length];
     uint8_t type = expectInt8t(state, packet);
+    scan.timestamp = expectUInt64t(state, packet);
     scan.id = expectInt16t(state, packet);
     scan.sub_order = expectInt8t(state, packet);
     scan.x = expectInt(state, packet);
     scan.y = expectInt(state, packet);
     scan.z = expectInt(state, packet);
-
     scan.rotateX = expectInt16t(state, packet);
     scan.rotateY = expectInt16t(state, packet);
     scan.rotateZ = expectInt16t(state, packet);

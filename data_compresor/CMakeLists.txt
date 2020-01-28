@@ -180,7 +180,8 @@ target_link_libraries(decompressor_node
 
 
 target_link_libraries( ${PROJECT_NAME}
-   ${ZLIB_LIBRARIES}
+  ${ZLIB_LIBRARIES}
+  ${catkin_LIBRARIES}
 )
 
 #############

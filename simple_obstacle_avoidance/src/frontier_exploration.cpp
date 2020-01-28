@@ -63,12 +63,11 @@ void onLaserScan (sensor_msgs::LaserScan lscan) {
     transform.setOrigin(tf::Vector3(0,0,0));
     transform.setRotation(tf::Quaternion(0,0,0,1));
     ls.plotgrid(transform, *grid, lscan);
-        //ROS_INFO("RAYTRACED");
 
     //Inflate it
     AMapper::Grid* inflated = AMapper::inflate(*grid, 5);
     pub.publish(inflated->toOccupancyGrid());
-    //ROS_INFO("INFLATED");
+
     //Get frontiers
     for(int x = 0; x < inflated->gridWidth ; x++) {
         for(int y = 0; y < inflated->gridHeight; y++) {

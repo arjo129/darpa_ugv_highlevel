@@ -47,6 +47,7 @@ add_message_files(
     FILES
     uwb.msg
     LoraPacket.msg
+    LoraInfo.msg
 #   Message2.msg
  )
 

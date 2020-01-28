@@ -14,7 +14,7 @@ Example::Example()
 
   setObjectName("Example");
   model = new QStringListModel();
-  vehicleList << "UGV 1" << "CrazyFlie";
+  vehicleList << "UGV 1" << "CrazyFlie"  << "TGV";
   model->setStringList(vehicleList);
 }
 
