@@ -19,8 +19,8 @@ public:
     ros::Subscriber estopSub;
 
     UGV(std::string _namespace, ros::NodeHandle nh) {
-        laserPub = nh.advertise<sensor_msgs::LaserScan>("/robot"+_namespace, 10);
-
+        laserPub = nh.advertise<sensor_msgs::LaserScan>("/robot"+_namespace+"/scan", 10);
+        wifiPub = nh.advertise<wifi_sensor::wifiArray>("/robot"+_namespace+"/wifi",10);
     }
 
     void sendEStop() {
