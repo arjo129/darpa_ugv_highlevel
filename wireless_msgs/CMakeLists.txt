@@ -49,6 +49,8 @@ add_message_files(
     LoraPacket.msg
     LoraInfo.msg
     Co2.msg
+    Wifi.msg
+    WifiArray.msg
 #   Message2.msg
  )
 
