@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   nav_msgs
   wireless_msgs
+  wifi_sensor
   sensor_msgs
   tf
   amapper
