@@ -6,7 +6,7 @@
 wireless_msgs::Co2 toCo2(Co2 co2) {
     wireless_msgs::Co2 msg;
     msg.header.frame_id = "co2";
-    msg.header.stamp = co2.timestamp;
+    msg.header.stamp = ros::Time(co2.timestamp/1000000000ull, co2.timestamp);
     msg.position.x = co2.x;
     msg.position.y = co2.y;
     msg.position.z = co2.z;
