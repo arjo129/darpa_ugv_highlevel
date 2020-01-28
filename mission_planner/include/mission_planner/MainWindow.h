@@ -5,6 +5,8 @@
 #include <mission_planner/CustomGraphicsScene.h>
 #include <QPixmap>
 #include <QGraphicsItem>
+#include <QTransform>
+#include <QDebug>
 #include <stack>
 #include "ui_MainWindow.h"
 
@@ -24,6 +26,7 @@ typedef struct {
     uint32_t endIdx;
     QPointF translationOffset;
     qreal rotationOffset;
+    QTransform qTransform;
 } offsetState;
 
 class MainWindow : public QMainWindow {
@@ -39,6 +42,11 @@ class MainWindow : public QMainWindow {
         uint32_t currentIndex = 0;
         double prevYaw = 0;
         QPointF prevPos;
+        QTransform getTransform(QPointF translation, double rotationAngle);
+        void applyTransformList(int startIdx, int endIdx, 
+                                QTransform transform, double rotationAngleTransform);
+        void applyTransform(QGraphicsPixmapItem* item, 
+                            QTransform transform, double rotationAngleTransform);
     public:
         MainWindow(ros::NodeHandle nh);
         ~MainWindow();
@@ -46,8 +54,6 @@ class MainWindow : public QMainWindow {
         void addPixmap(const QPixmap& map, int x, int y, float theta);
         void sliderMoved(int value);
         void propagateChanges();
-        void enterRotateMode();
-        void enterMoveMode();
         void rotatePixMap(RotateState rotateState);
 };
 #endif
