@@ -8,6 +8,7 @@ MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), rosthread(_nh) {
     ui->setupUi(this);
     scene = new CustomGraphicsScene();
     ui->graphicsView->setScene(scene);
+    ui->horizontalSplitPanel->setStretchFactor(0,2);
     qRegisterMetaType<QPixmap>("QPixmap");
     qRegisterMetaType<RotateState>("RotateState");
     connect(&rosthread, &ROSThread::scanRecieved, this, &MainWindow::addPixmap);
