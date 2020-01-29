@@ -18,11 +18,33 @@ TEST(WifiArrayCompressor, compress_decompress_integration_test) {
         w.ssid = "nusseds";
         w.signal = "100";
         w.quality = "100";
-        wa.data.push(w);
+        wa.data.push_back(w);
     }
+
     std::vector<uint8_t> data = encodeWifiArray(wa);
     WifiArray result = decodeWifiArray(data);
     ASSERT_EQ(wa, result);
+}
+
+TEST(WifiArrayCompressor, compress_string_test) {
+  std::string str = "hello";
+  std::vector<uint8_t> packet;
+  encodeString(packet, str);
+  PacketParser parser;
+  std::string result = expectString(parser, packet);
+  ASSERT_EQ(result, str);
+}
+
+TEST(WifiArrayCompresor, compress_wifi) {
+  Wifi w;
+  w.ssid = "nusseds";
+  w.signal = "100";
+  w.quality = "100";
+  std::vector<uint8_t> data;
+  encodeWifi(data,w);
+  PacketParser parser;
+  Wifi res = decodeWifi(parser,data);
+  ASSERT_EQ(res, w);
 }
 
 int main(int argc, char **argv){

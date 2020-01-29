@@ -5,12 +5,13 @@
 #include <wireless_msgs/LoraPacket.h>
 #include <wireless_msgs/WifiArray.h>
 #include <data_compressor/msgs/Wifi.h>
+#include <data_compressor/parser.h>
 
 struct WifiArray {
     uint64_t timestamp;
     int x,y,z;
     uint8_t length;
-    Wifi* data;
+    std::vector<Wifi> data;
 
     bool operator ==(const WifiArray& other) const {
         if(this->timestamp != other.timestamp)
@@ -24,7 +25,7 @@ struct WifiArray {
         if(this->length != other.length)
             return false;
         for(int i = 0 ; i < this->length; i++){
-            if(this->data[i] != other.data[i])
+            if(!(this->data[i] == other.data[i]))
                 return false;
         }
         return true;

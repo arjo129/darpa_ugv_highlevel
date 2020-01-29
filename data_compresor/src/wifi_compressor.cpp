@@ -10,12 +10,11 @@ wireless_msgs::WifiArray toWifiArray(WifiArray wa) {
     msg.position.x = wa.x;
     msg.position.y = wa.y;
     msg.position.z = wa.z;
-    msg.position.z = wa.z;
-    for(int i=0; i<wa.length; i++) {
+    for(int i=0; i < wa.length; i++) {
         wireless_msgs::Wifi wmsg;
-        wmsg.ssid = wa.data[i].ssid;
-        wmsg.signal = wa.data[i].signal;
-        wmsg.quality = wa.data[i].quality;
+        wmsg.ssid.data = wa.data[i].ssid;
+        wmsg.signal.data = wa.data[i].signal;
+        wmsg.quality.data = wa.data[i].quality;
         msg.data.push_back(wmsg);
     }
     return msg;
@@ -30,15 +29,15 @@ std::vector<uint8_t> encodeWifiArray(WifiArray wa) {
     encodeInt(bytestream, wa.z); //20
     encodeUInt8t(bytestream, wa.length); //21
     for (int i=0; i<wa.length; i++) {
-        encodeWifi(bytestream, wa[i]); //???
+        encodeWifi(bytestream, wa.data[i]); //???
     }
     return bytestream;
 }
 
 void encodeWifi(std::vector<uint8_t>& bytestream, Wifi w) {
-    encodeString(bytestream, w.ssid.data);
-    encodeString(bytestream, w.signal.data);
-    encodeString(bytestream, w.quality.data);
+    encodeString(bytestream, w.ssid);
+    encodeString(bytestream, w.signal);
+    encodeString(bytestream, w.quality);
 }
 
 WifiArray decodeWifiArray(std::vector<uint8_t> packet) {
@@ -49,18 +48,18 @@ WifiArray decodeWifiArray(std::vector<uint8_t> packet) {
     wa.x = expectInt(state, packet);
     wa.y = expectInt(state, packet);
     wa.z = expectInt(state, packet);
-    wa.length = expectInt(state, packet);
+    wa.length = expectUInt8t(state, packet);
     for (int i=0; i<wa.length; i++) {
-        wa.data.push(decodeWifi(state, packet));
+        wa.data.push_back(decodeWifi(state, packet));
     }
     return wa;
 }
 
 Wifi decodeWifi(PacketParser& state, std::vector<uint8_t>& packet) {
     Wifi w;
-    w.ssid.data = expectString(state, packet);
-    w.signal.data = expectString(state, packet);
-    w.quality.data = expectString(state, packet);
+    w.ssid = expectString(state, packet);
+    w.signal = expectString(state, packet);
+    w.quality = expectString(state, packet);
     return w;
 }
 
