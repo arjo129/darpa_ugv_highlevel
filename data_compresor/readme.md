@@ -35,15 +35,19 @@ For each robot, the decompressor node publishes the following topics:
 - `/robot_n/status` - Status 
 - `/robot_n/poop_trail` - The poop trail left by the dropped repeaters.
 - `/robot_n/odom` - Robot Odometry [`nav_msgs/Odom` message]
+
+
 It also subscribes to the following:
-- `/robot_n/estop`
-- `/robot_n/start`
+- `/robot_n/estop` - Message is `std_msgs/String`
+- `/robot_n/start` - Message is  `std_msgs/String`
 
 ## `compressor_node` 
 This node runs on the robot and subscribes to the following topics:
-- `/scan`
+- `/scan` 
 - `/co2`
 - `/odom`
+
+
 It publishes the following topics
 - `/estop`
 - `/start`
