@@ -17,7 +17,7 @@
         <box size="0.01 0.01 0.01"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <material name="black"/>
+      <material name="red"/>
     </visual>
     <collision>
       <geometry>

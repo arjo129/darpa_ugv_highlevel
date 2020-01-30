@@ -12,6 +12,9 @@
   <material name="white">
     <color rgba="1 1 1 1"/>
   </material>
+  <material name="red">
+    <color rgba="1 0 0 1"/>
+  </material>
 
   <link name="base_link">
   </link>
@@ -19,14 +22,14 @@
   <link name="main_frame">
     <visual>
       <geometry>
-        <box size="0.358 0.33 0.052"/>
+        <box size="0.358 0.33 0.072"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0.026"/>
+      <origin rpy="0 0 0" xyz="0 0 0.036"/>
       <material name="black"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.358 0.33 0.052"/>
+        <box size="0.358 0.33 0.072"/>
       </geometry>
     </collision>
     <inertial>
@@ -41,7 +44,7 @@
     <origin xyz="0 0 0"/>
   </joint>
 
-  <link name="lidar_frame">
+  <link name="base_laser">
     <visual>
       <geometry>
         <cylinder length="0.07" radius="0.035"/>
@@ -60,20 +63,20 @@
     </inertial>
   </link>
 
-  <joint name="lidar_to_base" type="fixed">
+  <joint name="laser_to_base" type="fixed">
     <parent link="base_link"/>
-    <child link="lidar_frame"/>
-    <origin xyz="0.144 0 0.114"/>
+    <child link="base_laser"/>
+    <origin xyz="0.144 0 0.134"/>
   </joint>
 
    <link name="realsense_base_frame">
   </link>
 
-  <joint name="realsense_to_base" type="fixed">
-    <parent link="base_link"/>
-    <child link="realsense_base_frame"/>
-    <origin xyz="0.209 0 0.035"/>
-  </joint>
+    <joint name="realsense_to_base" type="fixed">
+      <parent link="base_link"/>
+      <child link="realsense_base_frame"/>
+      <origin xyz="0.209 0 0.02"/>
+    </joint>
 
 <link name="right_front_servo_holder">
     <visual>
@@ -385,6 +388,16 @@
     <parent link="right_back_servo"/>
     <child link="right_back_wheel"/>
     <origin rpy="0 0 0" xyz="0 0 -0.12"/>
+  </joint>
+
+  
+  <link name="floor_frame">
+  </link>
+
+  <joint name="floor_to_base_link_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="floor_frame"/>
+    <origin rpy="0 0 0" xyz="0 0 -0.164"/>
   </joint>
 
   </xacro:macro>
