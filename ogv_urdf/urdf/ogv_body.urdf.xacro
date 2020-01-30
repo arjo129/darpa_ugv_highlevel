@@ -38,11 +38,13 @@
     </inertial>
   </link>
 
-  <joint name="main_frame_to_base" type="fixed">
+  <joint name="base_to_main_frame" type="fixed">
     <parent link="base_link"/>
     <child link="main_frame"/>
     <origin xyz="0 0 0"/>
   </joint>
+
+  <!-- LIDAR  -->
 
   <link name="base_laser">
     <visual>
@@ -63,22 +65,34 @@
     </inertial>
   </link>
 
-  <joint name="laser_to_base" type="fixed">
+  <joint name="base_to_laser" type="fixed">
     <parent link="base_link"/>
     <child link="base_laser"/>
     <origin xyz="0.144 0 0.134"/>
   </joint>
 
-   <link name="realsense_base_frame">
+  <link name="laser" />
+
+  <joint name="base_laser_rotated" type="fixed">
+    <parent link="base_laser"/>
+    <child link="laser"/>
+    <axis xyz="0 0 1"/>
+    <origin xyz="0 0 0" rpy="0 0 3.14"/>
+  </joint>
+
+  <!-- REALSENSE CAMERA -->
+  <link name="realsense_base_frame">
   </link>
 
-    <joint name="realsense_to_base" type="fixed">
-      <parent link="base_link"/>
-      <child link="realsense_base_frame"/>
-      <origin xyz="0.209 0 0.02"/>
-    </joint>
+  <joint name="base_to_realsense" type="fixed">
+    <parent link="base_link"/>
+    <child link="realsense_base_frame"/>
+    <origin xyz="0.209 0 0.02"/>
+  </joint>
 
-<link name="right_front_servo_holder">
+  <!-- WHEELS AND SERVOS -->
+
+  <link name="right_front_servo_holder">
     <visual>
       <geometry>
         <box size="0.05 0.095 0.03"/>
@@ -97,13 +111,13 @@
     </inertial>
   </link>
 
-  <joint name="right_front_servo_holder_to_base" type="fixed">
+  <joint name="base_to_right_front_servo_holder" type="fixed">
     <parent link="base_link"/>
     <child link="right_front_servo_holder"/>
     <origin xyz="0.179 -0.14 -0.005"/>
   </joint>
 
-<link name="left_front_servo_holder">
+  <link name="left_front_servo_holder">
     <visual>
       <geometry>
         <box size="0.05 0.095 0.03"/>
@@ -122,13 +136,13 @@
     </inertial>
   </link>
 
-  <joint name="left_front_servo_holder_to_base" type="fixed">
+  <joint name="base_to_left_front_servo_holder" type="fixed">
     <parent link="base_link"/>
     <child link="left_front_servo_holder"/>
     <origin xyz="0.179 0.14 -0.005"/>
   </joint>
 
-<link name="left_back_servo_holder">
+  <link name="left_back_servo_holder">
     <visual>
       <geometry>
         <box size="0.05 0.095 0.03"/>
@@ -147,7 +161,7 @@
     </inertial>
   </link>
 
-  <joint name="left_back_servo_holder_to_base" type="fixed">
+  <joint name="base_to_left_back_servo_holder" type="fixed">
     <parent link="base_link"/>
     <child link="left_back_servo_holder"/>
     <origin xyz="-0.179 0.14 -0.005"/>
@@ -172,7 +186,7 @@
     </inertial>
   </link>
 
-  <joint name="right_back_servo_holder_to_base" type="fixed">
+  <joint name="base_to_right_back_servo_holder" type="fixed">
     <parent link="base_link"/>
     <child link="right_back_servo_holder"/>
     <origin xyz="-0.179 -0.14 -0.005"/>
@@ -390,11 +404,12 @@
     <origin rpy="0 0 0" xyz="0 0 -0.12"/>
   </joint>
 
-  
+  <!-- FLOOR FRAME -->
+
   <link name="floor_frame">
   </link>
 
-  <joint name="floor_to_base_link_joint" type="fixed">
+  <joint name="base_link_to_floor_joint" type="fixed">
     <parent link="base_link"/>
     <child link="floor_frame"/>
     <origin rpy="0 0 0" xyz="0 0 -0.164"/>
