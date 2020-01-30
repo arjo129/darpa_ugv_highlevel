@@ -12,6 +12,9 @@
   <material name="white">
     <color rgba="1 1 1 1"/>
   </material>
+  <material name="red">
+    <color rgba="1 0 0 1"/>
+  </material>
 
   <link name="base_link">
   </link>
@@ -19,14 +22,14 @@
   <link name="main_frame">
     <visual>
       <geometry>
-        <box size="0.358 0.33 0.052"/>
+        <box size="0.358 0.33 0.072"/>
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0.026"/>
+      <origin rpy="0 0 0" xyz="0 0 0.036"/>
       <material name="black"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.358 0.33 0.052"/>
+        <box size="0.358 0.33 0.072"/>
       </geometry>
     </collision>
     <inertial>
@@ -35,13 +38,15 @@
     </inertial>
   </link>
 
-  <joint name="main_frame_to_base" type="fixed">
+  <joint name="base_to_main_frame" type="fixed">
     <parent link="base_link"/>
     <child link="main_frame"/>
     <origin xyz="0 0 0"/>
   </joint>
 
-  <link name="lidar_frame">
+  <!-- LIDAR  -->
+
+  <link name="base_laser_link">
     <visual>
       <geometry>
         <cylinder length="0.07" radius="0.035"/>
@@ -60,22 +65,34 @@
     </inertial>
   </link>
 
-  <joint name="lidar_to_base" type="fixed">
+  <joint name="base_to_laser" type="fixed">
     <parent link="base_link"/>
-    <child link="lidar_frame"/>
-    <origin xyz="0.144 0 0.114"/>
+    <child link="base_laser_link"/>
+    <origin xyz="0.144 0 0.134"/>
   </joint>
 
-   <link name="realsense_base_frame">
+  <link name="laser_frame" />
+
+  <joint name="base_laser_rotated" type="fixed">
+    <parent link="base_laser_link"/>
+    <child link="laser_frame"/>
+    <axis xyz="0 0 1"/>
+    <origin xyz="0 0 0" rpy="0 0 3.14"/>
+  </joint>
+
+  <!-- REALSENSE CAMERA -->
+  <link name="realsense_base_link">
   </link>
 
-  <joint name="realsense_to_base" type="fixed">
+  <joint name="base_to_realsense" type="fixed">
     <parent link="base_link"/>
-    <child link="realsense_base_frame"/>
-    <origin xyz="0.209 0 0.035"/>
+    <child link="realsense_base_link"/>
+    <origin xyz="0.209 0 0.02"/>
   </joint>
 
-<link name="right_front_servo_holder">
+  <!-- WHEELS AND SERVOS -->
+
+  <link name="right_front_servo_holder">
     <visual>
       <geometry>
         <box size="0.05 0.095 0.03"/>
@@ -94,13 +111,13 @@
     </inertial>
   </link>
 
-  <joint name="right_front_servo_holder_to_base" type="fixed">
+  <joint name="base_to_right_front_servo_holder" type="fixed">
     <parent link="base_link"/>
     <child link="right_front_servo_holder"/>
     <origin xyz="0.179 -0.14 -0.005"/>
   </joint>
 
-<link name="left_front_servo_holder">
+  <link name="left_front_servo_holder">
     <visual>
       <geometry>
         <box size="0.05 0.095 0.03"/>
@@ -119,13 +136,13 @@
     </inertial>
   </link>
 
-  <joint name="left_front_servo_holder_to_base" type="fixed">
+  <joint name="base_to_left_front_servo_holder" type="fixed">
     <parent link="base_link"/>
     <child link="left_front_servo_holder"/>
     <origin xyz="0.179 0.14 -0.005"/>
   </joint>
 
-<link name="left_back_servo_holder">
+  <link name="left_back_servo_holder">
     <visual>
       <geometry>
         <box size="0.05 0.095 0.03"/>
@@ -144,7 +161,7 @@
     </inertial>
   </link>
 
-  <joint name="left_back_servo_holder_to_base" type="fixed">
+  <joint name="base_to_left_back_servo_holder" type="fixed">
     <parent link="base_link"/>
     <child link="left_back_servo_holder"/>
     <origin xyz="-0.179 0.14 -0.005"/>
@@ -169,7 +186,7 @@
     </inertial>
   </link>
 
-  <joint name="right_back_servo_holder_to_base" type="fixed">
+  <joint name="base_to_right_back_servo_holder" type="fixed">
     <parent link="base_link"/>
     <child link="right_back_servo_holder"/>
     <origin xyz="-0.179 -0.14 -0.005"/>
@@ -385,6 +402,17 @@
     <parent link="right_back_servo"/>
     <child link="right_back_wheel"/>
     <origin rpy="0 0 0" xyz="0 0 -0.12"/>
+  </joint>
+
+  <!-- FLOOR FRAME -->
+
+  <link name="floor_frame">
+  </link>
+
+  <joint name="base_link_to_floor_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="floor_frame"/>
+    <origin rpy="0 0 0" xyz="0 0 -0.164"/>
   </joint>
 
   </xacro:macro>

@@ -8,7 +8,7 @@ def test_map_update():
         post = rospy.ServiceProxy('post_map_update', MappingUpdate)
         resp = post()
 
-        s = resp.result.data
+        s = resp
         print(s)
 
     except rospy.ServiceException as e:
@@ -19,7 +19,7 @@ def test_telemetry_update():
         post = rospy.ServiceProxy('post_telemetry_update', MappingUpdate)
         resp = post()
 
-        s = resp.result.data
+        s = resp
         print(s)
         
     except rospy.ServiceException as e:
@@ -30,7 +30,7 @@ def test_markers_update():
         post = rospy.ServiceProxy('post_markers_update', MappingUpdate)
         resp = post()
 
-        s = resp.result.data
+        s = resp
         print(s)
         
     except rospy.ServiceException as e:
