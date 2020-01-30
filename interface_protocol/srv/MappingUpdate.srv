@@ -1,2 +1,2 @@
 ---
-std_msgs/String result
+string result

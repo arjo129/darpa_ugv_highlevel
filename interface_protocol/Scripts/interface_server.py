@@ -40,11 +40,27 @@ class score_interface_server:
         response = requests.post(url, json=data, headers=head)
         print("[POST][post_report] RESPONSE: " + str(response))
         j = response.json()
-        #pprint.pprint(j)
+        pprint.pprint(j)
 
-        s = String()
-        s.data = str(j)
-        return PostReportResponse(s)
+        temp = str(j)
+        temp = temp.replace("\'","\"")
+        j = json.loads(temp)
+        
+        resp = PostReportResponse()
+        resp.url = str(j["url"])
+        resp.id = int(j["id"])
+        resp.x = float(j["x"])
+        resp.y = float(j["y"])
+        resp.z = float(j["z"])
+        resp.type = str(j["type"])
+        resp.type = str(j["submitted_datetime"])
+        resp.run_clock = float(j["run_clock"])
+        resp.team = str(j["team"])
+        resp.run = str(j["run"])
+        resp.report_status = str(j["report_status"])
+        resp.score_change = int(j["score_change"])
+
+        return resp
 
     def get_status(self,req):
         head = {"Authorization":"bearer " + self.token}
@@ -53,11 +69,19 @@ class score_interface_server:
         response = requests.get(url, headers=head)
         print("[GET][get_status] RESPONSE: " + str(response))
         j = response.json()
-        #pprint.pprint(j)
+        pprint.pprint(j)
 
-        s = String()
-        s.data = str(j)
-        return GetStatusResponse(s)
+        temp = str(j)
+        temp = temp.replace("\'","\"")
+        j = json.loads(temp)
+
+        resp = GetStatusResponse()
+        resp.current_team = str(j["current_team"])
+        resp.remaining_reports = int(j["remaining_reports"])
+        resp.run_clock = float(j["run_clock"])
+        resp.score = int(j["score"])
+
+        return resp
 
 class mapping_interface_server():
     base_url = "http://localhost:8000"
@@ -95,10 +119,8 @@ class mapping_interface_server():
         url = self.base_url + '/map/update/'
 
         response = requests.post(url, json=data, headers=head)
-        s = String()
-        s.data = str(response)
         print("[POST][map_update] RESPONSE: " + str(response))
-        return MappingUpdateResponse(s)
+        return MappingUpdateResponse(str(response))
 
     def post_telemetry_update(self,req):
         json_str = json_message_converter.convert_ros_message_to_json(self.pose)
@@ -109,10 +131,8 @@ class mapping_interface_server():
         url = self.base_url + '/state/update/'
 
         response = requests.post(url, json=data, headers=head)
-        s = String()
-        s.data = str(response)
         print("[POST][telemetry_update] RESPONSE: " + str(response))
-        return MappingUpdateResponse(s)
+        return MappingUpdateResponse(str(response))
 
     def post_markers_update(self,req):
         json_str = json_message_converter.convert_ros_message_to_json(self.mark)
@@ -123,10 +143,8 @@ class mapping_interface_server():
         url = self.base_url + '/markers/update/'
 
         response = requests.post(url, json=data, headers=head)
-        s = String()
-        s.data = str(response)
         print("[POST][markers_update] RESPONSE: " + str(response))
-        return MappingUpdateResponse(s)
+        return MappingUpdateResponse(str(response))
 
     # ROS Updates
     def update_grid(self,msg):
