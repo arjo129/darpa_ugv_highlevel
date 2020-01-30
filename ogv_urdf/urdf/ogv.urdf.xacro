@@ -7,7 +7,7 @@
   <xacro:ogv_body >
   </xacro:ogv_body>
 
-  <xacro:sensor_d435 parent="realsense_base_frame">
+  <xacro:sensor_d435 parent="realsense_base_link">
     <origin xyz="0 0 0" rpy="0 0 0"/>
   </xacro:sensor_d435>
 
@@ -32,7 +32,7 @@
   <link name="thermal_optical_frame"/>
 
   <joint name="realsense_to_thermal" type="fixed">
-    <parent link="realsense_base_frame"/>
+    <parent link="realsense_base_link"/>
     <child link="thermal_frame"/>
     <origin xyz="0 0 0.033"/>
   </joint>
