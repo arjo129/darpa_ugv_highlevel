@@ -1,0 +1,188 @@
+<?xml version="1.0"?>
+<robot name="tgv_body">
+
+<xacro:macro name="tgv_body" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <material name="blue">
+    <color rgba="0 0 0.8 1"/>
+  </material>
+  <material name="black">
+    <color rgba="0 0 0 1"/>
+  </material>
+  <material name="white">
+    <color rgba="1 1 1 1"/>
+  </material>
+  <material name="red">
+    <color rgba="1 0 0 1"/>
+  </material>
+
+  <link name="base_link">
+  </link>
+
+  <link name="main_frame">
+    <visual>
+      <geometry>
+        <box size="0.48 0.43 0.106"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <inertial>
+      <mass value="10"/>
+      <inertia ixx="0.4" ixy="0.0" ixz="0.0" iyy="0.4" iyz="0.0" izz="0.2"/>
+    </inertial>
+  </link>
+
+  <joint name="base_to_main_frame" type="fixed">
+    <parent link="base_link"/>
+    <child link="main_frame"/>
+    <origin xyz="0 0 0"/>
+  </joint>
+
+<!-- FRONT WHEELS -->
+  <link name="f_r_wheel">
+    <visual>
+      <geometry>
+        <cylinder length="0.075" radius= "0.12349"/>
+      </geometry>
+      <origin rpy="1.57075 0 0" xyz="0 0 0"/>
+      <material name="white"/>
+    </visual>
+    <inertial>
+      <mass value="10"/>
+      <inertia ixx="0.4" ixy="0.0" ixz="0.0" iyy="0.4" iyz="0.0" izz="0.2"/>
+    </inertial>
+  </link>
+
+  <joint name="base_to_f_r_wheel" type="continuous">
+    <parent link="base_link"/>
+    <child link="f_r_wheel"/>
+    <axis xyz="0 1 0"/>
+    <origin xyz="0.2135 -0.2625 -0.021"/>
+  </joint>
+
+  <link name="f_l_wheel">
+    <visual>
+      <geometry>
+        <cylinder length="0.075" radius= "0.12349"/>
+      </geometry>
+      <origin rpy="1.57075 0 0" xyz="0 0 0"/>
+      <material name="white"/>
+    </visual>
+    <inertial>
+      <mass value="10"/>
+      <inertia ixx="0.4" ixy="0.0" ixz="0.0" iyy="0.4" iyz="0.0" izz="0.2"/>
+    </inertial>
+  </link>
+
+  <joint name="base_to_f_l_wheel" type="continuous">
+    <parent link="base_link"/>
+    <child link="f_l_wheel"/>
+    <axis xyz="0 1 0"/>
+    <origin xyz="0.2135 0.2625 -0.021"/>
+  </joint>
+
+  <!-- BACK WHEELS  -->
+  <link name="b_r_wheel">
+    <visual>
+      <geometry>
+        <cylinder length="0.075" radius= "0.095496"/>
+      </geometry>
+      <origin rpy="1.57075 0 0" xyz="0 0 0"/>
+      <material name="white"/>
+    </visual>
+    <inertial>
+      <mass value="10"/>
+      <inertia ixx="0.4" ixy="0.0" ixz="0.0" iyy="0.4" iyz="0.0" izz="0.2"/>
+    </inertial>
+  </link>
+
+  <joint name="base_to_b_r_wheel" type="continuous">
+    <parent link="f_r_wheel"/>
+    <child link="b_r_wheel"/>
+    <axis xyz="0 1 0"/>
+    <!-- <origin xyz="-0.150 -0.2625 -0.021"/> -->
+    <origin xyz="-0.385 0 0"/>
+  </joint>
+
+  <link name="b_l_wheel">
+    <visual>
+      <geometry>
+        <cylinder length="0.075" radius= "0.095496"/>
+      </geometry>
+      <origin rpy="1.57075 0 0" xyz="0 0 0"/>
+      <material name="white"/>
+    </visual>
+    <inertial>
+      <mass value="10"/>
+      <inertia ixx="0.4" ixy="0.0" ixz="0.0" iyy="0.4" iyz="0.0" izz="0.2"/>
+    </inertial>
+  </link>
+
+  <joint name="base_to_b_l_wheel" type="continuous">
+    <parent link="f_l_wheel"/>
+    <child link="b_l_wheel"/>
+    <axis xyz="0 1 0"/>
+    <origin xyz="-0.385 0 0"/>
+  </joint>
+
+  <!-- LIDAR  -->
+  <link name="base_laser_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.07" radius="0.035"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 -0.027"/>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="0.07" radius="0.035"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.22"/>
+      <inertia ixx="0.000157" ixy="0.0" ixz="0.0" iyy="0.000157" iyz="0.0" izz="0.000135"/>
+    </inertial>
+  </link>
+
+  <joint name="base_to_laser" type="continuous">
+    <parent link="base_link"/>
+    <child link="base_laser_link"/>
+    <axis xyz="0 0 1"/>
+    <origin xyz="0.22 0 0.1196"/>
+  </joint>
+
+  <link name="laser_frame" />
+
+  <joint name="base_laser_rotated" type="fixed">
+    <parent link="base_laser_link"/>
+    <child link="laser_frame"/>
+    <axis xyz="0 0 1"/>
+    <origin xyz="0 0 0" rpy="0 0 3.14"/>
+  </joint>
+
+  <!-- REALSENSE CAMERA -->
+
+  <link name="realsense_base_link">
+  </link>
+
+  <joint name="base_to_realsense" type="fixed">
+    <parent link="base_link"/>
+    <child link="realsense_base_link"/>
+    <axis xyz="0 1 0"/>
+    <origin xyz="0.290 0 0.006"/>
+  </joint>
+
+
+  
+  <link name="floor_frame">
+  </link>
+
+  <joint name="floor_to_base_link_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="floor_frame"/>
+    <origin rpy="0 0 0" xyz="0 0 -0.164"/>
+  </joint>
+
+  </xacro:macro>
+</robot>
