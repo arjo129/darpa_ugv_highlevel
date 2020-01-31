@@ -40,7 +40,7 @@ class score_interface_server:
         response = requests.post(url, json=data, headers=head)
         print("[POST][post_report] RESPONSE: " + str(response))
         j = response.json()
-        pprint.pprint(j)
+        #pprint.pprint(j)
 
         temp = str(j)
         temp = temp.replace("\'","\"")
@@ -69,7 +69,7 @@ class score_interface_server:
         response = requests.get(url, headers=head)
         print("[GET][get_status] RESPONSE: " + str(response))
         j = response.json()
-        pprint.pprint(j)
+        #pprint.pprint(j)
 
         temp = str(j)
         temp = temp.replace("\'","\"")
@@ -120,7 +120,10 @@ class mapping_interface_server():
 
         response = requests.post(url, json=data, headers=head)
         print("[POST][map_update] RESPONSE: " + str(response))
-        return MappingUpdateResponse(str(response))
+        if "200" in str(response) or "201" in str(response):
+            return MappingUpdateResponse(str(response),True)
+        else:
+            return MappingUpdateResponse(str(response),False)
 
     def post_telemetry_update(self,req):
         json_str = json_message_converter.convert_ros_message_to_json(self.pose)
@@ -132,8 +135,10 @@ class mapping_interface_server():
 
         response = requests.post(url, json=data, headers=head)
         print("[POST][telemetry_update] RESPONSE: " + str(response))
-        return MappingUpdateResponse(str(response))
-
+        if "200" in str(response) or "201" in str(response):
+            return MappingUpdateResponse(str(response),True)
+        else:
+            return MappingUpdateResponse(str(response),False)
     def post_markers_update(self,req):
         json_str = json_message_converter.convert_ros_message_to_json(self.mark)
         message = json.loads(json_str)
@@ -144,7 +149,10 @@ class mapping_interface_server():
 
         response = requests.post(url, json=data, headers=head)
         print("[POST][markers_update] RESPONSE: " + str(response))
-        return MappingUpdateResponse(str(response))
+        if "200" in str(response) or "201" in str(response):
+            return MappingUpdateResponse(str(response),True)
+        else:
+            return MappingUpdateResponse(str(response),False)
 
     # ROS Updates
     def update_grid(self,msg):
