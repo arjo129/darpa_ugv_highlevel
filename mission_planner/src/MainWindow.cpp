@@ -2,11 +2,15 @@
 
 #define ROTATION_INCREMENT 1 // 1 degree increment per signal from onRotate()
 
-MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), rosthread(_nh) {
+MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), rosthread(_nh), darpaServerThread(_nh) {
     rosthread.start();
+    darpaServerThread.start();
     ui = new Ui::MainWindow();
     ui->setupUi(this);
     scene = new CustomGraphicsScene();
+    
+    initDarpaInterfaceUI();
+
     ui->graphicsView->setScene(scene);
     ui->horizontalSplitPanel->setStretchFactor(0,2);
     qRegisterMetaType<QPixmap>("QPixmap");
@@ -15,6 +19,7 @@ MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), rosthread(_nh) {
     connect(ui->progressSlider, &QSlider::sliderMoved, this, &MainWindow::sliderMoved);
     connect(ui->returnDraw, &QPushButton::pressed, this, &MainWindow::propagateChanges);
     connect(scene, &CustomGraphicsScene::onRotate, this, &MainWindow::rotatePixMap);
+    
     this->sliderState = SliderState::LIVE_VIEW;
     this->editorState = EditorState::MOVE;
     offsetState initialState = {0, 0, QPointF(0.0, 0.0), 0.0};
@@ -25,6 +30,37 @@ MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), rosthread(_nh) {
 MainWindow::~MainWindow() {
     delete scene;
     delete ui;
+}
+
+void MainWindow::initDarpaInterfaceUI() {
+    artifactXBox = ui->artifactXInput;
+    artifactYBox = ui->artifactYInput;
+    artifactZBox = ui->artifactZInput;
+    goalXBox = ui->goalXInput;
+    goalYBox = ui->goalYInput;
+    goalZBox = ui->goalZInput;
+    comboBoxArtifactType = ui->comboBoxArtifactType;
+
+    connect(&darpaServerThread, &DarpaServerThread::darpaStatusRecieved, this, &MainWindow::darpaStatusRecieved);
+    connect(&darpaServerThread, &DarpaServerThread::artifactStatusReceived, this, &MainWindow::artifactStatusReceived);
+    connect(&darpaServerThread, &DarpaServerThread::mapUpdateReceived, this, &MainWindow::mapUpdateReceived);
+    connect(this, &MainWindow::reportArtifact, &darpaServerThread, &DarpaServerThread::reportArtifact);
+    connect(ui->reportArtifactBtn, &QPushButton::pressed, this, &MainWindow::artifactBtnClicked);
+}
+
+QVector3D MainWindow::getArtifactPos() {
+
+    double x = artifactXBox->value();
+    double y = artifactYBox->value();
+    double z = artifactZBox->value();
+
+    return QVector3D(x,y,z);
+}
+
+std::string MainWindow::getArtifactTypeStr() {
+    std::string artifactTypeStr = (comboBoxArtifactType->currentText()).toStdString();
+    ROS_INFO("%s artifact type selected", artifactTypeStr.c_str());
+    return artifactTypeStr;
 }
 
 QTransform MainWindow::getTransform(QPointF translation, double rotationAngle) {
@@ -136,4 +172,26 @@ void MainWindow::rotatePixMap(RotateState rotateState) {
         laserscans[currentIndex]->setRotation(rotationAngle);
     }
     
+}
+
+void MainWindow::artifactBtnClicked() {
+    QVector3D pos3d = getArtifactPos();
+    std::string artifactTypeStr = getArtifactTypeStr();
+    emit reportArtifact(pos3d.x(), pos3d.y(), pos3d.z(), artifactTypeStr);
+}
+
+void MainWindow::darpaStatusRecieved(std::string teamName, double currentTime, 
+                                 int32_t numReportsLeft, int32_t currentScore) {
+
+}
+void MainWindow::artifactStatusReceived(std::string result) {
+    QMessageBox* resultDialog = new QMessageBox(this);
+    resultDialog->setText(QString::fromStdString(result));
+    resultDialog->show();
+    resultDialog->raise();
+    resultDialog->activateWindow();
+}
+
+void MainWindow::mapUpdateReceived(bool success, std::string errorStr) {
+
 }

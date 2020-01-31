@@ -446,7 +446,7 @@ color: rgb(238, 238, 236);</string>
             </widget>
            </item>
            <item row="5" column="0">
-            <widget class="QPushButton" name="reportArifactBtn">
+            <widget class="QPushButton" name="reportArtifactBtn">
              <property name="styleSheet">
               <string notr="true">background-color: rgb(241, 62, 190);</string>
              </property>
