@@ -16,4 +16,7 @@ Other settings that can be used to help detection is found in **settings.yml**.
 ## General
 The module listens to "/tag_detections" published by the **apriltag_ros** package
 If there are 2 detections, it gets the centre coordinate by averaging the x,y,z values of the position.
-It finally publishes the coordinates in the form of an **AprilTagDetection** msg
+
+From the "camera_color_optical_frame", publishes to the TF tree the centre coordinate "middle".
+Then a lookupTransform is performed to determine the vector between the base_link and the centre coordinate.
+Since the "map" frame is generated on base_link, this vector is hence the same as the representation from "DARPA" frame to "map" frame.
