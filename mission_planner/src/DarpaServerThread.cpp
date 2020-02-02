@@ -1,7 +1,7 @@
 #include <mission_planner/DarpaServerThread.h>
 
 DarpaServerThread::DarpaServerThread(ros::NodeHandle _nh) : nh(_nh) {
-    //initInterfaceProtocolServices();
+    initInterfaceProtocolServices();
     this->isRunning = true;
 }
 
@@ -16,14 +16,19 @@ bool DarpaServerThread::initInterfaceProtocolServices() {
     this->telemetryReportSrvClient = this->nh.serviceClient<interface_protocol::MappingUpdate>("post_telemetry_update");
     this->markersReportSrvClient = this->nh.serviceClient<interface_protocol::MappingUpdate>("post_markers_update");
 
-    while (!(this->artifactReportSrvClient.exists() && this->darpaStatusSrvClient.exists() && this->mapReportSrvClient.exists() && 
-        this->telemetryReportSrvClient.exists() && this->markersReportSrvClient.exists())) {
-        ROS_ERROR("One or more of the interface_protocol services are down. Please Check.");
-        ROS_ERROR("Trying Again...");
-        ros::Duration(2.0).sleep();
+    while (ros::ok()) {
+        if (!(this->artifactReportSrvClient.exists() && this->darpaStatusSrvClient.exists() && this->mapReportSrvClient.exists() && 
+            this->telemetryReportSrvClient.exists() && this->markersReportSrvClient.exists())) {
+            ROS_ERROR("One or more of the interface_protocol services are down. Please Check.");
+            ROS_ERROR("Trying Again...");
+            ros::Duration(2.0).sleep();
+        }
+        else {
+            ROS_INFO("Successfully connected to interface_protocol services");
+            break;
+        }
     }
-
-    ROS_INFO("Successfully connected to interface_protocol services");
+    
 }
 
 void DarpaServerThread::getDarpaStatus() {
