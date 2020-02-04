@@ -38,7 +38,7 @@ std::vector<float> getThermalAngs (std::vector<cv::Point2f> &thermalCenters) {
 void image_callBack(const sensor_msgs::ImageConstPtr &msg) {
 	cv_bridge::CvImagePtr cv_ptr;
 	try {
-		cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
+		cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO16);
 	} catch (cv_bridge::Exception e) {
 		ROS_ERROR("cv_bridge exception: %s", e.what());
 	}

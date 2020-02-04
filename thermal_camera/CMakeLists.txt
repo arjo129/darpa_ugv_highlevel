@@ -11,13 +11,14 @@ find_package(catkin REQUIRED
   sensor_msgs
   tf2
   roscpp
-  pcl_ros
+  tf2_ros
   std_msgs
   nav_msgs
   image_geometry
   message_generation
   dynamic_reconfigure
   image_transport
+  geometry_msgs
   cv_bridge
 )
 
