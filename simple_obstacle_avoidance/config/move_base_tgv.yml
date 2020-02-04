@@ -1,0 +1,72 @@
+max_planning_retries: 2
+recovery_behavior_enabled: false
+controller_patience: 5
+oscillation_timeout: 10
+
+TrajectoryPlannerROS:
+    max_vel_x: 0.45
+    min_vel_x: 0.1
+    max_vel_theta: 1.0
+    min_in_place_vel_theta: 0.4
+    
+    acc_lim_theta: 3.2
+    acc_lim_x: 2.5
+    acc_lim_y: 2.5
+    
+    holonomic_robot: false
+
+local_costmap:
+    global_frame: map
+    robot_base_frame: base_link
+    update_frequency: 6.0
+    publish_frequency: 2.0
+    static_map: false
+    rolling_window: true
+    width: 20
+    height: 20
+    resolution: 0.05
+    footprint: [[0.35, 0.35], [0.35, -0.35], [-0.35, -0.35], [-0.35, 0.35]]
+    transform_tolerance: 5
+    update_frequency: 5
+    publish_frequency: 5
+    plugins:
+        - {name: obstacles_laser,     type: "costmap_2d::ObstacleLayer"}
+        - {name: inflation,        type: "costmap_2d::InflationLayer"}
+    obstacles_laser:
+        observation_sources: laser
+        laser: {data_type: LaserScan, clearing: true, marking: true, topic: /scan, obstacle_range: 20,
+            raytrace_range: 20,inf_is_valid: true}
+    explore_boundary:
+        resize_to_boundary: false
+        frontier_travel_point: "middle"
+        explore_clear_space: false
+    inflation:
+        inflation_radius: 0.5
+
+global_costmap:
+    global_frame: map
+    robot_base_frame: base_link
+    update_frequency: 5.0
+    publish_frequency: 2.0
+    static_map: false
+    rolling_window: true
+    width: 20
+    height: 20
+    resolution: 0.05
+    footprint: [[0.5, 0.5], [0.5, -0.5], [-0.5, -0.5], [-0.5, 0.5]]
+    transform_tolerance: 5
+    update_frequency: 5
+    publish_frequency: 5
+    plugins:
+        - {name: obstacles_laser,     type: "costmap_2d::ObstacleLayer"}
+        - {name: inflation,        type: "costmap_2d::InflationLayer"}
+    obstacles_laser:
+        observation_sources: laser
+        laser: {data_type: LaserScan, clearing: true, marking: true, topic: /scan, inf_is_valid: true}
+    explore_boundary:
+        resize_to_boundary: false
+        frontier_travel_point: "middle"
+        explore_clear_space: false
+    inflation:
+        inflation_radius: 0.5
+      
