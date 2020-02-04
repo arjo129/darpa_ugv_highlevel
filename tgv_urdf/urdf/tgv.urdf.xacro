@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<robot name="tgv" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find tgv_urdf)/urdf/_d435.urdf.xacro" />
+  <xacro:include filename="$(find tgv_urdf)/urdf/tgv_body.urdf.xacro" />
+
+  <xacro:tgv_body >
+  </xacro:tgv_body>
+
+  <xacro:sensor_d435 parent="realsense_base_link">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:sensor_d435>
+
+  <link name="thermal_frame">
+    <visual>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="red"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.010"/>
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.000016" iyz="0.0" izz="0.0001"/>
+    </inertial>
+  </link>
+  <link name="thermal_optical_frame"/>
+
+  <joint name="realsense_to_thermal" type="fixed">
+    <parent link="realsense_base_link"/>
+    <child link="thermal_frame"/>
+    <origin xyz="0 0 0.033"/>
+  </joint>
+
+  <joint name="thermal_to_thermal_optical_joint" type="fixed">
+    <parent link="thermal_frame"/>
+    <child link="thermal_optical_frame"/>
+    <origin xyz="0 0 0" rpy="-1.57 0 -1.57"/>
+  </joint>
+
+</robot>

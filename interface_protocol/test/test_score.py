@@ -10,13 +10,8 @@ def test_get_status():
         get = rospy.ServiceProxy('get_status', GetStatus)
         resp = get()
 
-        s = resp.result.data
-
-        # Change the quotes to double quotes for JSON library to accept the string
-        s = s.replace("\'","\"")
-        print(s)
-        j = json.loads(s)
-        pprint.pprint(j)
+        s = resp
+        pprint.pprint(s.run_clock)
         
     except rospy.ServiceException as e:
         print ("Service call failed: %s"%e)
@@ -25,23 +20,17 @@ def test_post_report():
     try:
         post = rospy.ServiceProxy('post_report', PostReport)
 
-        # Good test - should show tahtt he score change is 1 in the test server
+        # Good test - should show that the score change is 1 in the test server
         resp = post(1,2,3,"backpack")
 
-        s = resp.result.data
-        s = s.replace("\'","\"")
-        print(s)
-        j = json.loads(s)
-        pprint.pprint(j)
+        s = resp
+        pprint.pprint(s.score_change)
         
         # Bad test - should show that the score change is 0 in the test server
         resp = post(1,2,3,"b")
 
-        s = resp.result.data
-        s = s.replace("\'","\"")
-        print(s)
-        j = json.loads(s)
-        pprint.pprint(j)
+        s = resp
+        pprint.pprint(s.score_change)
 
     except rospy.ServiceException as e:
         print ("Service call failed: %s"%e)

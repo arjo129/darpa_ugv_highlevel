@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ogv_urdf</name>
+  <version>0.1.0</version>
+  <description>The ogv_urdf package for darpa subt challenge</description>
+  <maintainer email="hashir@u.nus.edu">hashir</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
+  <export>
+  </export>
+</package>
