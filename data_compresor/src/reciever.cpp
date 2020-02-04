@@ -11,48 +11,31 @@
 #include <data_compressor/zip.h>
 #include <data_compressor/protocol.h>
 #include <data_compressor/msgs/laserscan.h>
-#include <unordered_map>
-ros::NodeHandle* nh;
-class UGV {
-public:
-    ros::Publisher laserPub, wifiPub, co2Pub, statusPub;
-    ros::Subscriber estopSub;
+#include <data_compressor/msgs/co2.h>
+#include <data_compressor/msgs/WifiArray.h>
 
-    UGV(std::string _namespace, ros::NodeHandle nh) {
-        laserPub = nh.advertise<sensor_msgs::LaserScan>("/robot"+_namespace+"/scan", 10);
-        wifiPub = nh.advertise<wifi_sensor::wifiArray>("/robot"+_namespace+"/wifi",10);
-    }
-
-    void sendEStop() {
-
-    }
-
-    wireless_msgs::LoraPacket retrieveNextMessage() {
-
-    }
-};
-
-std::unordered_map<std::string, UGV*> ugvs;
-
-void registerNewRobot(std::string name) {
-    UGV* ugv =  new UGV(name, *nh);
-    ugvs[name] = ugv;
-}
-
-ros::Publisher pub;
+ros::Publisher laserPub;
+ros::Publisher co2Pub;
+ros::Publisher waPub;
 ros::Subscriber loraSub;
+ros::NodeHandle *nh;
+
 void handleLaserScan(std::string from, std::vector<uint8_t> data) {
     AdaptiveTelemetryScan scan = decodeScan(data);
     sensor_msgs::LaserScan lscan = toLaserScan(scan);
-    pub.publish(lscan);
+    laserPub.publish(lscan);
 }
 
-void handleWifi(std::string from, std::vector<uint8_t> data) {
-
+void handleCo2(std::string from, std::vector<uint8_t> data) {
+    Co2 co2 = decodeCo2(data);
+    wireless_msgs::Co2 msg = toCo2(co2);
+    co2Pub.publish(msg);
 }
 
-void handleCO2(std::string from, std::vector<uint8_t> data) {
-
+void handleWifiArray(std::string from, std::vector<uint8_t> data) {
+    WifiArray wa = decodeWifiArray(data);
+    wireless_msgs::WifiArray msg = toWifiArray(wa);
+    waPub.publish(msg);
 }
 
 void handleEStopAck(std::string from, std::vector<uint8_t> data) {
@@ -72,14 +55,13 @@ void onRecieveRx(wireless_msgs::LoraPacket packet) {
         case (uint8_t)MessageType::LASER_SCAN:
             handleLaserScan(packet.from.data, data);
             break;
-        case (uint8_t)MessageType::WIFI_SIGNAL:
-            handleWifi(packet.from.data, data);
-            break;
-        case (uint8_t)MessageType::CO2_SIGNATURE:
-            handleCO2(packet.from.data, data);
-            break;
         case (uint8_t)MessageType::ESTOP_ACK:
             handleEStopAck(packet.from.data, data);
+        case (uint8_t)MessageType::CO2_SIGNATURE:
+            handleCo2(packet.from.data, data);
+            break;
+        case (uint8_t)MessageType::WIFI_SIGNAL:
+            handleWifiArray(packet.from.data, data);
             break;
         default:
             ROS_ERROR("Handler not found");
@@ -89,11 +71,14 @@ int main(int argc, char** argv) {
     ros::init(argc, argv, "basestation_relay");
     nh = new ros::NodeHandle();
     ros::Rate rate(10);
-    pub = nh->advertise<sensor_msgs::LaserScan>("/recieved/scan", 10);
+    laserPub = nh->advertise<sensor_msgs::LaserScan>("/recieved/scan", 10);
+    co2Pub = nh->advertise<wireless_msgs::Co2>("/recieved/co2", 10);
+    waPub = nh->advertise<wireless_msgs::Co2>("/recieved/wifi", 10);
     loraSub = nh->subscribe("/lora/rx", 10, &onRecieveRx);
     while(ros::ok()){
         ros::spinOnce();  
         rate.sleep();
     }
+    delete nh;
     return 0;
 }
