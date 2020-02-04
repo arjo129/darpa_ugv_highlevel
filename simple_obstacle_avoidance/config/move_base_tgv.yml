@@ -4,10 +4,10 @@ controller_patience: 5
 oscillation_timeout: 10
 
 TrajectoryPlannerROS:
-    max_vel_x: 0.45
-    min_vel_x: 0.1
-    max_vel_theta: 1.0
-    min_in_place_vel_theta: 0.4
+    max_vel_x: 0.1
+    min_vel_x: 0.01
+    max_vel_theta: 0.3
+    min_in_place_vel_theta: 0.1
     
     acc_lim_theta: 3.2
     acc_lim_x: 2.5
@@ -53,7 +53,7 @@ global_costmap:
     width: 20
     height: 20
     resolution: 0.05
-    footprint: [[0.5, 0.5], [0.5, -0.5], [-0.5, -0.5], [-0.5, 0.5]]
+    footprint: [[0.35, 0.35], [0.35, -0.35], [-0.35, -0.35], [-0.35, 0.35]]
     transform_tolerance: 5
     update_frequency: 5
     publish_frequency: 5
