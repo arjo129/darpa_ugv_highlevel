@@ -60,7 +60,7 @@ void onImuRecieved(sensor_msgs::Imu imu_reading) {
 uint8_t score(Eigen::Vector2i pt){
     float dx = pt.x() - frontierScore->gridWidth/2;
     float dy = pt.y() - frontierScore->gridHeight/2;
-    float angle = 90*(M_PI - abs(atan2(dy, dx)))/M_PI + 10;
+    float angle = 90*(abs(atan2(dy, dx)))/M_PI + 10;
     float preference = 1;
     if(atan2(dy, dx) <= -0.1){
         preference = 0.9;
@@ -159,8 +159,8 @@ void onLaserScan (sensor_msgs::LaserScan lscan) {
     //Build the goal message
     move_base_msgs::MoveBaseGoal goal;
     goal.target_pose.header = lscan.header;
-    goal.target_pose.pose.position.x = frontierScore->fromXIndex(optimum_choice.x())/optimum_choice.norm();
-    goal.target_pose.pose.position.y = frontierScore->fromYIndex(optimum_choice.y())/optimum_choice.norm();
+    goal.target_pose.pose.position.x = frontierScore->fromXIndex(optimum_choice.x())*0.5;
+    goal.target_pose.pose.position.y = frontierScore->fromYIndex(optimum_choice.y())*0.5;
     goal.target_pose.pose.position.z = 0;
     float targetYaw = atan2(frontierScore->fromYIndex(optimum_choice.y()), frontierScore->fromXIndex(optimum_choice.x()));
     tf::Quaternion targetYawQt(tf::Vector3(0,0,1), targetYaw);
