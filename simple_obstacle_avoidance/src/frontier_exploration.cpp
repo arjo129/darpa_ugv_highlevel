@@ -234,7 +234,7 @@ int main(int argc, char** argv) {
     //Subscribers
     ros::Subscriber sub = nh.subscribe("/scan", 1, onLaserScan);
     ros::Subscriber estopSub= nh.subscribe<std_msgs::String>("e_stop", 10, onEstopRecieved);
-    ros::Subscriber start = nh.subscribe<std_msgs::String>("e_stop", 10, onEstopRecieved);
+    ros::Subscriber start = nh.subscribe<std_msgs::String>("start", 10, onStartRecieved);
 
     //Movebase initiallization
     moveBaseClient = new MoveBaseClient("move_base", true);
