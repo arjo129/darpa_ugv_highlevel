@@ -58,7 +58,7 @@ void OdometryBasedLocalization::broadcast() {
 int main(int argc, char** argv){
     ros::init(argc, argv, "odometry_republisher");
     ros::NodeHandlePtr nh = boost::make_shared<ros::NodeHandle>();
-    OdometryBasedLocalization odom(nh, "X1");
+    OdometryBasedLocalization odom(nh, "");
     ros::Rate rate(10);
     while(ros::ok()){
         ros::spinOnce();

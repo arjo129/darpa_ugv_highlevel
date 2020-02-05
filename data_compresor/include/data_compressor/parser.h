@@ -24,6 +24,7 @@ uint16_t expectUInt16(PacketParser& parser, std::vector<uint8_t>& data);
 int16_t expectInt16t(PacketParser& parser, std::vector<uint8_t>& data);
 int8_t expectInt8t(PacketParser& parser, std::vector<uint8_t>& data);
 uint8_t expectUInt8t(PacketParser& parser, std::vector<uint8_t>& data);
+std::string expectString(PacketParser& parser, std::vector<uint8_t>& data);
 
 void encodeInt8t(std::vector<uint8_t>& packet, int8_t data);
 void encodeUInt8t(std::vector<uint8_t>& packet, uint8_t data);
@@ -31,4 +32,5 @@ void encodeUInt16t(std::vector<uint8_t>& packet, uint16_t data);
 void encodeInt16t(std::vector<uint8_t>& packet, int16_t data);
 void encodeInt(std::vector<uint8_t>& packet, int data);
 void encodeUInt64t(std::vector<uint8_t>& packet, uint64_t data);
+void encodeString(std::vector<uint8_t>& packet, std::string data);
 #endif

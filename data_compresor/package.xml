@@ -67,6 +67,7 @@
   <exec_depend>wireless_msgs</exec_depend>
     <build_depend>amapper</build_depend>
 
+  <depend>wifi_sensor</depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

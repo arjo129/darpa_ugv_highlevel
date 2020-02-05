@@ -7,7 +7,7 @@ project(wireless_msgs)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED message_generation std_msgs)
+find_package(catkin REQUIRED message_generation std_msgs geometry_msgs)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -48,6 +48,9 @@ add_message_files(
     uwb.msg
     LoraPacket.msg
     LoraInfo.msg
+    Co2.msg
+    Wifi.msg
+    WifiArray.msg
 #   Message2.msg
  )
 
@@ -69,6 +72,7 @@ add_message_files(
 generate_messages(
   DEPENDENCIES
   std_msgs  # Or other packages containing msgs
+  geometry_msgs
 )
 
 ################################################
