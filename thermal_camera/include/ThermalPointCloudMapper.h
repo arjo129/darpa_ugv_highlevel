@@ -25,15 +25,16 @@
 
 #include <pcl/point_types.h>
 #include <pcl/PCLPointCloud2.h>
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl/common/transforms.h>
 
 #include <pcl_ros/point_cloud.h>
-#include <pcl_ros/transforms.h>
 
 #define TF_THERMAL_FRAME "thermal_optical_frame"
 
 using namespace std;
+
+struct Bgr {
+    uchar blue, green, red;
+};
 
 struct Affine {
     double Rxx, Rxy, Rxz, Ryx, Ryy, Ryz, Rzx, Rzy, Rzz;
@@ -44,14 +45,12 @@ class ThermalPointCloudMapper {
     ros::NodeHandle _nh;
 
     ros::Subscriber sub_thermal_img, sub_depth_img;
-    ros::Publisher _filteredPoints_visual, _actual_visual;
+    ros::Publisher _filteredPoints_visual;
     image_transport::Publisher pub_thermal_image;
 
     Affine frameTransform;
 
     sensor_msgs::ImageConstPtr depthImgPtr;
-
-    void setBgrToArray(uchar* arr, uchar blue, uchar green, uchar red);
 
     bool isAcceptableRange(int z);
     bool isBounded(int val, int lower, int upper);

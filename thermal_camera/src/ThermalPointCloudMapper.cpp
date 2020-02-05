@@ -5,17 +5,25 @@ const double THERMAL_VFOV = toRad(35.0);
 const double DEPTH_HFOV  = toRad(87.0);
 const double DEPTH_VFOV  = toRad(58.0);
 
+#define THERMAL_MAX_VAL 60
+#define THERMAL_MIN_VAL 10
+
+#define SOURCE_FRAME "camera_depth_optical_frame"
+#define REFERENCE_FRAME "thermal_optical_frame"
+
 ThermalPointCloudMapper::ThermalPointCloudMapper() : frameTransform({0}) {
     // define the subscriber and publisher
     sub_thermal_img = _nh.subscribe("/thermal_front/image_raw", 1, &ThermalPointCloudMapper::thermal_img_callback, this);
     sub_depth_img = _nh.subscribe("/camera/depth/image_rect_raw", 1, &ThermalPointCloudMapper::depth_img_callback, this);
 
-    _filteredPoints_visual = _nh.advertise<pcl::PointCloud<pcl::PointXYZRGB>>("/thermal/actual", 1);
+    image_transport::ImageTransport it(_nh);
+    pub_thermal_image = it.advertise("/thermal_front/actual", 1);
+    _filteredPoints_visual = _nh.advertise<pcl::PointCloud<pcl::PointXYZRGB>>("/thermal/filtered", 1);
 
     try {
         tf2_ros::Buffer tfBuffer;
         tf2_ros::TransformListener tfListener(tfBuffer);
-        auto tfStamped = tfBuffer.lookupTransform("camera_depth_optical_frame", "thermal_optical_frame", ros::Time(0));
+        auto tfStamped = tfBuffer.lookupTransform(SOURCE_FRAME, REFERENCE_FRAME, ros::Time(0), ros::Duration(3.0));
         frameTransform = getAffinityMatrix(tfStamped.transform);
         std::cout << tfStamped << std::endl;
     } catch (tf2::TransformException &ex) {
@@ -26,16 +34,6 @@ ThermalPointCloudMapper::ThermalPointCloudMapper() : frameTransform({0}) {
     }
 
     ROS_INFO("Ready!");
-    image_transport::ImageTransport it(_nh);
-    pub_thermal_image = it.advertise("/thermal_front/actual", 1);
-    
-    _filteredPoints_visual = _nh.advertise<pcl::PointCloud<pcl::PointXYZRGB>>("/thermal/filtered", 1);
-}
-
-void ThermalPointCloudMapper::setBgrToArray(uchar* arr, uchar blue, uchar green, uchar red) {
-    arr[0] = blue;
-    arr[1] = green;
-    arr[2] = red;
 }
 
 bool ThermalPointCloudMapper::isAcceptableRange(int z) {
@@ -69,7 +67,7 @@ void ThermalPointCloudMapper::thermal_img_callback(const sensor_msgs::ImageConst
 
     sensor_msgs::ImagePtr output_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", smartThermalMonoImg).toImageMsg();
     output_msg->header.frame_id = "camera_depth_optical_frame";
-    pub_thermal_image.publish(msg);
+    pub_thermal_image.publish(output_msg);
 }
 
 int ThermalPointCloudMapper::getWatershedMarkers(const cv::Mat &src, cv::Mat &markers) {
@@ -81,7 +79,7 @@ int ThermalPointCloudMapper::getWatershedMarkers(const cv::Mat &src, cv::Mat &ma
     uchar* input_data = src.data;
     uchar* input_endData = input_data + input_size;
 
-    uchar* gray_data = gray.data;
+    Bgr* gray_data = reinterpret_cast<Bgr*>(gray.data);
     uchar* bw_data = bw.data;
 
     while (input_data < input_endData) {
@@ -90,8 +88,10 @@ int ThermalPointCloudMapper::getWatershedMarkers(const cv::Mat &src, cv::Mat &ma
         *bw_data = pix;
         bw_data++;
 
-        setBgrToArray(gray_data, pix, pix, pix);
-        gray_data += 3;
+        gray_data->blue = pix;
+        gray_data->red = pix;
+        gray_data->green = pix;
+        gray_data++;
 
         input_data++;
     }
@@ -175,12 +175,12 @@ Affine ThermalPointCloudMapper::getAffinityMatrix(const geometry_msgs::Transform
     transform.Rxz = 2 * ( xz + yw );
 
     transform.Ryx = 2 * ( xy + zw );
-    transform.Ryx = 1 - 2 * ( xx + zz );
-    transform.Ryx = 2 * ( yz - xw );
+    transform.Ryy = 1 - 2 * ( xx + zz );
+    transform.Ryz = 2 * ( yz - xw );
 
     transform.Rzx = 2 * ( xz - yw );
-    transform.Rzx = 2 * ( yz + xw );
-    transform.Rzx = 1 - 2 * ( xx + yy );
+    transform.Rzy = 2 * ( yz + xw );
+    transform.Rzz = 1 - 2 * ( xx + yy );
 
     // Translation
     transform.tx = tf.translation.x;
@@ -274,7 +274,7 @@ cv::Mat ThermalPointCloudMapper::getDirectImageMap(
             res.at<uchar>(dy, dx) = intensity;
 
             // For Debugging
-            const uchar red = map(intensity, 0, 30);
+            const uchar red = map(intensity, THERMAL_MIN_VAL, THERMAL_MAX_VAL);
             pcl::PointXYZRGB out_pt(red, 0, 255 - red);
             out_pt.x = pt_pre.x;
             out_pt.y = pt_pre.y;
@@ -328,21 +328,24 @@ cv::Mat ThermalPointCloudMapper::getSmartThermalOverlay(const cv::Mat &depth_img
     
     thermal_data = mapped_thermal_img.data;
     marker_data = reinterpret_cast<int*>(markers.data);
-    uchar* output_data = res.data;
+
+    Bgr* output_data = reinterpret_cast<Bgr*>(res.data);
 
     while (marker_data < marker_endData) {
 
         //const uchar intensity = (*marker_data == 0) ? *thermal_data : (uchar)sum_intensity[*marker_data];
         const uchar intensity = (isBounded(*marker_data, 1, numOfMarkers - 1))
                                     ? (uchar)sum_intensity[*marker_data] : *thermal_data;
-        const uchar red = map(intensity, 0, 60);
+        const uchar red = map(intensity, THERMAL_MIN_VAL, THERMAL_MAX_VAL);
         //ROS_INFO("%d -> %d", *marker_data, intensity);
         
         marker_data++;
         thermal_data++;
 
-        setBgrToArray(output_data, 255 - red, 0, red);
-        output_data += 3;
+        output_data->blue = 255 - red;
+        output_data->red = red;
+        output_data->green = 0;
+        output_data++;
     }
 
     delete[] sum_intensity;
