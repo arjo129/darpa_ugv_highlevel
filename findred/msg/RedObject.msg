@@ -1,3 +1,4 @@
+uint16 frame
 uint8[] contours
 uint8[] color
-uint16 depth
+uint8 depth

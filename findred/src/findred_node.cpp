@@ -9,7 +9,11 @@
 #include <vector>
 #include <string>
 
-cv::Mat depthImg;
+class FindRed {
+    ros::NodeHandle nh;
+    ros::Subscriber colSub, depthSub;
+    ros::Publisher redPub;
+    cv::Mat depthImg;
 
 std::vector<std::vector<cv::Point>> getContours(cv::Mat img) {
      cv::Mat canny_output;
@@ -27,7 +31,7 @@ void cleanContours(std::vector<std::vector<cv::Point>> &contours) {
         } else {
             int size = (*it).size();
             for (auto j = (*it).begin(); j != (*it).end();) {
-                for (int x = 0; x < size/75; x++) {
+                for (int x = 0; x < size/48; x++) { //take one point from every 1/75 of the contour
                     if (j != (*it).end()) {
                         (*it).erase(j);
                     }
@@ -110,9 +114,20 @@ void rs_callback(const sensor_msgs::ImageConstPtr &msg) {
         drawContours(mask, contours, i , cv::Scalar(255, 255, 255), cv::FILLED); 
         cv::Scalar avg = mean(cv_ptr->image, mask);
         drawContours(drawing, contours, i, avg, cv::FILLED);
-        uint16_t depth = depthImg.at<uint16_t>(mc[i]) / 10;
+        uint8_t depth = depthImg.at<uint16_t>(mc[i]);
         cv::putText(drawing, std::to_string(depth), mc[i], CV_FONT_HERSHEY_PLAIN, 1.0, cv::Scalar(0xffff), 1, 8, false);
         mask = cv::Scalar(0, 0, 0);
+        findred::RedObject rmsg; 
+        rmsg.depth = depth;
+        rmsg.frame = msg->header.seq;
+        rmsg.color.push_back(avg.val[0]);
+        rmsg.color.push_back(avg.val[1]);
+        rmsg.color.push_back(avg.val[2]);
+        for (int j = 0; j < contours[i].size(); j++) {
+            rmsg.contours.push_back(contours[i][j].x);
+            rmsg.contours.push_back(contours[i][j].y);
+        }
+        redPub.publish(rmsg);
 
     }
     cv::namedWindow("thresh");
@@ -139,20 +154,24 @@ void depth_callback(const sensor_msgs::ImageConstPtr &msg) {
     // cv::imshow("depth", cv_ptr->image);
 }
 
+public:
+FindRed(ros::NodeHandle _nh) {
+    this->nh = _nh;
+    colSub = this->nh.subscribe("/camera/color/image_raw", 1000, &FindRed::rs_callback, this);
+    depthSub = this->nh.subscribe("/camera/aligned_depth_to_color/image_raw", 1000, &FindRed::depth_callback, this);
+    redPub = this->nh.advertise<findred::RedObject>("redobject", 1000);
+}
+
+};
+
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "finding_red");
     ros::NodeHandle n;
-    ros::Subscriber rsSub = n.subscribe("/camera/color/image_raw", 1000, rs_callback);
-    ros::Subscriber depthSub = n.subscribe("/camera/aligned_depth_to_color/image_raw", 1000, depth_callback);
-    ros::Publisher redPub = n.advertise<findred::RedObject>("redobject", 1000);
-    // ros::Rate loop_rate(10);
-    // while(ros::ok()) {
-    // findred::RedObject msg;
-    // msg.depth = 34;
-    // redPub.publish(msg);
-    // ros::spinOnce();
-    // loop_rate.sleep();
-    // }
+    FindRed fr(n);
+    // ros::Subscriber rsSub = n.subscribe("/camera/color/image_raw", 1000, rs_callback);
+    // ros::Subscriber depthSub = n.subscribe("/camera/aligned_depth_to_color/image_raw", 1000, depth_callback);
+    // ros::Publisher redPub = n.advertise<findred::RedObject>("redobject", 1000);
+    ros::spin();
     return 0;
 }
