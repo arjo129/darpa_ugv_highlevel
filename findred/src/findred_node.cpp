@@ -108,13 +108,14 @@ void rs_callback(const sensor_msgs::ImageConstPtr &msg) {
 
 
     std::vector<std::vector<cv::Point>> contours = getContours(imgThresholded);
+    if (contours.size() > 0) {
     cleanContours(contours);
     std::vector<cv::Point2f> mc = getContourCenter(contours);
     for (int i = 0; i < contours.size(); i++) {
         drawContours(mask, contours, i , cv::Scalar(255, 255, 255), cv::FILLED); 
         cv::Scalar avg = mean(cv_ptr->image, mask);
         drawContours(drawing, contours, i, avg, cv::FILLED);
-        uint8_t depth = depthImg.at<uint16_t>(mc[i]);
+        uint8_t depth = 50;//depthImg.at<uint16_t>(mc[i]);
         cv::putText(drawing, std::to_string(depth), mc[i], CV_FONT_HERSHEY_PLAIN, 1.0, cv::Scalar(0xffff), 1, 8, false);
         mask = cv::Scalar(0, 0, 0);
         findred::RedObject rmsg; 
@@ -124,17 +125,18 @@ void rs_callback(const sensor_msgs::ImageConstPtr &msg) {
         rmsg.color.push_back(avg.val[1]);
         rmsg.color.push_back(avg.val[2]);
         for (int j = 0; j < contours[i].size(); j++) {
-            rmsg.contours.push_back(contours[i][j].x);
-            rmsg.contours.push_back(contours[i][j].y);
+            rmsg.contours.push_back(contours[i][j].x / 3);
+            // std::cout << contours[i][j].x << " " << contours[i][j].y << " | ";
+            rmsg.contours.push_back(contours[i][j].y / 2);
         }
         redPub.publish(rmsg);
-
     }
     cv::namedWindow("thresh");
     cv::namedWindow("color_img");
     cv::imshow("color_img", cv_ptr->image);
     cv::imshow("thresh", drawing);
     cv::waitKey(3);
+    }
 }
 
 void depth_callback(const sensor_msgs::ImageConstPtr &msg) {
