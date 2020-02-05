@@ -35,10 +35,10 @@ void onLaserScan (sensor_msgs::LaserScan lscan) {
 }
 
 int main(int argc, char** argv) {
-    grid = new AMapper::Grid(0,0,150,150,0.1);
-    frontier = new AMapper::Grid(0,0,150,150,0.1);
-    grid->setFrameId(std::string("/X1/base_link/frontlaser"));
-    frontier->setFrameId(std::string("/X1/base_link/frontlaser"));
+    grid = new AMapper::Grid(0,0,200,200,0.1);
+    frontier = new AMapper::Grid(0,0,200,200,0.1);
+    grid->setFrameId(std::string("laser"));
+    frontier->setFrameId(std::string("laser"));
     ls.setRaytracer(rt);
     ros::init(argc, argv, "LaserScanExampleNode");
     ros::NodeHandle nh;

@@ -9,7 +9,7 @@
 #define ROBOT_BACK -0.47
 #define MAX_SPEED 0.1
 #define DELAY 2.0
-#define BASE_LINK "X1/base_link"
+#define BASE_LINK "base_link"
 
 enum Direction  {
 	FORWARD = 0, LEFT = 1, RIGHT = 2, BACKWARD = 3

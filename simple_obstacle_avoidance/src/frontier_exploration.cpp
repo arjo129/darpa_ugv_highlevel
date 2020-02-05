@@ -6,20 +6,56 @@
 #include <amapper/cluster.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
+#include <sensor_msgs/Imu.h>
+#include <sensor_msgs/Range.h>
+#include <std_msgs/String.h>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
         std::default_random_engine gen;
 
 enum State {
-    SELECTING_TARGET, MOVE_TO_TARGET, SELECT_RECOVERY_TARGET
+    SELECTING_TARGET, MOVE_TO_TARGET, SELECT_RECOVERY_TARGET, RECOVERY, E_STOPPED
 };
 
 State state = SELECTING_TARGET;
+
 AMapper::Grid *grid, *frontier, *frontierScore;
 AMapper::LaserScanner ls;
 AMapper::NoClearingRaytracer rt;
 MoveBaseClient* moveBaseClient;
+
 ros::Time lastSent;
+
+ros::Subscriber estopSubscriber;
+ros::Subscriber startSubscriber;
+ros::Subscriber imuSubscriber;
+ros::Subscriber sonarSubscriber;
+
+void onEstopRecieved(std_msgs::String estop){
+    state = E_STOPPED;
+    moveBaseClient->cancelGoal();
+}
+
+void onStartRecieved(std_msgs::String start) {
+    state = SELECTING_TARGET;
+}
+
+void onSonarRecieved(sensor_msgs::Range range) {
+    if(range.range > 0.4) {
+        state = RECOVERY;
+        moveBaseClient->cancelGoal();
+        //Pick another goal.
+    }
+    //
+    /*if(range.range < ){
+
+    }*/
+}
+
+void onImuRecieved(sensor_msgs::Imu imu_reading) {
+    Eigen::Vector3f acceleration(imu_reading.linear_acceleration.x, imu_reading.linear_acceleration.y, imu_reading.linear_acceleration.z);
+    
+}
 
 uint8_t score(Eigen::Vector2i pt){
     float dx = pt.x() - frontierScore->gridWidth/2;
@@ -65,7 +101,7 @@ void onLaserScan (sensor_msgs::LaserScan lscan) {
     ls.plotgrid(transform, *grid, lscan);
 
     //Inflate it
-    AMapper::Grid* inflated = AMapper::inflate(*grid, 5);
+    AMapper::Grid* inflated = AMapper::inflate(*grid, 3);
     pub.publish(inflated->toOccupancyGrid());
 
     //Get frontiers
@@ -86,7 +122,6 @@ void onLaserScan (sensor_msgs::LaserScan lscan) {
             }
         }
     }
-        //ROS_INFO("FRONTIER EXTR");
 
     //Get clusters
     std::vector<AMapper::Cluster> clusters = AMapper::getClusters(*frontier);
@@ -95,8 +130,7 @@ void onLaserScan (sensor_msgs::LaserScan lscan) {
             frontierScore->data[i][j] = 0;
         }
     }
-     //ROS_INFO("Clustered");
-
+    
     //get the best scoring candidate
     uint8_t max_score = 0;
     Eigen::Vector2i optimum_choice;
@@ -125,8 +159,8 @@ void onLaserScan (sensor_msgs::LaserScan lscan) {
     //Build the goal message
     move_base_msgs::MoveBaseGoal goal;
     goal.target_pose.header = lscan.header;
-    goal.target_pose.pose.position.x = frontierScore->fromXIndex(optimum_choice.x())*0.7;
-    goal.target_pose.pose.position.y = frontierScore->fromYIndex(optimum_choice.y())*0.7;
+    goal.target_pose.pose.position.x = frontierScore->fromXIndex(optimum_choice.x())/optimum_choice.norm();
+    goal.target_pose.pose.position.y = frontierScore->fromYIndex(optimum_choice.y())/optimum_choice.norm();
     goal.target_pose.pose.position.z = 0;
     float targetYaw = atan2(frontierScore->fromYIndex(optimum_choice.y()), frontierScore->fromXIndex(optimum_choice.x()));
     tf::Quaternion targetYawQt(tf::Vector3(0,0,1), targetYaw);
@@ -199,6 +233,8 @@ int main(int argc, char** argv) {
     
     //Subscribers
     ros::Subscriber sub = nh.subscribe("/scan", 1, onLaserScan);
+    ros::Subscriber estopSub= nh.subscribe<std_msgs::String>("e_stop", 10, onEstopRecieved);
+    ros::Subscriber start = nh.subscribe<std_msgs::String>("e_stop", 10, onEstopRecieved);
 
     //Movebase initiallization
     moveBaseClient = new MoveBaseClient("move_base", true);

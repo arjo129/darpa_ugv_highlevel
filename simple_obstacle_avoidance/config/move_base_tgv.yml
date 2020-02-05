@@ -16,7 +16,7 @@ TrajectoryPlannerROS:
     holonomic_robot: false
 
 local_costmap:
-    global_frame: map
+    global_frame: odom
     robot_base_frame: base_link
     update_frequency: 6.0
     publish_frequency: 2.0
@@ -35,16 +35,16 @@ local_costmap:
     obstacles_laser:
         observation_sources: laser
         laser: {data_type: LaserScan, clearing: true, marking: true, topic: /scan, obstacle_range: 20,
-            raytrace_range: 20,inf_is_valid: true}
+            raytrace_range: 20, inf_is_valid: true}
     explore_boundary:
         resize_to_boundary: false
         frontier_travel_point: "middle"
         explore_clear_space: false
     inflation:
-        inflation_radius: 0.5
+        inflation_radius: 0.2
 
 global_costmap:
-    global_frame: map
+    global_frame: odom
     robot_base_frame: base_link
     update_frequency: 5.0
     publish_frequency: 2.0
@@ -68,5 +68,5 @@ global_costmap:
         frontier_travel_point: "middle"
         explore_clear_space: false
     inflation:
-        inflation_radius: 0.5
+        inflation_radius: 0.2
       
