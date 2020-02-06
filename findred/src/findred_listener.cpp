@@ -11,17 +11,15 @@
 
 void cb(const findred::RedObject &msg) {
     cv::Mat drawing(cv::Size(640, 480), CV_8UC3, cv::Scalar(0, 0, 0));
-    std::vector<cv::Point> contour;
+    std::vector<cv::Point2i> contour;
     // std::cout << msg.contours.size() << std::endl;
-    for (int i = 0; i < msg.contours.size(); i++) {
-        cv::Point p;
-        p.x = (int)msg.contours[i];
-        p.y = (int)msg.contours[i+1];
-        contour.push_back(p);
+    for (int i = 0; i < msg.contours.size(); i+=2) {
+        contour.push_back(cv::Point2i((int)msg.contours[i] * 3, (int)msg.contours[i+1] * 2));
     }
-    std::vector<std::vector<cv::Point>> conts;
+    cv::Scalar col((int)msg.color[0], (int)msg.color[1], (int)msg.color[2]);
+    std::vector<std::vector<cv::Point2i>> conts;
     conts.push_back(contour);
-    drawContours(drawing, conts, 0, cv::Scalar(255, 255 ,255), cv::FILLED);
+    drawContours(drawing, conts, 0, col, cv::FILLED);
     cv::namedWindow("test");
     cv::imshow("test", drawing);
     cv::waitKey(3);

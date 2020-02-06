@@ -107,9 +107,11 @@ void rs_callback(const sensor_msgs::ImageConstPtr &msg) {
   erode(imgThresholded, imgThresholded, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5)) );
 
 
-    std::vector<std::vector<cv::Point>> contours = getContours(imgThresholded);
+    std::vector<std::vector<cv::Point2i>> contours = getContours(imgThresholded);
     if (contours.size() > 0) {
     cleanContours(contours);
+
+        cv::Mat testDrawing (cv_ptr->image.size(), CV_8UC3, cv::Scalar(0,0,0)); 
     std::vector<cv::Point2f> mc = getContourCenter(contours);
     for (int i = 0; i < contours.size(); i++) {
         drawContours(mask, contours, i , cv::Scalar(255, 255, 255), cv::FILLED); 
@@ -124,11 +126,16 @@ void rs_callback(const sensor_msgs::ImageConstPtr &msg) {
         rmsg.color.push_back(avg.val[0]);
         rmsg.color.push_back(avg.val[1]);
         rmsg.color.push_back(avg.val[2]);
+        std::vector<cv::Point2i> testContour;
         for (int j = 0; j < contours[i].size(); j++) {
+            // testContour.push_back(cv::Point2i((int)contours[i][j].x/3, (int)contours[i][j].y/2));
             rmsg.contours.push_back(contours[i][j].x / 3);
             // std::cout << contours[i][j].x << " " << contours[i][j].y << " | ";
             rmsg.contours.push_back(contours[i][j].y / 2);
         }
+        // std::vector<std::vector<cv::Point>> testContours;
+        // testContours.push_back(testContour);
+        // drawContours(testDrawing, testContours, 0, cv::Scalar(255, 255, 255), cv::FILLED);
         redPub.publish(rmsg);
     }
     cv::namedWindow("thresh");
