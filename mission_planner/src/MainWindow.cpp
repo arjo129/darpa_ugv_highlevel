@@ -1,35 +1,65 @@
 #include <mission_planner/MainWindow.h>
 
-#define ROTATION_INCREMENT 1 // 1 degree increment per signal from onRotate()
-
-MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), rosthread(_nh), darpaServerThread(_nh) {
-    rosthread.start();
+MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), darpaServerThread(_nh) {
+    initRobots();
     darpaServerThread.start();
     ui = new Ui::MainWindow();
     ui->setupUi(this);
-    scene = new CustomGraphicsScene();
     
+    initMapUI();
     initDarpaInterfaceUI();
 
-    ui->graphicsView->setScene(scene);
     ui->horizontalSplitPanel->setStretchFactor(0,2);
     qRegisterMetaType<QPixmap>("QPixmap");
     qRegisterMetaType<RotateState>("RotateState");
-    connect(&rosthread, &ROSThread::scanRecieved, this, &MainWindow::addPixmap);
-    connect(ui->progressSlider, &QSlider::sliderMoved, this, &MainWindow::sliderMoved);
-    connect(ui->returnDraw, &QPushButton::pressed, this, &MainWindow::propagateChanges);
-    connect(scene, &CustomGraphicsScene::onRotate, this, &MainWindow::rotatePixMap);
-    
-    this->sliderState = SliderState::LIVE_VIEW;
-    this->editorState = EditorState::MOVE;
-    offsetState initialState = {0, 0, QPointF(0.0, 0.0), 0.0};
-    offsetStack.push(initialState); // initially no transform applied to map
+    qRegisterMetaType<RotateState>("uint8_t");
+
     ROS_INFO("Starting UI");
 }
 
 MainWindow::~MainWindow() {
-    delete scene;
     delete ui;
+
+    for(int i=0;i<NUM_ROBOTS;i++) {
+        delete scenes[i];
+        delete robots[i];
+    }
+
+    delete[] scenes;
+    delete[] robots; 
+}
+
+void MainWindow::initMapUI() {
+
+    scenes = new CustomGraphicsScene*[NUM_ROBOTS];
+    for (int idx = 0; idx < NUM_ROBOTS; idx++) {
+        scenes[idx] = new CustomGraphicsScene();
+    }
+
+    ui->graphicsView_1->setScene(scenes[0]);
+    ui->graphicsView_2->setScene(scenes[1]);
+    ui->graphicsView_3->setScene(scenes[2]);
+    ui->graphicsView_4->setScene(scenes[3]);
+    ui->graphicsView_5->setScene(scenes[4]);
+
+    // TODO: Connect slider and map rotation to individual maps
+    connect(ui->progressSlider, &QSlider::sliderMoved, this, &MainWindow::sliderMoved);
+    connect(ui->returnDraw, &QPushButton::pressed, this, &MainWindow::propagateChanges);
+    connect(scenes[0], &CustomGraphicsScene::onRotate, this, &MainWindow::rotatePixMap);
+
+    this->sliderState = SliderState::LIVE_VIEW;
+    this->editorState = EditorState::MOVE;
+    offsetState initialState = {0, 0, QPointF(0.0, 0.0), 0.0};
+    offsetStack.push(initialState); // initially no transform applied to map
+}
+
+// initialize the rosthread for each robot
+void MainWindow::initRobots() {
+    robots = new Robot*[NUM_ROBOTS];
+    for (int idx = 1; idx <= NUM_ROBOTS; idx++) {
+        robots[idx-1] = new Robot(nh, idx);
+        connect(&(robots[idx-1]->rosthread), &ROSThread::scanRecieved, this, &MainWindow::addPixmap);
+    }
 }
 
 void MainWindow::initDarpaInterfaceUI() {
@@ -71,8 +101,9 @@ QTransform MainWindow::getTransform(QPointF translation, double rotationAngle) {
 }
 
 // Applies transform to laserscan list from start and end indexes (inclusive)
-void MainWindow::applyTransformList(int startIdx, int endIdx, 
-                            QTransform transform, double rotationAngleTransform) {
+void MainWindow::applyTransformList(std::vector<QGraphicsPixmapItem*> laserscans, 
+                                    int startIdx, int endIdx, QTransform transform, 
+                                                    double rotationAngleTransform) {
 
     if (startIdx < 0 || endIdx >= laserscans.size()) {
         ROS_WARN("applyTransform(): Out of bounds, not applying transform");
@@ -96,7 +127,10 @@ void MainWindow::applyTransform(QGraphicsPixmapItem* item,
     item->setRotation(transformedRotation);
 }
 
-void MainWindow::addPixmap(const QPixmap& map, int x, int y, float theta) {
+// TODO: Slider and return button still configured for map 1, 
+//       find a way to extend UI editing for all N maps
+void MainWindow::addPixmap(uint8_t robotNum, const QPixmap& map, int x, int y, float theta) {
+    CustomGraphicsScene* scene = scenes[robotNum - 1];
     QGraphicsPixmapItem* item = scene->addPixmap(map);
     item->setTransformOriginPoint(map.rect().center());
 
@@ -106,19 +140,23 @@ void MainWindow::addPixmap(const QPixmap& map, int x, int y, float theta) {
     applyTransform(item, transform, rotationAngleTransform);
 
     if (sliderState == SliderState::LIVE_VIEW) {
-        ui->progressSlider->setValue(laserscans.size());
+        ui->progressSlider->setValue(robots[robotNum-1]->laserscans.size());
         item->setVisible(true);
     }
     else {
         item->setVisible(false);
     }
-    ui->progressSlider->setRange(0, laserscans.size());
-    laserscans.push_back(item);
+    ui->progressSlider->setRange(0, robots[robotNum-1]->laserscans.size());
+    robots[robotNum-1]->laserscans.push_back(item);
 }
 
 void MainWindow::sliderMoved(int value) {
     ROS_INFO("Map Editing Mode");
     sliderState = SliderState::EDITING;
+
+    uint8_t robotNum = 1; // temp hack, PLS FIX LATER
+    std::vector<QGraphicsPixmapItem*> laserscans = robots[robotNum-1]->laserscans;
+
     for (int i = 0; i < value; i++) {
         laserscans[i]->setVisible(true);
         laserscans[i]->setFlag(QGraphicsItem::GraphicsItemFlag::ItemIsMovable, false);
@@ -140,6 +178,9 @@ void MainWindow::propagateChanges() {
         return;
 
     ROS_INFO("Propagating Map Changes");
+
+    uint8_t robotNum = 1; // temp hack, PLS FIX LATER
+    std::vector<QGraphicsPixmapItem*> laserscans = robots[robotNum-1]->laserscans;
     
     // update latest map transform from the UI and save on the stack
     QPointF centerPoint = laserscans[currentIndex]->pos();
@@ -154,12 +195,16 @@ void MainWindow::propagateChanges() {
     /** Apply transform to points that arrived while map was being edited,
      *  from index after the current edit point to the last received scan
      */ 
-    applyTransformList(currentIndex+1, laserscans.size()-1, transform, rotation);
+    applyTransformList(laserscans, currentIndex+1, laserscans.size()-1, transform, rotation);
 
     sliderState = SliderState::LIVE_VIEW;
 }
 
 void MainWindow::rotatePixMap(RotateState rotateState) {
+
+    uint8_t robotNum = 1; // temp hack, PLS FIX LATER
+    std::vector<QGraphicsPixmapItem*> laserscans = robots[robotNum-1]->laserscans;
+
     if (sliderState == SliderState::EDITING) {
         qreal rotationAngle = laserscans[currentIndex]->rotation();
         if (rotateState == RotateState::CLOCKWISE) {

@@ -5,6 +5,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <nav_msgs/Odometry.h>
 #include <mission_planner/RosThread.h>
+#include <QGraphicsItem>
 
 /***
  * A robot represents 1 individual vehicle inm the fleet
@@ -17,5 +18,6 @@ public:
     Robot(ros::NodeHandle nh, uint8_t robotNum);
     ~Robot();
     ROSThread rosthread;
+    std::vector<QGraphicsPixmapItem*> laserscans;
 };
 #endif

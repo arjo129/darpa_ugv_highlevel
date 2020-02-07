@@ -561,7 +561,14 @@ color: rgb(238, 238, 236);</string>
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_4">
            <item>
-            <widget class="QGraphicsView" name="graphicsView"/>
+            <widget class="QGraphicsView" name="graphicsView_1">
+             <property name="verticalScrollBarPolicy">
+              <enum>Qt::ScrollBarAlwaysOn</enum>
+             </property>
+             <property name="horizontalScrollBarPolicy">
+              <enum>Qt::ScrollBarAlwaysOn</enum>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -571,7 +578,14 @@ color: rgb(238, 238, 236);</string>
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_5">
            <item>
-            <widget class="QGraphicsView" name="graphicsView_2"/>
+            <widget class="QGraphicsView" name="graphicsView_2">
+             <property name="verticalScrollBarPolicy">
+              <enum>Qt::ScrollBarAlwaysOn</enum>
+             </property>
+             <property name="horizontalScrollBarPolicy">
+              <enum>Qt::ScrollBarAlwaysOn</enum>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -581,7 +595,14 @@ color: rgb(238, 238, 236);</string>
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_6">
            <item>
-            <widget class="QGraphicsView" name="graphicsView_3"/>
+            <widget class="QGraphicsView" name="graphicsView_3">
+             <property name="verticalScrollBarPolicy">
+              <enum>Qt::ScrollBarAlwaysOn</enum>
+             </property>
+             <property name="horizontalScrollBarPolicy">
+              <enum>Qt::ScrollBarAlwaysOn</enum>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -591,7 +612,14 @@ color: rgb(238, 238, 236);</string>
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_7">
            <item>
-            <widget class="QGraphicsView" name="graphicsView_4"/>
+            <widget class="QGraphicsView" name="graphicsView_4">
+             <property name="verticalScrollBarPolicy">
+              <enum>Qt::ScrollBarAlwaysOn</enum>
+             </property>
+             <property name="horizontalScrollBarPolicy">
+              <enum>Qt::ScrollBarAlwaysOn</enum>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -601,7 +629,14 @@ color: rgb(238, 238, 236);</string>
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_8">
            <item>
-            <widget class="QGraphicsView" name="graphicsView_5"/>
+            <widget class="QGraphicsView" name="graphicsView_5">
+             <property name="verticalScrollBarPolicy">
+              <enum>Qt::ScrollBarAlwaysOn</enum>
+             </property>
+             <property name="horizontalScrollBarPolicy">
+              <enum>Qt::ScrollBarAlwaysOn</enum>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -611,7 +646,14 @@ color: rgb(238, 238, 236);</string>
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_9">
            <item>
-            <widget class="QGraphicsView" name="graphicsView_6"/>
+            <widget class="QGraphicsView" name="graphicsView_6">
+             <property name="verticalScrollBarPolicy">
+              <enum>Qt::ScrollBarAlwaysOn</enum>
+             </property>
+             <property name="horizontalScrollBarPolicy">
+              <enum>Qt::ScrollBarAlwaysOn</enum>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>

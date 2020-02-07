@@ -4,6 +4,8 @@
 #include <mission_planner/RosThread.h>
 #include <mission_planner/DarpaServerThread.h>
 #include <mission_planner/CustomGraphicsScene.h>
+#include <mission_planner/Robot.h>
+#include <mission_planner/Config.h>
 #include <QPixmap>
 #include <QGraphicsItem>
 #include <QMessageBox>
@@ -14,6 +16,8 @@
 #include <QVector3D>
 #include <stack>
 #include "ui_MainWindow.h"
+
+#define ROTATION_INCREMENT 1 // 1 degree increment per signal from onRotate()
 
 enum class SliderState {
     EDITING,
@@ -38,7 +42,7 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
     private:
         Ui::MainWindow* ui;
-        CustomGraphicsScene* scene;
+        CustomGraphicsScene** scenes;
         // XYZ values for artifact reporting and goals
         QDoubleSpinBox* artifactXBox; 
         QDoubleSpinBox* artifactYBox; 
@@ -50,23 +54,26 @@ class MainWindow : public QMainWindow {
 
 
         ros::NodeHandle nh;
-        ROSThread rosthread;
+        Robot** robots;
         DarpaServerThread darpaServerThread;
-        std::vector<QGraphicsPixmapItem*> laserscans;
+
+        // TODO: Make set of variables for each Robot
         std::stack<offsetState> offsetStack;
         SliderState sliderState;
         EditorState editorState;
         uint32_t currentIndex = 0;
         double prevYaw = 0;
         QPointF prevPos;
+        // End of TODO
 
+        void initRobots();
+        void initDarpaInterfaceUI();
+        void initMapUI();
         QTransform getTransform(QPointF translation, double rotationAngle);
-        void applyTransformList(int startIdx, int endIdx, 
-                                QTransform transform, double rotationAngleTransform);
+        void applyTransformList(std::vector<QGraphicsPixmapItem*> laserscans, int startIdx, 
+                                int endIdx, QTransform transform, double rotationAngleTransform);
         void applyTransform(QGraphicsPixmapItem* item, 
                             QTransform transform, double rotationAngleTransform);
-        
-        void initDarpaInterfaceUI();
         QVector3D getArtifactPos();
         std::string getArtifactTypeStr();
     public:
@@ -78,7 +85,7 @@ class MainWindow : public QMainWindow {
                                                 const std::string artifactTypeStr);
 
     public slots:
-        void addPixmap(const QPixmap& map, int x, int y, float theta);
+        void addPixmap(uint8_t robotNum, const QPixmap& map, int x, int y, float theta);
         void sliderMoved(int value);
         void artifactBtnClicked();
         void propagateChanges();

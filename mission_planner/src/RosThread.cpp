@@ -7,6 +7,7 @@ ROSThread::ROSThread(ros::NodeHandle parentNh, uint8_t robotNum): nh(parentNh, R
 {
     laserScanSub = nh.subscribe(ROBOT_SCAN_TOPIC(robotNum), 10, &ROSThread::onLaserScan, this);
     odometrySub = nh.subscribe(ROBOT_ODOM_TOPIC(robotNum),10,  &ROSThread::onNavMsg, this);
+    this->robotNum = robotNum;
     this->running = true;
 }
 
@@ -48,7 +49,7 @@ void ROSThread::onLaserScan(sensor_msgs::LaserScan lscan)
     double roll, pitch, yaw;
     m.getRPY(roll, pitch, yaw);
     QPixmap pixmap = QBitmap::fromImage(*image);
-    emit scanRecieved(pixmap, x, y, yaw);
+    emit scanRecieved(robotNum, pixmap, x, y, yaw);
 }
 
 void ROSThread::onNavMsg(nav_msgs::Odometry odom) 
