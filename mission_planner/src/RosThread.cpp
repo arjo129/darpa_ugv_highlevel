@@ -1,12 +1,11 @@
 #include <mission_planner/RosThread.h>
-#include <QBitmap> 
-#include <QImage>
-#include <tf/tf.h>
 
 ROSThread::ROSThread(ros::NodeHandle parentNh, uint8_t robotNum): nh(parentNh, ROBOT_NAME(robotNum)) 
 {
     laserScanSub = nh.subscribe(ROBOT_SCAN_TOPIC(robotNum), 10, &ROSThread::onLaserScan, this);
     odometrySub = nh.subscribe(ROBOT_ODOM_TOPIC(robotNum),10,  &ROSThread::onNavMsg, this);
+    robotStartPub = nh.advertise<std_msgs::String>(ROBOT_START_TOPIC(robotNum), 1);
+    robotEStopPub = nh.advertise<std_msgs::String>(ROBOT_ESTOP_TOPIC(robotNum), 1);
     this->robotNum = robotNum;
     this->running = true;
 }
@@ -55,6 +54,24 @@ void ROSThread::onLaserScan(sensor_msgs::LaserScan lscan)
 void ROSThread::onNavMsg(nav_msgs::Odometry odom) 
 {
     this->recentOdom = odom;
+}
+
+// cancels the e-stop operation to make robot autonomous again
+void ROSThread::startRobot() 
+{
+    std_msgs::String msg;
+    msg.data = "start"; // any non-empty string will work
+    robotStartPub.publish(msg);
+    ROS_INFO("Cancelling E-Stop and starting Robot number %d", this->robotNum);
+}
+
+// stop the robot immediately
+void ROSThread::eStopRobot() 
+{
+    std_msgs::String msg;
+    msg.data = "estop"; // any non-empty string will work
+    robotEStopPub.publish(msg);
+    ROS_INFO("E-Stopping Robot number %d", this->robotNum);
 }
 
 void ROSThread::run() 

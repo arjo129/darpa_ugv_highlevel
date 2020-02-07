@@ -232,7 +232,7 @@ QLabel{border:1px solid black;};
               </property>
               <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,0,0,0,0,0" columnstretch="0,0,1,2">
                <item row="1" column="2">
-                <widget class="QPushButton" name="robot1StartBtn">
+                <widget class="EStopButton" name="robot1StartBtn">
                  <property name="styleSheet">
                   <string notr="true">background-color: rgb(138, 226, 52);</string>
                  </property>
@@ -263,7 +263,7 @@ QLabel{border:1px solid black;};
                 </widget>
                </item>
                <item row="1" column="3">
-                <widget class="QPushButton" name="robot1StopBtn">
+                <widget class="EStopButton" name="robot1StopBtn">
                  <property name="styleSheet">
                   <string notr="true">background-color: rgb(239, 41, 41);</string>
                  </property>
@@ -287,7 +287,7 @@ QLabel{border:1px solid black;};
                 </widget>
                </item>
                <item row="2" column="2">
-                <widget class="QPushButton" name="robot2StartBtn">
+                <widget class="EStopButton" name="robot2StartBtn">
                  <property name="styleSheet">
                   <string notr="true">background-color: rgb(138, 226, 52);</string>
                  </property>
@@ -297,7 +297,7 @@ QLabel{border:1px solid black;};
                 </widget>
                </item>
                <item row="3" column="2">
-                <widget class="QPushButton" name="robot3StartBtn">
+                <widget class="EStopButton" name="robot3StartBtn">
                  <property name="styleSheet">
                   <string notr="true">background-color: rgb(138, 226, 52);</string>
                  </property>
@@ -307,7 +307,7 @@ QLabel{border:1px solid black;};
                 </widget>
                </item>
                <item row="4" column="2">
-                <widget class="QPushButton" name="robot4StartBtn">
+                <widget class="EStopButton" name="robot4StartBtn">
                  <property name="styleSheet">
                   <string notr="true">background-color: rgb(138, 226, 52);</string>
                  </property>
@@ -317,7 +317,7 @@ QLabel{border:1px solid black;};
                 </widget>
                </item>
                <item row="5" column="2">
-                <widget class="QPushButton" name="robot5StartBtn">
+                <widget class="EStopButton" name="robot5StartBtn">
                  <property name="styleSheet">
                   <string notr="true">background-color: rgb(138, 226, 52);</string>
                  </property>
@@ -327,7 +327,7 @@ QLabel{border:1px solid black;};
                 </widget>
                </item>
                <item row="2" column="3">
-                <widget class="QPushButton" name="robot2StopBtn">
+                <widget class="EStopButton" name="robot2StopBtn">
                  <property name="styleSheet">
                   <string notr="true">background-color: rgb(239, 41, 41);</string>
                  </property>
@@ -337,7 +337,7 @@ QLabel{border:1px solid black;};
                 </widget>
                </item>
                <item row="3" column="3">
-                <widget class="QPushButton" name="robot3StopBtn">
+                <widget class="EStopButton" name="robot3StopBtn">
                  <property name="styleSheet">
                   <string notr="true">background-color: rgb(239, 41, 41);</string>
                  </property>
@@ -347,7 +347,7 @@ QLabel{border:1px solid black;};
                 </widget>
                </item>
                <item row="4" column="3">
-                <widget class="QPushButton" name="robot4StopBtn">
+                <widget class="EStopButton" name="robot4StopBtn">
                  <property name="styleSheet">
                   <string notr="true">background-color: rgb(239, 41, 41);</string>
                  </property>
@@ -357,7 +357,7 @@ QLabel{border:1px solid black;};
                 </widget>
                </item>
                <item row="5" column="3">
-                <widget class="QPushButton" name="robot5StopBtn">
+                <widget class="EStopButton" name="robot5StopBtn">
                  <property name="styleSheet">
                   <string notr="true">background-color: rgb(239, 41, 41);</string>
                  </property>
@@ -392,7 +392,7 @@ QLabel{border:1px solid black;};
             </layout>
            </item>
            <item row="1" column="2" colspan="3">
-            <widget class="QPushButton" name="eStopAllButton">
+            <widget class="QPushButton" name="eStopAllBtn">
              <property name="styleSheet">
               <string notr="true">background-color: rgb(164, 0, 0);
 color: rgb(238, 238, 236);</string>
@@ -733,6 +733,13 @@ color: rgb(238, 238, 236);</string>
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>EStopButton</class>
+   <extends>QPushButton</extends>
+   <header>mission_planner/EStopButton.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

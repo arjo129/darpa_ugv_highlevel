@@ -8,6 +8,7 @@ MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), darpaServerThread(_nh) {
     
     initMapUI();
     initDarpaInterfaceUI();
+    initEStopUI();
 
     ui->horizontalSplitPanel->setStretchFactor(0,2);
     qRegisterMetaType<QPixmap>("QPixmap");
@@ -23,10 +24,13 @@ MainWindow::~MainWindow() {
     for(int i=0;i<NUM_ROBOTS;i++) {
         delete scenes[i];
         delete robots[i];
+        delete eStopButtons[2*i];
+        delete eStopButtons[2*i + 1];
     }
 
     delete[] scenes;
     delete[] robots; 
+    delete[] eStopButtons;
 }
 
 void MainWindow::initMapUI() {
@@ -76,6 +80,35 @@ void MainWindow::initDarpaInterfaceUI() {
     connect(&darpaServerThread, &DarpaServerThread::mapUpdateReceived, this, &MainWindow::mapUpdateReceived);
     connect(this, &MainWindow::reportArtifact, &darpaServerThread, &DarpaServerThread::reportArtifact);
     connect(ui->reportArtifactBtn, &QPushButton::pressed, this, &MainWindow::artifactBtnClicked);
+}
+
+void MainWindow::initEStopUI() {
+    ui->robot1StartBtn->setType(false, 1);
+    ui->robot2StartBtn->setType(false, 2);
+    ui->robot3StartBtn->setType(false, 3);
+    ui->robot4StartBtn->setType(false, 4);
+    ui->robot5StartBtn->setType(false, 5);
+
+    connect(ui->robot1StartBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
+    connect(ui->robot2StartBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
+    connect(ui->robot3StartBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
+    connect(ui->robot4StartBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
+    connect(ui->robot5StartBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
+
+    ui->robot1StopBtn->setType(true, 1);
+    ui->robot2StopBtn->setType(true, 2);
+    ui->robot3StopBtn->setType(true, 3);
+    ui->robot4StopBtn->setType(true, 4);
+    ui->robot5StopBtn->setType(true, 5);
+
+    connect(ui->robot1StopBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
+    connect(ui->robot2StopBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
+    connect(ui->robot3StopBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
+    connect(ui->robot4StopBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
+    connect(ui->robot5StopBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
+
+    connect(ui->eStopAllBtn, &QPushButton::clicked, this, &MainWindow::eStopAllBtnClicked);
+    connect(ui->startAllBtn, &QPushButton::clicked, this, &MainWindow::startAllBtnClicked);
 }
 
 QVector3D MainWindow::getArtifactPos() {
@@ -240,3 +273,25 @@ void MainWindow::artifactStatusReceived(std::string result) {
 void MainWindow::mapUpdateReceived(bool success, std::string errorStr) {
 
 }
+
+void MainWindow::eStopBtnClicked(bool isEStop, uint8_t robotNum) {
+    if (isEStop) {
+        robots[robotNum-1]->rosthread.eStopRobot();
+    }
+    else {
+        robots[robotNum-1]->rosthread.startRobot();
+    }
+}
+
+void MainWindow::eStopAllBtnClicked() {
+    for (int idx = 0;idx < NUM_ROBOTS; idx++) {
+        robots[idx]->rosthread.eStopRobot();
+    }
+}
+
+void MainWindow::startAllBtnClicked() {
+    for (int idx = 0;idx < NUM_ROBOTS; idx++) {
+        robots[idx]->rosthread.startRobot();
+    }
+}
+

@@ -2,9 +2,13 @@
 #define _ROS_THREAD_H_
 
 #include <ros/ros.h>
-#include <QThread>
 #include <sensor_msgs/LaserScan.h>
 #include <nav_msgs/Odometry.h>
+#include <std_msgs/String.h>
+#include <tf/tf.h>
+#include <QThread>
+#include <QBitmap> 
+#include <QImage>
 #include <mission_planner/Config.h>
 
 inline std::string stringConcat(const std::string& a, const std::string& b)
@@ -57,6 +61,8 @@ class ROSThread: public QThread {
         ros::NodeHandle nh;
         ros::Subscriber laserScanSub;
         ros::Subscriber odometrySub;
+        ros::Publisher robotStartPub; // cancels E-stop
+        ros::Publisher robotEStopPub;
         nav_msgs::Odometry recentOdom;
         bool running;
         uint8_t robotNum;
@@ -65,6 +71,8 @@ class ROSThread: public QThread {
         ~ROSThread();
         void onLaserScan(sensor_msgs::LaserScan scan);
         void onNavMsg(nav_msgs::Odometry odometry);
+        void startRobot();
+        void eStopRobot();
     signals:
         void scanRecieved(uint8_t robotNum, const QPixmap& map, int x, int y, float theta);
 };

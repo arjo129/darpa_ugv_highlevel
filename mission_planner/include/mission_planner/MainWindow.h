@@ -4,6 +4,7 @@
 #include <mission_planner/RosThread.h>
 #include <mission_planner/DarpaServerThread.h>
 #include <mission_planner/CustomGraphicsScene.h>
+#include <mission_planner/EStopButton.h>
 #include <mission_planner/Robot.h>
 #include <mission_planner/Config.h>
 #include <QPixmap>
@@ -52,6 +53,8 @@ class MainWindow : public QMainWindow {
         QDoubleSpinBox* goalZBox;
         QComboBox* comboBoxArtifactType;
 
+        EStopButton** eStopButtons;
+
 
         ros::NodeHandle nh;
         Robot** robots;
@@ -69,6 +72,7 @@ class MainWindow : public QMainWindow {
         void initRobots();
         void initDarpaInterfaceUI();
         void initMapUI();
+        void initEStopUI();
         QTransform getTransform(QPointF translation, double rotationAngle);
         void applyTransformList(std::vector<QGraphicsPixmapItem*> laserscans, int startIdx, 
                                 int endIdx, QTransform transform, double rotationAngleTransform);
@@ -94,5 +98,8 @@ class MainWindow : public QMainWindow {
                                  int32_t numReportsLeft, int32_t currentScore);
         void artifactStatusReceived(std::string result);
         void mapUpdateReceived(bool success, std::string errorStr);
+        void eStopBtnClicked(bool isEStop, uint8_t robotNum);
+        void eStopAllBtnClicked();
+        void startAllBtnClicked();
 };
 #endif
