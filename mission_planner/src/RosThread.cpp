@@ -3,17 +3,20 @@
 #include <QImage>
 #include <tf/tf.h>
 
-ROSThread::ROSThread(ros::NodeHandle _nh): nh(_nh) {
-    laserScanSub = _nh.subscribe("/scan", 10, &ROSThread::onLaserScan, this);
-    odometrySub = _nh.subscribe("/odom_rf2o",10,  &ROSThread::onNavMsg, this);
+ROSThread::ROSThread(ros::NodeHandle parentNh, uint8_t robotNum): nh(parentNh, ROBOT_NAME(robotNum)) 
+{
+    laserScanSub = nh.subscribe(ROBOT_SCAN_TOPIC(robotNum), 10, &ROSThread::onLaserScan, this);
+    odometrySub = nh.subscribe(ROBOT_ODOM_TOPIC(robotNum),10,  &ROSThread::onNavMsg, this);
     this->running = true;
 }
 
-ROSThread::~ROSThread() {
+ROSThread::~ROSThread() 
+{
     this->running = false;
 }
 
-void ROSThread::onLaserScan(sensor_msgs::LaserScan lscan) {
+void ROSThread::onLaserScan(sensor_msgs::LaserScan lscan) 
+{
     const int size = 500;
     float angle = lscan.angle_min;
     QImage* image = new QImage(size, size, QImage::Format::Format_RGB888);
@@ -48,11 +51,13 @@ void ROSThread::onLaserScan(sensor_msgs::LaserScan lscan) {
     emit scanRecieved(pixmap, x, y, yaw);
 }
 
-void ROSThread::onNavMsg(nav_msgs::Odometry odom) {
+void ROSThread::onNavMsg(nav_msgs::Odometry odom) 
+{
     this->recentOdom = odom;
 }
 
-void ROSThread::run() {
+void ROSThread::run() 
+{
     ros::Rate rate(10);
     while(this->running) {
         ros::spinOnce();
