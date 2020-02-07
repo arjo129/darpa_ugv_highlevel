@@ -13,13 +13,15 @@
 #include <interface_protocol/PostReportResponse.h>
 #include <QThread>
 
+#define MAX_PROTOCOL_RETRIES 2
+
 class DarpaServerThread : public QThread {
     
     Q_OBJECT
     protected:
         void run() override;
     public: 
-        DarpaServerThread(ros::NodeHandle nh);
+        DarpaServerThread(ros::NodeHandle parentNh);
         ~DarpaServerThread();
         bool initInterfaceProtocolServices();
         
