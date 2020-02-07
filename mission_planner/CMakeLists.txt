@@ -149,7 +149,8 @@ add_executable(${PROJECT_NAME}_node
     include/mission_planner/MainWindow.h
     include/mission_planner/RosThread.h
     include/mission_planner/DarpaServerThread.h
-    include/mission_planner/CustomGraphicsScene.h)
+    include/mission_planner/CustomGraphicsScene.h
+    include/mission_planner/Config.h)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
