@@ -34,7 +34,7 @@
   <joint name="realsense_to_thermal" type="fixed">
     <parent link="realsense_base_link"/>
     <child link="thermal_frame"/>
-    <origin xyz="0 0 0.033"/>
+    <origin xyz="0.010 0 0.040"/>
   </joint>
 
   <joint name="thermal_to_thermal_optical_joint" type="fixed">
