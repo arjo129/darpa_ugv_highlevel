@@ -16,13 +16,23 @@
 class CompressedTelemetrySender {
 
     ros::Publisher loraPub, estopPub, startPub;
-    ros::Subscriber laserscan, co2, wifi, loraSubscriber;
+    ros::Subscriber laserscan, co2, wifi, loraSubscriber, odomSub;
+    nav_msgs::Odometry lastOdom;
+    bool recieved_odom = false;
     tf::TransformListener* tfListener;
     wireless_msgs::LoraPacket scanPacket; 
+    
     void compressScan(sensor_msgs::LaserScan scan) {
-        nav_msgs::Odometry odom;
-        std::vector<AdaptiveTelemetryScan> result = convertLaserScan(scan, odom, 4);
+        if(!recieved_odom){
+            return;
+        }
+        std::vector<AdaptiveTelemetryScan> result = convertLaserScan(scan, lastOdom, 4);
         scanPacket = toLoraPacket(result[0]);
+    }
+
+    void onRecieveOdom(nav_msgs::Odometry odom) {
+        this->lastOdom = odom;
+        this->recieved_odom = true;
     }
 
     void onRecieveLora(wireless_msgs::LoraPacket packet) {

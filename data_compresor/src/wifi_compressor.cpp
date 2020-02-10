@@ -68,3 +68,4 @@ wireless_msgs::LoraPacket toLoraPacket(WifiArray wa) {
     packet.to.data = "base_station";
     packet.data = compressZip(encodeWifiArray(wa));
 }
+

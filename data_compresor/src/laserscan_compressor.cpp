@@ -53,6 +53,17 @@ sensor_msgs::LaserScan toLaserScan(AdaptiveTelemetryScan cscan) {
     return scan;
 }
 
+nav_msgs::Odometry getOdom(AdaptiveTelemetryScan scan) {
+    nav_msgs::Odometry odom;
+    odom.pose.pose.position.x = scan.x;
+    odom.pose.pose.position.y = scan.y;
+    odom.pose.pose.position.z = scan.z;
+    odom.pose.pose.orientation.w = scan.rotateW;
+    odom.pose.pose.orientation.x = scan.rotateX;
+    odom.pose.pose.orientation.y = scan.rotateY;
+    odom.pose.pose.orientation.z = scan.rotateZ;
+    return odom; 
+}
 
 std::vector<uint8_t> encodeScan(AdaptiveTelemetryScan scan) {
     std::vector<uint8_t>  bytestream;

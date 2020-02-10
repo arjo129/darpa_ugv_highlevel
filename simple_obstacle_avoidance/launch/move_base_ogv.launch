@@ -1,5 +1,6 @@
 <launch>
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+        <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" /> 
         <rosparam file="$(find simple_obstacle_avoidance)/config/move_base_ogv.yml" command="load" /> 
     </node>
     <!--<node pkg="localization_manager" type="odom_repub" respawn="false" name="odom_repub" output="screen"/> -->

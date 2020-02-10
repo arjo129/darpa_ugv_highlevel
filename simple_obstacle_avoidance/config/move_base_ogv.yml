@@ -3,7 +3,7 @@ recovery_behavior_enabled: false
 controller_patience: 5
 oscillation_timeout: 10
 
-TrajectoryPlannerROS:
+DWAPlannerROS:
     max_vel_x: 0.4
     min_vel_x: 0.01
     max_vel_theta: 0.2

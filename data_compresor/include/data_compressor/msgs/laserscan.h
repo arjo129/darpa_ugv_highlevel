@@ -51,4 +51,5 @@ sensor_msgs::LaserScan toLaserScan(AdaptiveTelemetryScan cscan);
 std::vector<uint8_t> encodeScan(AdaptiveTelemetryScan scan);
 AdaptiveTelemetryScan decodeScan(std::vector<uint8_t> packet);
 wireless_msgs::LoraPacket toLoraPacket(AdaptiveTelemetryScan scan);
+nav_msgs::Odometry getOdom(AdaptiveTelemetryScan scan);
 #endif
