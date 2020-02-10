@@ -1,3 +1,6 @@
+#ifndef CUSTOM_GRAPHICS_SCENCE_H
+#define CUSTOM_GRAPHICS_SCENCE_H
+
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 
@@ -19,3 +22,5 @@ public slots:
 signals:
     void onRotate(RotateState rotateState);
 };
+
+#endif /* CUSTOM_GRAPHICS_SCENCE_H */
