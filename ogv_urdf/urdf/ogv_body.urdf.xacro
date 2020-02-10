@@ -22,14 +22,14 @@
   <link name="main_frame">
     <visual>
       <geometry>
-        <box size="0.358 0.33 0.072"/>
+        <box size="0.355 0.330 0.072"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0.036"/>
       <material name="black"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.358 0.33 0.072"/>
+        <box size="0.355 0.330 0.072"/>
       </geometry>
     </collision>
     <inertial>
@@ -87,7 +87,7 @@
   <joint name="base_to_realsense" type="fixed">
     <parent link="base_link"/>
     <child link="realsense_base_link"/>
-    <origin xyz="0.209 0 0.02"/>
+    <origin xyz="0.196 0 -0.03"/>
   </joint>
 
   <!-- WHEELS AND SERVOS -->
