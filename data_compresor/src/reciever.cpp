@@ -193,7 +193,8 @@ int main(int argc, char** argv) {
     loraSub = nh->subscribe("/lora/rx", 10, &onRecieveRx);
     loraPub = nh->advertise<wireless_msgs::LoraPacket>("/lora/tx", 10);
     while(ros::ok()){
-        ros::spinOnce();  
+        ros::spinOnce();
+        flushAllRobotsBuffers();
         rate.sleep();
     }
     delete nh;
