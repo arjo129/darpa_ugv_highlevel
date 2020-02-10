@@ -176,11 +176,22 @@ void onRecieveRx(wireless_msgs::LoraPacket packet) {
             ROS_ERROR("Handler not found");
     }
 }
+
+void flushAllRobotsBuffers() {
+    for(auto robots : robot_list){
+        Robot robot = robots.second;
+        std::vector<wireless_msgs::LoraPacket> packets= robot.flushLoraOut();
+        for(wireless_msgs::LoraPacket packet: packets) {
+            loraPub.publish(packet);
+        }
+    }
+}
 int main(int argc, char** argv) {
     ros::init(argc, argv, "basestation_relay");
     nh = new ros::NodeHandle();
     ros::Rate rate(10);
     loraSub = nh->subscribe("/lora/rx", 10, &onRecieveRx);
+    loraPub = nh->advertise<wireless_msgs::LoraPacket>("/lora/tx", 10);
     while(ros::ok()){
         ros::spinOnce();  
         rate.sleep();
