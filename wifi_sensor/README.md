@@ -1,6 +1,7 @@
 # Wifi sensor for ROS
 ## Dependancies
 This module requires iwlist, nmcli and its tools to be installed
+Fill in the **wifi_device** in the wifi_sensor_node.py depending on the device used on as shown in ifconfig
 
 **NOTE** Usually sudo is needed to list access points other than the one that it is connected to. A work around was found which is to use **nmcli** to scan before calling on iwlist.
 
@@ -14,6 +15,7 @@ wifi.msg
  - std_msgs/String quality
  - std_msgs/String last_beacon
  - std_msgs/String mac_address
+ - nav_msgs/Odometry odom
 
 wifiArray.msg
  - int32 count

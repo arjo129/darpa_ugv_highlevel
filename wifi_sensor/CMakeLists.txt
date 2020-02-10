@@ -9,7 +9,9 @@ project(wifi_sensor)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   rospy
+  roscpp
   std_msgs
+  nav_msgs
   message_generation
 )
 
@@ -71,6 +73,7 @@ add_message_files(
 generate_messages(
     DEPENDENCIES
     std_msgs
+    nav_msgs
 )
 
 ################################################
@@ -105,7 +108,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES wifi_sensor
-   CATKIN_DEPENDS rospy std_msgs message_runtime
+   CATKIN_DEPENDS rospy roscpp std_msgs message_runtime
 #  DEPENDS system_lib
 )
 
