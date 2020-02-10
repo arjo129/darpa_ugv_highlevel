@@ -31,10 +31,11 @@ ros::Subscriber startSubscriber;
 ros::Subscriber imuSubscriber;
 ros::Subscriber sonarSubscriber;
 
-void onEstopRecieved(std_msgs::String estop){
-    state = E_STOPPED;
-    moveBaseClient->cancelGoal();
-}
+ void onEstopRecieved(std_msgs::String estop){
+     state = E_STOPPED;
+     ROS_INFO("ESTOP RECIEVED");
+     moveBaseClient->cancelGoal();
+ }
 
 void onStartRecieved(std_msgs::String start) {
     state = SELECTING_TARGET;
@@ -69,12 +70,16 @@ uint8_t score(Eigen::Vector2i pt){
 }
 
 void doneCb(const actionlib::SimpleClientGoalState& goalState, const move_base_msgs::MoveBaseResultConstPtr& result) {
+    if(state == E_STOPPED) {
+         return;
+    }
     state = SELECTING_TARGET;
     ROS_INFO("%s", goalState.getText().c_str());
-    if("Failed to find a valid plan. Even after executing recovery behaviors." == goalState.getText() 
-    || "Failed to find a valid control. Even after executing recovery behaviors." == goalState.getText()) {
-        state = SELECT_RECOVERY_TARGET;
+    if("Failed to find a valid plan. Even after executing recovery behaviors." == goalState.         getText()
+    || "Failed to find a valid control. Even after executing recovery behaviors." == goalState.      getText()) {
+         state = SELECT_RECOVERY_TARGET;
     }
+
 }
 void feedbackCb(const move_base_msgs::MoveBaseFeedbackConstPtr& ptr){
 

@@ -3,18 +3,6 @@ recovery_behavior_enabled: false
 controller_patience: 5
 oscillation_timeout: 10
 
-DWAPlannerROS:
-    max_vel_x: 0.4
-    min_vel_x: 0.01
-    max_vel_theta: 0.2
-    min_in_place_vel_theta: 0.1
-    
-    acc_lim_theta: 3.2
-    acc_lim_x: 2.5
-    acc_lim_y: 2.5
-    
-    holonomic_robot: false
-
 local_costmap:
     global_frame: odom
     robot_base_frame: base_link
@@ -25,23 +13,28 @@ local_costmap:
     width: 20
     height: 20
     resolution: 0.05
-    footprint: [[0.20, 0.20], [0.20, -0.20], [-0.20, -0.20], [-0.20, 0.20]]
+    footprint: [[0.25, 0.25], [0.25, -0.25], [-0.25, -0.25], [-0.25, 0.25]]
     transform_tolerance: 5
     update_frequency: 5
     publish_frequency: 5
     plugins:
         - {name: obstacles_laser,     type: "costmap_2d::ObstacleLayer"}
+        - {name: obstacles_realsense,     type: "costmap_2d::ObstacleLayer"}
         - {name: inflation,        type: "costmap_2d::InflationLayer"}
     obstacles_laser:
         observation_sources: laser
         laser: {data_type: LaserScan, clearing: true, marking: true, topic: /scan, obstacle_range: 20,
             raytrace_range: 20, inf_is_valid: true}
+    obstacles_realsense:
+        observation_sources: realsense
+        realsense: {data_type: PointCloud2, clearing: true, marking: true, topic: /camera/depth_registered/points, obstacle_range: 8.0,
+            raytrace_range: 8.0, inf_is_valid: false}
     explore_boundary:
         resize_to_boundary: false
         frontier_travel_point: "middle"
         explore_clear_space: false
     inflation:
-        inflation_radius: 0.2
+        inflation_radius: 0.15
 
 global_costmap:
     global_frame: odom
@@ -53,7 +46,7 @@ global_costmap:
     width: 20
     height: 20
     resolution: 0.05
-    footprint: [[0.20, 0.20], [0.20, -0.20], [-0.20, -0.20], [-0.20, 0.20]]
+    footprint: [[0.25, 0.25], [0.25, -0.25], [-0.25, -0.25], [-0.25, 0.25]]
     transform_tolerance: 5
     update_frequency: 5
     publish_frequency: 5
@@ -68,5 +61,25 @@ global_costmap:
         frontier_travel_point: "middle"
         explore_clear_space: false
     inflation:
-        inflation_radius: 0.2
+        inflation_radius: 0.15
       
+
+DWAPlannerROS:
+     max_vel_x: 0.4
+     min_vel_x: -0.1
+     max_vel_theta: 0.3
+     min_in_place_vel_theta: 0.1
+     min_vel_y: 0
+     max_vel_y: 0
+ #    
+     acc_lim_theta: 3.2
+     acc_lim_x: 2.5
+     acc_lim_y: 2.5
+ #
+     xy_goal_tolerance: 0.5
+     yaw_goal_tolerance: 0.10
+     holonomic_robot: false
+     occ_dist_scale: 10
+     forward_point_distance: 0
+     #pdist_scale: 0.1
+     #gdist_scale: 0.5
