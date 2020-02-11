@@ -156,8 +156,9 @@ class SerialParser {
 
     wireless_msgs::LoraInfo retrieveLoraInfo() {
         wireless_msgs::LoraInfo loraInfo;
-        loraInfo.address = packet[1];
+        loraInfo.address = (int)packet[1];
         this->reset();
+        return loraInfo;
     }
 
     cv::Mat retrieveThermalPacket() {

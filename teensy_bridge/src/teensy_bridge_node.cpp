@@ -114,7 +114,6 @@ public:
             std::cout << "no data recv" << std::endl;
         }
         for (int i = 0; i < length; i++){
-            
             if(parser.addByteToPacket(buffer[i])){
                 if(parser.getMessageType() == SerialResponseMessageType::PACKET_RECIEVED) {
                     wireless_msgs::LoraPacket pkt = parser.retrievePacket();
@@ -144,7 +143,7 @@ public:
         sub = this->nh.subscribe("/lora/tx", 10, &TeensyBridgeNode::onWirelessMessageRecieved, this);
         std::string port;
         this->nh.getParam("serial_port", port);
-        serialPort = openSerialPort("/dev/teensey");
+        serialPort = openSerialPort("/dev/ttyACM0");
         names->addNameRecord("base_station", 0);
         //thermal camera image publishing stuff
         image_transport::ImageTransport it(nh);
