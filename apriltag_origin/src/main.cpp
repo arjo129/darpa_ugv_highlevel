@@ -79,9 +79,12 @@ public:
                     // APRILTAG_TO_FLOOR_HEIGHT is added as documentation shows the height that the April Tags are elevated is 0.85m
                     tf::Vector3 v;
                     v = st2.getOrigin();
-                    v.setX(v.getX() * -1);
-                    v.setZ((v.getZ() * -1) + APRILTAG_TO_FLOOR_HEIGHT);
-                    v.setY(v.getY() * -1);
+                    v.setX(v.getX());
+                    v.setZ((v.getZ()) + APRILTAG_TO_FLOOR_HEIGHT);
+                    v.setY(v.getY());
+                    //v.setX(v.getX() * -1);
+                    //v.setZ((v.getZ() * -1) + APRILTAG_TO_FLOOR_HEIGHT);
+                    //v.setY(v.getY() * -1);
                     tr2.setOrigin(v);
                     tr2.setRotation(tf::Quaternion(0,0,0,1));
 
