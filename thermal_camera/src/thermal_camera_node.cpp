@@ -30,7 +30,8 @@ float calcAngle (float x, float y) {
 std::vector<float> getThermalAngs (std::vector<cv::Point2f> &thermalCenters) {
     std::vector<float> angles;
     for (int i = 0; i < thermalCenters.size(); i++) {
-        angles.push_back(calcAngle(thermalCenters[i].x, thermalCenters[i].y));
+        angles.push_back(calcAngle(thermalCenters[i].x - 16, 13 - thermalCenters[i].y));
+        std::cout << angles[i] * 180 / M_PI << std::endl;
     }
     return angles;
 }
@@ -89,33 +90,40 @@ void cleanContours(std::vector<std::vector<cv::Point>> &contours) {
 }
 
 void shortlistPoints(std::vector<cv::Point2f> &centers) {
-    std::cout << thermalAngs.size() << std::endl;
     for (auto it = centers.begin(); it != centers.end();) {
+        bool erase = true;
         for (int j = 0; j < thermalAngs.size(); j++) {
-            // std::cout << (calcAngle((*it).x, (*it).y) - thermalAngs[j]) << std::endl;
-            if (abs(calcAngle((*it).x, (*it).y) - thermalAngs[j]) > 0.08) {
-                centers.erase(it);
-            } else {
-                ++it;
+            if (abs(calcAngle((*it).x - 320, 240 - (*it).y) - thermalAngs[j]) < 0.174) {
+                erase = false;
             }
+        }
+        if (erase) {
+            centers.erase(it);
+        } else {
+            ++it;
         }
     }
 }
 
-void displayContours(std::vector<std::vector<cv::Point>> &contours, std::vector<cv::Point2f> &center, cv::Size img, std::string name) {
-    cv::Mat drawing (img, CV_8UC3, cv::Scalar(255,255,255));
+void displayContours(std::vector<std::vector<cv::Point>> &contours, std::vector<cv::Point2f> &center, cv::Mat img, std::string name) {
+    cv::Mat drawing (img.size(), CV_8UC3, cv::Scalar(255,255,255));
     for (int i = 0; i < contours.size(); i++) {
         drawContours(drawing, contours, i , cv::Scalar(0, 0, 0), 1, 8, cv::noArray(), 0, cv::Point());
-        for (int j = 0; j < thermalAngs.size(); j++) {
-            if (abs(calcAngle(center[i].x, center[i].y) - thermalAngs[j]) < 0.08) {
-                circle( drawing, center[i], 4, cv::Scalar(0, 0, 255), -1, 8, 0 );
-            }
+    }
+    for (int i = 0; i < center.size(); i++) {
+        if (img.at<uint16_t>(center[i]) == 0) {
+            circle(drawing, center[i], 4, cv::Scalar(0, 0, 255), -1, 8, 0);
+        } else {
+            circle(drawing,center[i], 4, cv::Scalar(0, 255, 0), -1, 8, 0);
         }
     }
+    std::cout << "end frame" << std::endl;
     cv::namedWindow(name);
     cv::imshow(name, drawing);
     cv::waitKey(3);
 }
+
+//to do get image with better depth and use the depth and position to shortlist further
 
 void rs_callBack(const sensor_msgs::ImageConstPtr &msg) {
     cv_bridge::CvImagePtr cv_ptr;
@@ -130,18 +138,14 @@ void rs_callBack(const sensor_msgs::ImageConstPtr &msg) {
         std::vector<std::vector<cv::Point>> contours = getContours(newimg);
         cleanContours(contours);
         std::vector<cv::Point2f> mc = getContourCenter(contours);
-        // shortlistPoints(mc);
-        displayContours(contours, mc, cv_ptr->image.size(), "realsense");
+        shortlistPoints(mc);
+        // for (int i = 0; i < mc.size(); i++) {
+        //     std::cout << cv_ptr->image.at<uint16_t>(mc[i]) << std::endl;
+        // }
+        displayContours(contours, mc, cv_ptr->image, "realsense");
         thermalSignature = false;
     }
 }
-
-/**
- * To do:
- * Use matchShapes to match the contours
- * Check the center of the contour to ensure that it is in the same area
- * --matchShapes does not seem to work well, try with humanoid figures next time
- **/
 
 public:
 ThermalManager(ros::NodeHandle _nh) {
