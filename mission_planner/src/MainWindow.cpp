@@ -1,6 +1,10 @@
 #include <mission_planner/MainWindow.h>
 
 MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), darpaServerThread(_nh) {
+    qRegisterMetaType<QPixmap>("QPixmap");
+    qRegisterMetaType<RotateState>("RotateState");
+    qRegisterMetaType<uint8_t>("uint8_t");
+
     initRobots();
     darpaServerThread.start();
     ui = new Ui::MainWindow();
@@ -11,9 +15,6 @@ MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), darpaServerThread(_nh) {
     initEStopUI();
 
     ui->horizontalSplitPanel->setStretchFactor(0,2);
-    qRegisterMetaType<QPixmap>("QPixmap");
-    qRegisterMetaType<RotateState>("RotateState");
-    qRegisterMetaType<RotateState>("uint8_t");
 
     ROS_INFO("Starting UI");
 }
@@ -165,6 +166,8 @@ void MainWindow::applyTransform(QGraphicsPixmapItem* item,
 void MainWindow::addPixmap(uint8_t robotNum, const QPixmap& map, int x, int y, float theta) {
     CustomGraphicsScene* scene = scenes[robotNum - 1];
     QGraphicsPixmapItem* item = scene->addPixmap(map);
+    item->setPos(x,y);
+    item->setRotation(theta*57.29);
     item->setTransformOriginPoint(map.rect().center());
 
     // apply latest transform to all incoming maps
