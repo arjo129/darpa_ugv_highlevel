@@ -1,0 +1,14 @@
+<launch>
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="odom_rf2o_to_odom_static_tf_pub" 
+                                                        args="0 0 0 3.14159 0 0 odom odom_rf2o" /> -->
+
+  <node pkg="robot_localization" type="ukf_localization_node" name="ukf_se" clear_params="true">
+    <rosparam command="load" file="$(find robot_localization)/params/ogv_kf_params.yaml" />
+
+    <!--  Placeholder for output topic remapping
+    <remap from="odometry/filtered" to=""/>
+    <remap from="accel/filtered" to=""/>
+    -->
+
+  </node>
+</launch>
