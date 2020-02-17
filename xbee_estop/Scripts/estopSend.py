@@ -3,7 +3,7 @@ import rospy
 import time
 from digi.xbee.devices import XBeeDevice
 
-device = XBeeDevice("/dev/ttyUSB0", 9600)
+device = XBeeDevice("/dev/xbee", 9600)
 device.open()
 print("SENDING ESTOP SIGNAL")
 for i in range(1,10):
