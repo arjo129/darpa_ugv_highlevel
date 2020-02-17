@@ -18,23 +18,23 @@ local_costmap:
     update_frequency: 5
     publish_frequency: 5
     plugins:
+        # - {name: obstacles_realsense,     type: "costmap_2d::ObstacleLayer"}
         - {name: obstacles_laser,     type: "costmap_2d::ObstacleLayer"}
-        - {name: obstacles_realsense,     type: "costmap_2d::ObstacleLayer"}
         - {name: inflation,        type: "costmap_2d::InflationLayer"}
+    obstacles_realsense:
+        observation_sources: realsense
+        realsense: {data_type: PointCloud2, clearing: false, marking: true, topic: /camera/depth/color/points, obstacle_range: 4.0,
+            raytrace_range: 4.0, inf_is_valid: false}
     obstacles_laser:
         observation_sources: laser
         laser: {data_type: LaserScan, clearing: true, marking: true, topic: /scan, obstacle_range: 20,
             raytrace_range: 20, inf_is_valid: true}
-    obstacles_realsense:
-        observation_sources: realsense
-        realsense: {data_type: PointCloud2, clearing: true, marking: true, topic: /camera/depth_registered/points, obstacle_range: 8.0,
-            raytrace_range: 8.0, inf_is_valid: false}
     explore_boundary:
         resize_to_boundary: false
         frontier_travel_point: "middle"
         explore_clear_space: false
     inflation:
-        inflation_radius: 0.15
+        inflation_radius: 0.10
 
 global_costmap:
     global_frame: odom
@@ -55,22 +55,28 @@ global_costmap:
         - {name: inflation,        type: "costmap_2d::InflationLayer"}
     obstacles_laser:
         observation_sources: laser
-        laser: {data_type: LaserScan, clearing: true, marking: true, topic: /scan, inf_is_valid: true}
+        laser: {data_type: LaserScan, clearing: true, marking: true, topic: /scan, obstacle_range: 20,
+            raytrace_range: 20, inf_is_valid: true}
     explore_boundary:
         resize_to_boundary: false
         frontier_travel_point: "middle"
         explore_clear_space: false
     inflation:
-        inflation_radius: 0.15
+        inflation_radius: 0.5
+        cost_scaling_factor: 4.0
       
 
+## Path planning fixed by larger global cost map and small local costmap
+## Path following still problematic, no in place turns
 DWAPlannerROS:
      max_vel_x: 0.4
-     min_vel_x: -0.1
+     min_vel_x: -0.2
      max_vel_theta: 0.3
-     min_in_place_vel_theta: 0.1
+     min_in_place_vel_theta: 0.2
      min_vel_y: 0
      max_vel_y: 0
+     vx_sample: 20
+     vth_sample: 40 # better to have vth higher than vxy
  #    
      acc_lim_theta: 3.2
      acc_lim_x: 2.5
@@ -78,8 +84,13 @@ DWAPlannerROS:
  #
      xy_goal_tolerance: 0.5
      yaw_goal_tolerance: 0.10
-     holonomic_robot: false
-     occ_dist_scale: 10
+     holonomic_robot: true
+     occ_dist_scale: 0.3
      forward_point_distance: 0
-     #pdist_scale: 0.1
-     #gdist_scale: 0.5
+     pdist_scale: 0.1
+     gdist_scale: 0.5
+     sim_time: 4.0
+     sim_granularity: 0.025 # how frequent shud the points be checked if they intersect with obstacles
+     path_distance_bias: 1.0
+     goal_distance_bias: 0.8
+

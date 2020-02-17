@@ -164,8 +164,8 @@ void onLaserScan (sensor_msgs::LaserScan lscan) {
     //Build the goal message
     move_base_msgs::MoveBaseGoal goal;
     goal.target_pose.header = lscan.header;
-    goal.target_pose.pose.position.x = frontierScore->fromXIndex(optimum_choice.x())/optimum_choice.norm()*3;
-    goal.target_pose.pose.position.y = frontierScore->fromYIndex(optimum_choice.y())/optimum_choice.norm()*3;
+    goal.target_pose.pose.position.x = frontierScore->fromXIndex(optimum_choice.x())/optimum_choice.norm()*30;
+    goal.target_pose.pose.position.y = frontierScore->fromYIndex(optimum_choice.y())/optimum_choice.norm()*30;
     goal.target_pose.pose.position.z = 0;
     float targetYaw = atan2(frontierScore->fromYIndex(optimum_choice.y()), frontierScore->fromXIndex(optimum_choice.x()));
     tf::Quaternion targetYawQt(tf::Vector3(0,0,1), targetYaw);
