@@ -126,9 +126,9 @@ class SerialParser {
                 return true;
             }
             return false;
-        }
-        if(this->messageType == SerialResponseMessageType::PHYSICAL_ADDRESS) {
-            if(packet.size() == 2) {
+                        transformListener->waitForTransform("base_link", "darpa", time, ros::Duration(1.0));
+                        transformListener->lookupTransform("base_link", "darpa", time, stampedTransform);
+                        reading.position.x = stampedTransform
                 return true;
             }
             return false;
@@ -138,7 +138,8 @@ class SerialParser {
 
     wireless_msgs::LoraPacket retrievePacket() {
         wireless_msgs::LoraPacket wpacket;
-        wpacket.from.data = name->getName(this->packet[2]);
+        wpacket.to.data = name->getName(this->packet[2]);
+        wpacket.from.data = name->getName(this->packet[3]);
         wpacket.rssi = (int8_t)this->packet[this->packet.size()-1];
         for(int i =0; i < this->packetLength; i++){
             wpacket.data.push_back(this->packet[i + 4]);
