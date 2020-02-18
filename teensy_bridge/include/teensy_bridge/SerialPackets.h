@@ -138,7 +138,7 @@ class SerialParser {
 
     wireless_msgs::LoraPacket retrievePacket() {
         wireless_msgs::LoraPacket wpacket;
-        wpacket.from.data = name->getName(this->packet[0]);
+        wpacket.from.data = name->getName(this->packet[2]);
         wpacket.rssi = (int8_t)this->packet[this->packet.size()-1];
         for(int i =0; i < this->packetLength; i++){
             wpacket.data.push_back(this->packet[i + 4]);
