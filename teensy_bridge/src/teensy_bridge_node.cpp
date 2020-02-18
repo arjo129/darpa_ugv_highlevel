@@ -130,8 +130,8 @@ public:
                 }
                 if(parser.getMessageType() == SerialResponseMessageType::LORA_STATUS_READY) {
                     this->messageQueueEmpty = true;
-		    std::cout << "Queue Empty"<< std::endl;
-		    parser.reset();
+                    std::cout << "Queue Empty"<< std::endl;
+                    parser.reset();
 
                 }
                 if (parser.getMessageType() == SerialResponseMessageType::THERMAL_FRONT) {
@@ -142,7 +142,7 @@ public:
                 }
                 if (parser.getMessageType() == SerialResponseMessageType::PHYSICAL_ADDRESS) {
                     addressPublisher.publish(parser.retrieveLoraInfo());
-		    parser.reset();
+		            parser.reset();
                 }
              /*   if(parser.getMessageType() == SerialResponseMessageType::CO2_SENSOR_READING) {
                     wireless_msgs::Co2 reading;

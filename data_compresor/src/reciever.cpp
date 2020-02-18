@@ -93,8 +93,9 @@ class Robot {
             signal.push_back((uint8_t)MessageType::ESTOP);
             packet.data  = compressZip(signal);
             packets.push_back(packet);
-            return packets;
+            
         }
+        return packets;
     }
 
     std::string getName() const {

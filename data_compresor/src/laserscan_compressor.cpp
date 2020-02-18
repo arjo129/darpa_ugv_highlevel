@@ -112,4 +112,5 @@ wireless_msgs::LoraPacket toLoraPacket(AdaptiveTelemetryScan scan) {
     wireless_msgs::LoraPacket packet;
     packet.to.data = "base_station";
     packet.data = compressZip(encodeScan(scan));
+    return packet;
 }

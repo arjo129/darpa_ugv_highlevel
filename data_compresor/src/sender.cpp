@@ -28,6 +28,7 @@ class CompressedTelemetrySender {
         }
         std::vector<AdaptiveTelemetryScan> result = convertLaserScan(scan, lastOdom, 4);
         scanPacket = toLoraPacket(result[0]);
+        loraPub.publish(scanPacket);
     }
 
     void onRecieveOdom(nav_msgs::Odometry odom) {
@@ -59,13 +60,15 @@ class CompressedTelemetrySender {
 public:
     CompressedTelemetrySender(ros::NodeHandle& nh) {
         //Laser scan compressor
-        this->laserscan = nh.subscribe("/scan", 10, &CompressedTelemetrySender::compressScan, this);
-        this->co2 = nh.subscribe("/co2", 10, &CompressedTelemetrySender::compressScan, this);
-        this->wifi = nh.subscribe("/wifi", 10, &CompressedTelemetrySender::compressScan, this);
-        this->loraSubscriber = nh.subscribe("/lora/rx", 10, &CompressedTelemetrySender::onRecieveLora, this);  
+        
         this->loraPub = nh.advertise<wireless_msgs::LoraPacket>("/lora/tx", 10);
         this->estopPub = nh.advertise<std_msgs::String>("/e_stop", 10);
         this->tfListener = new tf::TransformListener();
+        this->laserscan = nh.subscribe("/scan", 10, &CompressedTelemetrySender::compressScan, this);
+        this->odomSub = nh.subscribe("/odom", 10, &CompressedTelemetrySender::onRecieveOdom, this);
+        //this->co2 = nh.subscribe("/co2", 10, &CompressedTelemetrySender::compressScan, this);
+        //this->wifi = nh.subscribe("/wifi", 10, &CompressedTelemetrySender::compressScan, this);
+        this->loraSubscriber = nh.subscribe("/lora/rx", 10, &CompressedTelemetrySender::onRecieveLora, this);  
     }
 
     void publish(){
