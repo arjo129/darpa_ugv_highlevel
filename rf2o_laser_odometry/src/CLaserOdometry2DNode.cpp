@@ -105,7 +105,6 @@ CLaserOdometry2DNode::CLaserOdometry2DNode() :
     initial_robot_pose.pose.pose.orientation.z = 0;
   //}
 
-  setLaserPoseFromTf();
 
   //Init variables
   module_initialized = false;
@@ -202,6 +201,8 @@ void CLaserOdometry2DNode::LaserCallBack(const sensor_msgs::LaserScan::ConstPtr&
       first_laser_scan = false;
     }
   }
+
+  setLaserPoseFromTf();
 }
 
 void CLaserOdometry2DNode::initPoseCallBack(const nav_msgs::Odometry::ConstPtr& new_initPose)
@@ -261,6 +262,14 @@ void CLaserOdometry2DNode::publish()
   odom.twist.twist.linear.x = lin_speed;    //linear speed
   odom.twist.twist.linear.y = 0.0;
   odom.twist.twist.angular.z = ang_speed;   //angular speed
+  //set the velocity covariance
+
+  odom.twist.covariance[0]  = cov_odo(0,0);
+  odom.twist.covariance[7]  = cov_odo(1,1);
+  odom.twist.covariance[14] = 99999;
+  odom.twist.covariance[21] = 99999;
+  odom.twist.covariance[28] = 99999;
+  odom.twist.covariance[35] = cov_odo(2,2);
   //publish the message
   odom_pub.publish(odom);
 }

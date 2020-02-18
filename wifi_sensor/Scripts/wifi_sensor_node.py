@@ -3,11 +3,20 @@ import rospy
 import subprocess
 from wifi_sensor.msg import wifi, wifiArray
 from std_msgs.msg import String
+from nav_msgs.msg import Odometry
 
-cmd = "nmcli device wifi rescan && iwlist wlp2s0 scan | egrep 'Cell |Encryption|Quality|Last beacon|ESSID'"
+odom = Odometry()
+
+# Change the wifi device as shown in the ifconfig
+wifi_device = "wlp2s0"
+cmd = "nmcli device wifi rescan && iwlist %s scan | egrep 'Cell |Encryption|Quality|Last beacon|ESSID'" % wifi_device
+
+def odom_callback(msg):
+    odom = msg.data
 
 def talker():
     pub = rospy.Publisher('/wifi_ap', wifiArray, queue_size=10)
+    sub = rospy.Subscriber('/odom',Odometry,odom_callback)
     rospy.init_node('wifi_sensor_node', anonymous=True)
     print("wifi_sensor_node Initialised")
 
@@ -50,7 +59,10 @@ def talker():
                         temp.data = item.split(":")[-1].strip()
                         entry.last_beacon = temp
 
-                entries.append(entry)
+                entry.odom = odom
+                # Reduces the number of wifi entries to only darpa related ones
+                if "darpa" in entry.ssid.data:
+                    entries.append(entry)
 
             msg = wifiArray()
             msg.count = len(entries)

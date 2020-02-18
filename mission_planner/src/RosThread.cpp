@@ -1,19 +1,22 @@
 #include <mission_planner/RosThread.h>
-#include <QBitmap> 
-#include <QImage>
-#include <tf/tf.h>
 
-ROSThread::ROSThread(ros::NodeHandle _nh): nh(_nh) {
-    laserScanSub = _nh.subscribe("/scan", 10, &ROSThread::onLaserScan, this);
-    odometrySub = _nh.subscribe("/odom_rf2o",10,  &ROSThread::onNavMsg, this);
+ROSThread::ROSThread(ros::NodeHandle parentNh, uint8_t robotNum): nh(parentNh, ROBOT_NAME(robotNum)) 
+{
+    laserScanSub = nh.subscribe(ROBOT_SCAN_TOPIC(robotNum), 10, &ROSThread::onLaserScan, this);
+    odometrySub = nh.subscribe(ROBOT_ODOM_TOPIC(robotNum),10,  &ROSThread::onNavMsg, this);
+    robotStartPub = nh.advertise<std_msgs::String>(ROBOT_START_TOPIC(robotNum), 1);
+    robotEStopPub = nh.advertise<std_msgs::String>(ROBOT_ESTOP_TOPIC(robotNum), 1);
+    this->robotNum = robotNum;
     this->running = true;
 }
 
-ROSThread::~ROSThread() {
+ROSThread::~ROSThread() 
+{
     this->running = false;
 }
 
-void ROSThread::onLaserScan(sensor_msgs::LaserScan lscan) {
+void ROSThread::onLaserScan(sensor_msgs::LaserScan lscan) 
+{
     const int size = 500;
     float angle = lscan.angle_min;
     QImage* image = new QImage(size, size, QImage::Format::Format_RGB888);
@@ -45,14 +48,34 @@ void ROSThread::onLaserScan(sensor_msgs::LaserScan lscan) {
     double roll, pitch, yaw;
     m.getRPY(roll, pitch, yaw);
     QPixmap pixmap = QBitmap::fromImage(*image);
-    emit scanRecieved(pixmap, x, y, yaw);
+    emit scanRecieved(robotNum, pixmap, x, y, yaw);
 }
 
-void ROSThread::onNavMsg(nav_msgs::Odometry odom) {
+void ROSThread::onNavMsg(nav_msgs::Odometry odom) 
+{
     this->recentOdom = odom;
 }
 
-void ROSThread::run() {
+// cancels the e-stop operation to make robot autonomous again
+void ROSThread::startRobot() 
+{
+    std_msgs::String msg;
+    msg.data = "start"; // any non-empty string will work
+    robotStartPub.publish(msg);
+    ROS_INFO("Cancelling E-Stop and starting Robot number %d", this->robotNum);
+}
+
+// stop the robot immediately
+void ROSThread::eStopRobot() 
+{
+    std_msgs::String msg;
+    msg.data = "estop"; // any non-empty string will work
+    robotEStopPub.publish(msg);
+    ROS_INFO("E-Stopping Robot number %d", this->robotNum);
+}
+
+void ROSThread::run() 
+{
     ros::Rate rate(10);
     while(this->running) {
         ros::spinOnce();

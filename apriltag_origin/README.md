@@ -14,6 +14,13 @@ This is done in the configuration file **tags.yml**.
 Other settings that can be used to help detection is found in **settings.yml**.
 
 ## General
+
+**IMPORTANT**
+The OGV and TGV have apriltag_ros installed from apt libraries.
+The files can be found in the following folder:
+    /opt/ros/melodic/share/apriltag_ros/config/
+Editting the files will require sudo access.
+
 The module listens to "/tag_detections" published by the **apriltag_ros** package
 If there are 2 detections, it gets the centre coordinate by averaging the x,y,z values of the position.
 

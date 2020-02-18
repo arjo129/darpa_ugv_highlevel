@@ -31,10 +31,11 @@ ros::Subscriber startSubscriber;
 ros::Subscriber imuSubscriber;
 ros::Subscriber sonarSubscriber;
 
-void onEstopRecieved(std_msgs::String estop){
-    state = E_STOPPED;
-    moveBaseClient->cancelGoal();
-}
+ void onEstopRecieved(std_msgs::String estop){
+     state = E_STOPPED;
+     ROS_INFO("ESTOP RECIEVED");
+     moveBaseClient->cancelGoal();
+ }
 
 void onStartRecieved(std_msgs::String start) {
     state = SELECTING_TARGET;
@@ -69,12 +70,16 @@ uint8_t score(Eigen::Vector2i pt){
 }
 
 void doneCb(const actionlib::SimpleClientGoalState& goalState, const move_base_msgs::MoveBaseResultConstPtr& result) {
+    if(state == E_STOPPED) {
+         return;
+    }
     state = SELECTING_TARGET;
     ROS_INFO("%s", goalState.getText().c_str());
-    if("Failed to find a valid plan. Even after executing recovery behaviors." == goalState.getText() 
-    || "Failed to find a valid control. Even after executing recovery behaviors." == goalState.getText()) {
-        state = SELECT_RECOVERY_TARGET;
+    if("Failed to find a valid plan. Even after executing recovery behaviors." == goalState.         getText()
+    || "Failed to find a valid control. Even after executing recovery behaviors." == goalState.      getText()) {
+         state = SELECT_RECOVERY_TARGET;
     }
+
 }
 void feedbackCb(const move_base_msgs::MoveBaseFeedbackConstPtr& ptr){
 
@@ -159,8 +164,8 @@ void onLaserScan (sensor_msgs::LaserScan lscan) {
     //Build the goal message
     move_base_msgs::MoveBaseGoal goal;
     goal.target_pose.header = lscan.header;
-    goal.target_pose.pose.position.x = frontierScore->fromXIndex(optimum_choice.x())/optimum_choice.norm()*3;
-    goal.target_pose.pose.position.y = frontierScore->fromYIndex(optimum_choice.y())/optimum_choice.norm()*3;
+    goal.target_pose.pose.position.x = frontierScore->fromXIndex(optimum_choice.x())/optimum_choice.norm()*30;
+    goal.target_pose.pose.position.y = frontierScore->fromYIndex(optimum_choice.y())/optimum_choice.norm()*30;
     goal.target_pose.pose.position.z = 0;
     float targetYaw = atan2(frontierScore->fromYIndex(optimum_choice.y()), frontierScore->fromXIndex(optimum_choice.x()));
     tf::Quaternion targetYawQt(tf::Vector3(0,0,1), targetYaw);

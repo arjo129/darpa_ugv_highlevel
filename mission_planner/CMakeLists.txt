@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   roscpp
   sensor_msgs
+  interface_protocol
 )
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 ## System dependencies are found with CMake's conventions
@@ -142,11 +143,16 @@ add_executable(${PROJECT_NAME}_node
     src/main.cpp
     src/MainWindow.cpp
     src/RosThread.cpp
+    src/DarpaServerThread.cpp
     src/Robot.cpp
     src/CustomGraphicsScene.cpp
+    src/EStopButton.cpp
     include/mission_planner/MainWindow.h
     include/mission_planner/RosThread.h
-    include/mission_planner/CustomGraphicsScene.h)
+    include/mission_planner/DarpaServerThread.h
+    include/mission_planner/CustomGraphicsScene.h
+    include/mission_planner/EStopButton.h
+    include/mission_planner/Config.h)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

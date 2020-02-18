@@ -1,3 +1,4 @@
+#include "stdlib.h"
 #include "ros/ros.h"
 #include "std_msgs/Bool.h"
 #include "tf/transform_listener.h"
@@ -21,6 +22,7 @@ public:
     
     int timeout = 100;
     float APRILTAG_TO_FLOOR_HEIGHT = 0.85;
+    bool terminate_apriltag_detector = false;
 
     double _x, _y, _z;
 
@@ -34,6 +36,11 @@ public:
 
             // once DARPA frame is published 100 times using callback, the loop below fixes the DARPA FRAME to location of map
             if (timeout == 0){
+                if (!terminate_apriltag_detector){
+                    terminate_apriltag_detector = true;
+                    system("rosnode kill /apriltag_ros_continuous_node");
+                    std::cout << "Killed apriltag_continuous_node";
+                }
                 br.sendTransform(tf::StampedTransform (tr2,ros::Time::now(),"darpa","map"));
                 std::cout << "DARPA frame transform sent [PERMANENT]\n";
                 std_msgs::Bool b;
@@ -79,9 +86,12 @@ public:
                     // APRILTAG_TO_FLOOR_HEIGHT is added as documentation shows the height that the April Tags are elevated is 0.85m
                     tf::Vector3 v;
                     v = st2.getOrigin();
-                    v.setX(v.getX() * -1);
-                    v.setZ((v.getZ() * -1) + APRILTAG_TO_FLOOR_HEIGHT);
-                    v.setY(v.getY() * -1);
+                    v.setX(v.getX());
+                    v.setZ((v.getZ()) + APRILTAG_TO_FLOOR_HEIGHT);
+                    v.setY(v.getY());
+                    //v.setX(v.getX() * -1);
+                    //v.setZ((v.getZ() * -1) + APRILTAG_TO_FLOOR_HEIGHT);
+                    //v.setY(v.getY() * -1);
                     tr2.setOrigin(v);
                     tr2.setRotation(tf::Quaternion(0,0,0,1));
 

@@ -7,7 +7,7 @@ def estop():
     pub = rospy.Publisher('e_stop', String, queue_size=1)
     rospy.init_node('estop_receiver', anonymous=True)
 
-    device = XBeeDevice("/dev/ttyUSB0", 9600)
+    device = XBeeDevice("/dev/xbee", 9600)
     device.open()
     message = None
     print("E-Stop node has started")
