@@ -126,9 +126,9 @@ class SerialParser {
                 return true;
             }
             return false;
-                        transformListener->waitForTransform("base_link", "darpa", time, ros::Duration(1.0));
-                        transformListener->lookupTransform("base_link", "darpa", time, stampedTransform);
-                        reading.position.x = stampedTransform
+        }
+        if(this->messageType == SerialResponseMessageType::PHYSICAL_ADDRESS) {
+            if(packet.size() == 2) {
                 return true;
             }
             return false;
