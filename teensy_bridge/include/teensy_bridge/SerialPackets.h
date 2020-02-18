@@ -90,6 +90,12 @@ class SerialParser {
             packet.push_back(byte);
             return false;
         }
+         if(this->state == ParserState::AWAITING_START && byte == (uint8_t)SerialResponseMessageType::LORA_STATUS_READY){ //Starting state. Check for LoRA
+            this->state = ParserState::DETERMINED_PACKETTYPE;
+            this->messageType = SerialResponseMessageType::LORA_STATUS_READY;
+            packet.push_back(byte);
+            return true;
+        }
         if (this->state == ParserState::AWAITING_START) {
             return false;
         }
@@ -110,19 +116,7 @@ class SerialParser {
         }     
         if(this->messageType == SerialResponseMessageType::CO2_SENSOR_READING) {
             if(packet.size() == 12) {
-                union{
-                uint16_t value;
-                uint8_t halves[2];
-                } lower;
-                lower.halves[0] =  packet[2];
-                lower.halves[1] = packet[3];
-                int concentration = lower.value;
-                float humidity;
-                memcpy(&humidity, packet.data()+4,4);
-                float temp;
-                memcpy(&temp, packet.data()+8,4);
-                packet.clear();
-                this->state = ParserState::AWAITING_START;
+                
                 return true;
             }
             return false;
@@ -182,6 +176,21 @@ class SerialParser {
         return img;
     }
 
+    float retrieveCo2Packet() {
+        union{
+            uint16_t value;
+            uint8_t halves[2];
+        } lower;
+        lower.halves[0] =  packet[2];
+        lower.halves[1] = packet[3];
+        int concentration = lower.value;
+        float humidity;
+        memcpy(&humidity, packet.data()+4,4);
+        float temp;
+        memcpy(&temp, packet.data()+8,4);
+        packet.clear();
+        return concentration;
+    }
     void reset() {
         this->state = ParserState::AWAITING_START; 
         this->packet.clear();

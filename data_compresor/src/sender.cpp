@@ -64,7 +64,7 @@ public:
         this->wifi = nh.subscribe("/wifi", 10, &CompressedTelemetrySender::compressScan, this);
         this->loraSubscriber = nh.subscribe("/lora/rx", 10, &CompressedTelemetrySender::onRecieveLora, this);  
         this->loraPub = nh.advertise<wireless_msgs::LoraPacket>("/lora/tx", 10);
-        this->estopPub = nh.advertise<std_msgs::String>("/estop", 10);
+        this->estopPub = nh.advertise<std_msgs::String>("/e_stop", 10);
         this->tfListener = new tf::TransformListener();
     }
 

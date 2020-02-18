@@ -49,6 +49,7 @@ class Robot {
         waPub = nh->advertise<wireless_msgs::WifiArray>(robot_name+"/wifi", 10);
         odomPub = nh->advertise<nav_msgs::Odometry>(robot_name+"/odom", 10);
 
+        estop = nh->subscribe(robot_name+"/e_stop", 10, &Robot::onRecieveEstop, this);
     }
 
     void publish(sensor_msgs::LaserScan scan){
@@ -65,6 +66,10 @@ class Robot {
 
     void publish(wireless_msgs::WifiArray wifi) {
         waPub.publish(wifi);
+    }
+
+    void onRecieveEstop(std_msgs::String str) {
+        EStop();
     }
 
     void EStop() {
