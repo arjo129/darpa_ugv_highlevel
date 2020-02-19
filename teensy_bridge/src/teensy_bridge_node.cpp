@@ -88,7 +88,7 @@ class TeensyBridgeNode {
     WirelessMessageHandler handler;
     wireless_msgs::LoraPacket mostRecentPacket;
     int serialPort;
-    bool messageQueueEmpty = false;
+    bool messageQueueEmpty = true;
     bool new_msg = false;
    
     void onWirelessMessageRecieved(wireless_msgs::LoraPacket pkt) {
@@ -111,7 +111,13 @@ class TeensyBridgeNode {
             writeSerialPort(serialPort, buffer, length);
             this->messageQueueEmpty =false;
             new_msg = false;
-        }
+            std::cout << "wrote" ;
+            for(int i = 0; i < length; i++) {
+                std::cout << (unsigned int)buffer[i] << " ";
+            }
+            std::cout << std::endl;
+        //}
+        
     }
 
    
