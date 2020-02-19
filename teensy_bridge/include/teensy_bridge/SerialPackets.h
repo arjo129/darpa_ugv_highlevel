@@ -110,19 +110,7 @@ class SerialParser {
         }     
         if(this->messageType == SerialResponseMessageType::CO2_SENSOR_READING) {
             if(packet.size() == 12) {
-                union{
-                uint16_t value;
-                uint8_t halves[2];
-                } lower;
-                lower.halves[0] =  packet[2];
-                lower.halves[1] = packet[3];
-                int concentration = lower.value;
-                float humidity;
-                memcpy(&humidity, packet.data()+4,4);
-                float temp;
-                memcpy(&temp, packet.data()+8,4);
-                packet.clear();
-                this->state = ParserState::AWAITING_START;
+                
                 return true;
             }
             return false;
@@ -156,8 +144,9 @@ class SerialParser {
 
     wireless_msgs::LoraInfo retrieveLoraInfo() {
         wireless_msgs::LoraInfo loraInfo;
-        loraInfo.address = packet[1];
+        loraInfo.address = (int)packet[1];
         this->reset();
+        return loraInfo;
     }
 
     cv::Mat retrieveThermalPacket() {
@@ -181,6 +170,21 @@ class SerialParser {
         return img;
     }
 
+    float retrieveCo2Packet() {
+        union{
+            uint16_t value;
+            uint8_t halves[2];
+        } lower;
+        lower.halves[0] =  packet[2];
+        lower.halves[1] = packet[3];
+        int concentration = lower.value;
+        float humidity;
+        memcpy(&humidity, packet.data()+4,4);
+        float temp;
+        memcpy(&temp, packet.data()+8,4);
+        packet.clear();
+        return concentration;
+    }
     void reset() {
         this->state = ParserState::AWAITING_START; 
         this->packet.clear();

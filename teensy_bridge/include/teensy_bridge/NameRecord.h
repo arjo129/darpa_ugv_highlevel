@@ -6,6 +6,16 @@ class NameRecords {
     std::unordered_map<uint8_t, std::string> id2name;
 public:    
     NameRecords() {
+        name2id["base_station"] = 0;
+        id2name[0] = "base_station";
+        name2id["robot_1"] = 1;
+        id2name[1] = "robot_1";
+        name2id["robot_2"] = 2;
+        id2name[2] = "robot_2";
+        name2id["robot_3"] = 3;
+        id2name[3] = "robot_3";
+        name2id["robot_4"] = 4;
+        id2name[4] = "robot_4";
     }
     void addNameRecord(std::string name, uint8_t id) {
         name2id[name] = id;

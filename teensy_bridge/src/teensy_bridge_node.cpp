@@ -1,5 +1,7 @@
 #include <ros/ros.h>
 #include <wireless_msgs/LoraPacket.h>
+#include <wireless_msgs/WifiArray.h>
+#include <wireless_msgs/Co2.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
@@ -13,7 +15,8 @@
 #include <errno.h> // Error integer and strerror() function
 #include <termios.h> // Contains POSIX terminal control definitions
 #include <unistd.h> 
-
+#include <tf/tf.h>
+#include <tf/transform_listener.h>
 
 int openSerialPort(const char* port) {
     int serial_port = open(port, O_RDWR);
@@ -74,14 +77,15 @@ void writeSerialPort(int serial_port, uint8_t* buffer, int length) {
 
 class TeensyBridgeNode {
     ros::NodeHandle nh;
-    ros::Publisher pub, addressPublisher;
+    ros::Publisher pub, addressPublisher, co2Publisher;
     ros::Subscriber sub;
+    tf::TransformListener* transformListener;
     image_transport::Publisher pubThermal;
     std::shared_ptr<NameRecords> names;
     WirelessMessageHandler handler;
     wireless_msgs::LoraPacket mostRecentPacket;
     int serialPort;
-    bool messageQueueEmpty = false;
+    bool messageQueueEmpty = true;
     bool new_msg = false;
    
     void onWirelessMessageRecieved(wireless_msgs::LoraPacket pkt) {
@@ -93,14 +97,21 @@ class TeensyBridgeNode {
         new_msg = true;
     }
 
+
     void sendMsg() {
         uint8_t buffer[255];
         int length = handler.serializeMessage(mostRecentPacket, buffer);
-        if(this->messageQueueEmpty & new_msg){
+        //if(this->messageQueueEmpty & new_msg){
             writeSerialPort(serialPort, buffer, length);
             this->messageQueueEmpty =false;
             new_msg = false;
-        }
+            std::cout << "wrote" ;
+            for(int i = 0; i < length; i++) {
+                std::cout << (unsigned int)buffer[i] << " ";
+            }
+            std::cout << std::endl;
+        //}
+        
     }
 
    
@@ -114,7 +125,7 @@ public:
             std::cout << "no data recv" << std::endl;
         }
         for (int i = 0; i < length; i++){
-            
+            //std::cout << std::hex << (unsigned int)buffer[i] << " ";
             if(parser.addByteToPacket(buffer[i])){
                 if(parser.getMessageType() == SerialResponseMessageType::PACKET_RECIEVED) {
                     wireless_msgs::LoraPacket pkt = parser.retrievePacket();
@@ -133,22 +144,42 @@ public:
                 if (parser.getMessageType() == SerialResponseMessageType::PHYSICAL_ADDRESS) {
                     addressPublisher.publish(parser.retrieveLoraInfo());
                 }
+             /*   if(parser.getMessageType() == SerialResponseMessageType::CO2_SENSOR_READING) {
+                    wireless_msgs::Co2 reading;
+                    reading.concentration = parser.retrieveCo2Packet();
+                    try{
+                        tf::StampedTransform stampedTransform;
+                        ros::Time time = ros::Time::now();
+                        transformListener->waitForTransform("base_link", "darpa", time, ros::Duration(1.0));
+                        transformListener->lookupTransform("base_link", "darpa", time, stampedTransform);
+                        reading.position.x = stampedTransform.getOrigin().x();
+                        reading.position.y = stampedTransform.getOrigin().y();
+                        reading.position.z = stampedTransform.getOrigin().z();
+                    } catch(tf::LookupException ex) {
+                        ROS_WARN("Failed go get odometry, sending default");
+                    }
+                    co2Publisher.publish(reading);
+
+                }*/
             }
         }
+        std::cout << std::endl;
         sendMsg();
     }
 
     TeensyBridgeNode(ros::NodeHandle _nh): nh(_nh), names(new NameRecords), handler(names) {
         pub = this->nh.advertise<wireless_msgs::LoraPacket>("/lora/rx",10);
         addressPublisher = this->nh.advertise<wireless_msgs::LoraInfo>("/lora/info",10);
+        co2Publisher = this->nh.advertise<wireless_msgs::Co2>("/co2", 10);
         sub = this->nh.subscribe("/lora/tx", 10, &TeensyBridgeNode::onWirelessMessageRecieved, this);
         std::string port;
         this->nh.getParam("serial_port", port);
-        serialPort = openSerialPort("/dev/teensey");
+        serialPort = openSerialPort("/dev/teensy");
         names->addNameRecord("base_station", 0);
         //thermal camera image publishing stuff
         image_transport::ImageTransport it(nh);
 	    pubThermal = it.advertise("/thermal_front/image_raw", 1);
+        transformListener = new tf::TransformListener();
     }
 };
 
