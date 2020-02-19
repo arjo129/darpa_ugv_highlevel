@@ -51,6 +51,7 @@ This node runs on the robot and subscribes to the following topics:
 It publishes the following topics
 - `/estop`
 - `/start`
+- `/poop`
 
 # Launch files
 There are launch files provided for the UGV and base station respectively.

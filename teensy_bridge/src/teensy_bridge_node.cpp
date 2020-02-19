@@ -96,6 +96,7 @@ class TeensyBridgeNode {
             ROS_ERROR("packet size greater than 255. Not sending.");
             return;
         }
+        ROS_INFO("sending packet");
         mostRecentPacket = pkt;
         new_msg = true;
     }
@@ -104,7 +105,9 @@ class TeensyBridgeNode {
     void sendMsg() {
         uint8_t buffer[255];
         int length = handler.serializeMessage(mostRecentPacket, buffer);
+        std::cout << "status "<< new_msg<< std::endl;
         if(this->messageQueueEmpty & new_msg){
+            std::cout << "hello " <<std::endl;
             writeSerialPort(serialPort, buffer, length);
             this->messageQueueEmpty =false;
             new_msg = false;

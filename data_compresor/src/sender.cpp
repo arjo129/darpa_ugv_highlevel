@@ -71,10 +71,6 @@ public:
         this->loraSubscriber = nh.subscribe("/lora/rx", 10, &CompressedTelemetrySender::onRecieveLora, this);  
     }
 
-    void publish(){
-        static uint8_t count ;
-        loraPub.publish(scanPacket);    
-    }
 };
 int main(int argc, char** argv) {
     ros::init(argc, argv, "compression_node");
@@ -83,7 +79,6 @@ int main(int argc, char** argv) {
     ros::Rate rate(1.5);
     while(ros::ok()){
         ros::spinOnce();
-        telemetry.publish();
         rate.sleep();
     }
     return 0;
