@@ -105,13 +105,19 @@ class TeensyBridgeNode {
     void sendMsg() {
         uint8_t buffer[255];
         int length = handler.serializeMessage(mostRecentPacket, buffer);
+        #ifdef DEBUG
         std::cout << "status "<< new_msg<< std::endl;
+        #endif
         if(this->messageQueueEmpty & new_msg){
+            #ifdef DEBUG
             std::cout << "hello " <<std::endl;
+            #endif
             writeSerialPort(serialPort, buffer, length);
             this->messageQueueEmpty =false;
             new_msg = false;
+            #ifdef DEBUG
             std::cout << "wrote" ;
+            #endif
             for(int i = 0; i < length; i++) {
                 std::cout << (unsigned int)buffer[i] << " ";
             }
@@ -131,7 +137,9 @@ public:
             std::cout << "no data recv" << std::endl;
         }
         for (int i = 0; i < length; i++){
-            std::cout <<  buffer[i] << " ";
+            #ifdef DEBUG
+            std::cout <<  (int)buffer[i] << " ";
+            #endif
             if(parser.addByteToPacket(buffer[i])){
                 if(parser.getMessageType() == SerialResponseMessageType::PACKET_RECIEVED) {
                     wireless_msgs::LoraPacket pkt = parser.retrievePacket();
@@ -139,12 +147,14 @@ public:
                 }
                 if(parser.getMessageType() == SerialResponseMessageType::LORA_STATUS_READY) {
                     this->messageQueueEmpty = true;
+                    #ifdef DEBUG
                     std::cout << "Queue Empty"<< std::endl;
+                    #endif
                     parser.reset();
 
                 }
                 if (parser.getMessageType() == SerialResponseMessageType::THERMAL_FRONT) {
-                    std::cout << "retrieve packet" << std::endl;
+                   // std::cout << "retrieve packet" << std::endl;
                     cv::Mat img = parser.retrieveThermalPacket();
                     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", img).toImageMsg();
 		            pubThermal.publish(msg);                
