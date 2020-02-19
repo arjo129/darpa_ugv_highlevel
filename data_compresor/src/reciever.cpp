@@ -24,7 +24,7 @@ ros::Publisher loraPub;
  * Robot state 
 `*/
 enum class RobotState {
-    ESTOP_IN_PROG, ESTOPPED
+    ESTOP_IN_PROG, ESTOPPED, OK
 };
 /**
  * Define an individual robot
@@ -51,6 +51,7 @@ class Robot {
         odomPub = nh->advertise<nav_msgs::Odometry>(robot_name+"/odom", 10);
 
         estop = nh->subscribe(robot_name+"/e_stop", 10, &Robot::onRecieveEstop, this);
+        this->state = RobotState::OK;
     }
 
     void publish(data_compresor::ScanStamped scan){
@@ -74,11 +75,11 @@ class Robot {
     }
 
     void EStop() {
-        state = RobotState::ESTOP_IN_PROG;
+        this->state = RobotState::ESTOP_IN_PROG;
     }
 
     void EStopAck() {
-        state = RobotState::ESTOPPED;
+        this->state = RobotState::ESTOPPED;
     }
 
     void start(){
@@ -87,7 +88,7 @@ class Robot {
 
     std::vector<wireless_msgs::LoraPacket> flushLoraOut(){
         std::vector<wireless_msgs::LoraPacket> packets;
-        if(state == RobotState::ESTOP_IN_PROG){
+        if(this->state == RobotState::ESTOP_IN_PROG){
             wireless_msgs::LoraPacket packet;
             packet.to.data = robot_name;
             std::vector<uint8_t> signal;
