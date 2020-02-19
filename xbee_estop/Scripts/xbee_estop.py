@@ -16,4 +16,5 @@ with serial.Serial('/dev/xbee', 9600, timeout=1) as ser:
             st = String()
             st.data = "hi"
             pub.publish(st)
+            print("estopped")
 
