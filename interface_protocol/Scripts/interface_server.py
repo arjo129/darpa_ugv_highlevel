@@ -16,7 +16,7 @@ from geometry_msgs.msg import PoseArray
 from visualization_msgs.msg import MarkerArray
 
 class score_interface_server:
-    base_url = "http://localhost:8000"
+    base_url = "http://10.100.1.200:8000"# alpha "http://10.100.2.200:8000"
     token_file = ""
     token = ""
 
@@ -27,14 +27,16 @@ class score_interface_server:
         print("[scoring_interface] STATUS: READY")
 
     def get_token(self):
-        infile = open(self.token_file)
-        self.token = infile.read()[:-1]
+        #infile = open(self.token_file)
+        self.token = "eBV1Cka2492TWk80"#infile.read()[:-1]
         #print(self.token)
-        infile.close()
+        
+        #infile.close()
 
     def post_report(self,req):
         data = {'x' : req.x, 'y' : req.y, 'z' : req.z, 'type': req.type}
         head = {"Authorization":"bearer " + self.token}
+        #infile = open(self.token_file)
         url = self.base_url + '/api/artifact_reports/'
 
         response = requests.post(url, json=data, headers=head)
@@ -84,7 +86,7 @@ class score_interface_server:
         return resp
 
 class mapping_interface_server():
-    base_url = "http://localhost:8000"
+    base_url = "http://10.100.1.201:8000"
     token_file = ""
     token = ""
 
@@ -105,17 +107,15 @@ class mapping_interface_server():
         print("[mapping_interface] STATUS: READY")
 
     def get_token(self):
-        infile = open(self.token_file)
-        self.token = infile.read()[:-1]
-        #print(self.token)
-        infile.close()
+        #infile = open(self.token_file)
+        self.token = "eBV1Cka2492TWk80"#infile.read()[:-1]
 
     def post_map_update(self,req):
         json_str = json_message_converter.convert_ros_message_to_json(self.grid)
         message = json.loads(json_str)
 
         data = {'type': 'OccupancyGrid', 'msg': message}
-        head = {"Authorization":"bearer " + self.token}
+        head = {"Authorization":"Bearer " + self.token}
         url = self.base_url + '/map/update/'
 
         response = requests.post(url, json=data, headers=head)
@@ -130,7 +130,7 @@ class mapping_interface_server():
         message = json.loads(json_str)
         
         data = message
-        head = {"Authorization":"bearer " + self.token}
+        head = {"Authorization":"Bearer " + self.token}
         url = self.base_url + '/state/update/'
 
         response = requests.post(url, json=data, headers=head)
@@ -144,7 +144,7 @@ class mapping_interface_server():
         message = json.loads(json_str)
         
         data = message
-        head = {"Authorization":"bearer " + self.token}
+        head = {"Authorization":"Bearer " + self.token}
         url = self.base_url + '/markers/update/'
 
         response = requests.post(url, json=data, headers=head)
