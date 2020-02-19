@@ -14,6 +14,7 @@
 #include <data_compressor/msgs/laserscan.h>
 #include <data_compressor/msgs/co2.h>
 #include <data_compressor/msgs/WifiArray.h>
+#include <data_compresor/ScanStamped.h>
 
 /*Global cause who gives a damn about coding standards 1 week before a competition*/
 ros::NodeHandle *nh;
@@ -44,14 +45,15 @@ class Robot {
  public:
     Robot(){}//Hack to silence compiler errors.
     Robot(std::string name): robot_name(name) {
-        laserPub = nh->advertise<sensor_msgs::LaserScan>(robot_name+"/scan", 10);
+        laserPub = nh->advertise<data_compresor::ScanStamped>(robot_name+"/scan", 10);
         co2Pub = nh->advertise<wireless_msgs::Co2>(robot_name+"/co2", 10);
         waPub = nh->advertise<wireless_msgs::WifiArray>(robot_name+"/wifi", 10);
         odomPub = nh->advertise<nav_msgs::Odometry>(robot_name+"/odom", 10);
 
+        estop = nh->subscribe(robot_name+"/e_stop", 10, &Robot::onRecieveEstop, this);
     }
 
-    void publish(sensor_msgs::LaserScan scan){
+    void publish(data_compresor::ScanStamped scan){
         laserPub.publish(scan);
     }
 
@@ -65,6 +67,10 @@ class Robot {
 
     void publish(wireless_msgs::WifiArray wifi) {
         waPub.publish(wifi);
+    }
+
+    void onRecieveEstop(std_msgs::String str) {
+        EStop();
     }
 
     void EStop() {
@@ -88,8 +94,9 @@ class Robot {
             signal.push_back((uint8_t)MessageType::ESTOP);
             packet.data  = compressZip(signal);
             packets.push_back(packet);
-            return packets;
+            
         }
+        return packets;
     }
 
     std::string getName() const {
@@ -131,8 +138,10 @@ Robot* lookupOrCreateRobot(std::string robot){
 void handleLaserScan(std::string from, std::vector<uint8_t> data) {
     AdaptiveTelemetryScan scan = decodeScan(data);
     sensor_msgs::LaserScan lscan = toLaserScan(scan);
-    lookupOrCreateRobot(from)->publish(getOdom(scan));
-    lookupOrCreateRobot(from)->publish(lscan);
+    data_compresor::ScanStamped stampedScan;
+    stampedScan.odom = getOdom(scan);
+    stampedScan.scan = lscan;
+    lookupOrCreateRobot(from)->publish(stampedScan);
 }
 
 void handleCo2(std::string from, std::vector<uint8_t> data) {
@@ -193,7 +202,8 @@ int main(int argc, char** argv) {
     loraSub = nh->subscribe("/lora/rx", 10, &onRecieveRx);
     loraPub = nh->advertise<wireless_msgs::LoraPacket>("/lora/tx", 10);
     while(ros::ok()){
-        ros::spinOnce();  
+        ros::spinOnce();
+        flushAllRobotsBuffers();
         rate.sleep();
     }
     delete nh;

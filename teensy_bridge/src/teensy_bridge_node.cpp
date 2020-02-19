@@ -67,12 +67,15 @@ int openSerialPort(const char* port) {
  * Temporary TEENSY 4.0 workaround
  */ 
 void writeSerialPort(int serial_port, uint8_t* buffer, int length) {
+	std::cout <<"writing stuff" <<std::endl; 
     for(int i = 0; i <length; i+=63){
+        std::cout <<buffer[i] <<std::endl;
         if(length < i+63)
             write(serial_port, buffer+i, length-i);
         else
             write(serial_port, buffer+i, 63);
     }
+    std::cout << "hi"<< std::endl;
 }
 
 class TeensyBridgeNode {
@@ -93,6 +96,7 @@ class TeensyBridgeNode {
             ROS_ERROR("packet size greater than 255. Not sending.");
             return;
         }
+        ROS_INFO("sending packet");
         mostRecentPacket = pkt;
         new_msg = true;
     }
@@ -101,7 +105,9 @@ class TeensyBridgeNode {
     void sendMsg() {
         uint8_t buffer[255];
         int length = handler.serializeMessage(mostRecentPacket, buffer);
-        //if(this->messageQueueEmpty & new_msg){
+        std::cout << "status "<< new_msg<< std::endl;
+        if(this->messageQueueEmpty & new_msg){
+            std::cout << "hello " <<std::endl;
             writeSerialPort(serialPort, buffer, length);
             this->messageQueueEmpty =false;
             new_msg = false;
@@ -125,7 +131,7 @@ public:
             std::cout << "no data recv" << std::endl;
         }
         for (int i = 0; i < length; i++){
-            //std::cout << std::hex << (unsigned int)buffer[i] << " ";
+            std::cout <<  buffer[i] << " ";
             if(parser.addByteToPacket(buffer[i])){
                 if(parser.getMessageType() == SerialResponseMessageType::PACKET_RECIEVED) {
                     wireless_msgs::LoraPacket pkt = parser.retrievePacket();
@@ -133,7 +139,9 @@ public:
                 }
                 if(parser.getMessageType() == SerialResponseMessageType::LORA_STATUS_READY) {
                     this->messageQueueEmpty = true;
+                    std::cout << "Queue Empty"<< std::endl;
                     parser.reset();
+
                 }
                 if (parser.getMessageType() == SerialResponseMessageType::THERMAL_FRONT) {
                     std::cout << "retrieve packet" << std::endl;
@@ -143,6 +151,7 @@ public:
                 }
                 if (parser.getMessageType() == SerialResponseMessageType::PHYSICAL_ADDRESS) {
                     addressPublisher.publish(parser.retrieveLoraInfo());
+		            parser.reset();
                 }
              /*   if(parser.getMessageType() == SerialResponseMessageType::CO2_SENSOR_READING) {
                     wireless_msgs::Co2 reading;

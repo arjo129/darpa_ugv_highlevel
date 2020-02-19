@@ -1,4 +1,4 @@
 <launch>
-    <node pkg="data_compressor" type="decompressor_node" name="base_station_node"></node>
+    <node pkg="data_compresor" type="decompressor_node" name="base_station_node"></node>
     <node pkg="teensy_bridge" type="teensy_bridge_node" name="teensy_bridge_node"></node>
 </launch>

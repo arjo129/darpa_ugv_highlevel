@@ -90,6 +90,12 @@ class SerialParser {
             packet.push_back(byte);
             return false;
         }
+         if(this->state == ParserState::AWAITING_START && byte == (uint8_t)SerialResponseMessageType::LORA_STATUS_READY){ //Starting state. Check for LoRA
+            this->state = ParserState::DETERMINED_PACKETTYPE;
+            this->messageType = SerialResponseMessageType::LORA_STATUS_READY;
+            packet.push_back(byte);
+            return true;
+        }
         if (this->state == ParserState::AWAITING_START) {
             return false;
         }
@@ -132,7 +138,7 @@ class SerialParser {
 
     wireless_msgs::LoraPacket retrievePacket() {
         wireless_msgs::LoraPacket wpacket;
-        wpacket.from.data = name->getName(this->packet[0]);
+        wpacket.from.data = name->getName(this->packet[1]);
         wpacket.rssi = (int8_t)this->packet[this->packet.size()-1];
         for(int i =0; i < this->packetLength; i++){
             wpacket.data.push_back(this->packet[i + 4]);
