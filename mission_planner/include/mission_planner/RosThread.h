@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 #include <nav_msgs/Odometry.h>
+#include <data_compresor/ScanStamped.h>
 #include <std_msgs/String.h>
 #include <tf/tf.h>
 #include <QThread>
@@ -59,8 +60,7 @@ class ROSThread: public QThread {
         void run() override;
     private:
         ros::NodeHandle nh;
-        ros::Subscriber laserScanSub;
-        ros::Subscriber odometrySub;
+        ros::Subscriber scanStampedSub;
         ros::Publisher robotStartPub; // cancels E-stop
         ros::Publisher robotEStopPub;
         nav_msgs::Odometry recentOdom;
@@ -69,7 +69,8 @@ class ROSThread: public QThread {
     public:
         ROSThread(ros::NodeHandle parentNh, int robotNum);
         ~ROSThread();
-        void onLaserScan(sensor_msgs::LaserScan scan);
+        void onLaserScanStamped(data_compresor::ScanStamped scanStamped);
+        void onLaserScan(sensor_msgs::LaserScan);
         void onNavMsg(nav_msgs::Odometry odometry);
         void startRobot();
         void eStopRobot();

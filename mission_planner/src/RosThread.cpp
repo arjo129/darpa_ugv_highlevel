@@ -2,8 +2,7 @@
 
 ROSThread::ROSThread(ros::NodeHandle parentNh, int robotNum): nh(parentNh, ROBOT_NAME(robotNum)) 
 {
-    laserScanSub = nh.subscribe(ROBOT_SCAN_TOPIC(robotNum), 10, &ROSThread::onLaserScan, this);
-    odometrySub = nh.subscribe(ROBOT_ODOM_TOPIC(robotNum),10,  &ROSThread::onNavMsg, this);
+    scanStampedSub = nh.subscribe(ROBOT_SCAN_TOPIC(robotNum), 10, &ROSThread::onLaserScanStamped, this);
     robotStartPub = nh.advertise<std_msgs::String>(ROBOT_START_TOPIC(robotNum), 1);
     robotEStopPub = nh.advertise<std_msgs::String>(ROBOT_ESTOP_TOPIC(robotNum), 1);
     this->robotNum = robotNum;
@@ -13,6 +12,12 @@ ROSThread::ROSThread(ros::NodeHandle parentNh, int robotNum): nh(parentNh, ROBOT
 ROSThread::~ROSThread() 
 {
     this->running = false;
+}
+
+void ROSThread::onLaserScanStamped(data_compresor::ScanStamped scanStamped)
+{
+    onNavMsg(scanStamped.odom);
+    onLaserScan(scanStamped.scan);
 }
 
 void ROSThread::onLaserScan(sensor_msgs::LaserScan lscan) 
