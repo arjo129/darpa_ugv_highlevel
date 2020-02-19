@@ -116,7 +116,7 @@ class TeensyBridgeNode {
                 std::cout << (unsigned int)buffer[i] << " ";
             }
             std::cout << std::endl;
-        //}
+        }
         
     }
 
