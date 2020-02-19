@@ -123,16 +123,23 @@ namespace std{
 /**
  * Maintain a list of robots
  */ 
-std::unordered_map<std::string, Robot> robot_list;
+std::unordered_map<std::string, Robot*> robot_list;
 
 /**
  * Get the robot by name
  */ 
 Robot* lookupOrCreateRobot(std::string robot){
     if(robot_list.count(robot) == 0){
-        robot_list[robot] = Robot(robot);
+        robot_list[robot] = new Robot(robot);
     }
-    return &robot_list[robot];
+    return robot_list[robot];
+}
+
+void initRobots(int numRobots) {
+    for (int idx = 1; idx <= numRobots; idx++) {
+        std::string robotName = "robot_" + std::to_string(idx);
+        lookupOrCreateRobot(robotName);
+    }
 }
 
 void handleLaserScan(std::string from, std::vector<uint8_t> data) {
@@ -188,8 +195,8 @@ void onRecieveRx(wireless_msgs::LoraPacket packet) {
 
 void flushAllRobotsBuffers() {
     for(auto robots : robot_list){
-        Robot robot = robots.second;
-        std::vector<wireless_msgs::LoraPacket> packets= robot.flushLoraOut();
+        Robot* robot = robots.second;
+        std::vector<wireless_msgs::LoraPacket> packets= robot->flushLoraOut();
         for(wireless_msgs::LoraPacket packet: packets) {
             loraPub.publish(packet);
         }
@@ -201,6 +208,7 @@ int main(int argc, char** argv) {
     ros::Rate rate(10);
     loraSub = nh->subscribe("/lora/rx", 10, &onRecieveRx);
     loraPub = nh->advertise<wireless_msgs::LoraPacket>("/lora/tx", 10);
+    initRobots(5);
     while(ros::ok()){
         ros::spinOnce();
         flushAllRobotsBuffers();
