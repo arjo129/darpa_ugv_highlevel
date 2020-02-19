@@ -3,7 +3,6 @@
 MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), darpaServerThread(_nh) {
     qRegisterMetaType<QPixmap>("QPixmap");
     qRegisterMetaType<RotateState>("RotateState");
-    qRegisterMetaType<uint8_t>("uint8_t");
 
     initRobots();
     darpaServerThread.start();
@@ -163,7 +162,13 @@ void MainWindow::applyTransform(QGraphicsPixmapItem* item,
 
 // TODO: Slider and return button still configured for map 1, 
 //       find a way to extend UI editing for all N maps
-void MainWindow::addPixmap(uint8_t robotNum, const QPixmap& map, int x, int y, float theta) {
+void MainWindow::addPixmap(int robotNum, const QPixmap& map, int x, int y, float theta) {
+    if (std::isnan(theta)) {
+        ROS_ERROR("Yaw of map provided is NAN. Rejecting.");
+        return;
+    }
+
+    ROS_INFO("Laser Scan Received: robot_%d", robotNum);
     CustomGraphicsScene* scene = scenes[robotNum - 1];
     QGraphicsPixmapItem* item = scene->addPixmap(map);
     item->setPos(x,y);
@@ -190,7 +195,7 @@ void MainWindow::sliderMoved(int value) {
     ROS_INFO("Map Editing Mode");
     sliderState = SliderState::EDITING;
 
-    uint8_t robotNum = 1; // temp hack, PLS FIX LATER
+    int robotNum = 1; // temp hack, PLS FIX LATER
     std::vector<QGraphicsPixmapItem*> laserscans = robots[robotNum-1]->laserscans;
 
     for (int i = 0; i < value; i++) {
@@ -215,7 +220,7 @@ void MainWindow::propagateChanges() {
 
     ROS_INFO("Propagating Map Changes");
 
-    uint8_t robotNum = 1; // temp hack, PLS FIX LATER
+    int robotNum = 1; // temp hack, PLS FIX LATER
     std::vector<QGraphicsPixmapItem*> laserscans = robots[robotNum-1]->laserscans;
     
     // update latest map transform from the UI and save on the stack
@@ -238,7 +243,7 @@ void MainWindow::propagateChanges() {
 
 void MainWindow::rotatePixMap(RotateState rotateState) {
 
-    uint8_t robotNum = 1; // temp hack, PLS FIX LATER
+    int robotNum = 1; // temp hack, PLS FIX LATER
     std::vector<QGraphicsPixmapItem*> laserscans = robots[robotNum-1]->laserscans;
 
     if (sliderState == SliderState::EDITING) {
@@ -277,7 +282,7 @@ void MainWindow::mapUpdateReceived(bool success, std::string errorStr) {
 
 }
 
-void MainWindow::eStopBtnClicked(bool isEStop, uint8_t robotNum) {
+void MainWindow::eStopBtnClicked(bool isEStop, int robotNum) {
     if (isEStop) {
         robots[robotNum-1]->rosthread.eStopRobot();
     }

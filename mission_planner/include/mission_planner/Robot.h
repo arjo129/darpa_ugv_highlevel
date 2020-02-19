@@ -15,7 +15,7 @@
 class Robot {
 
 public:
-    Robot(ros::NodeHandle nh, uint8_t robotNum);
+    Robot(ros::NodeHandle nh, int robotNum);
     ~Robot();
     ROSThread rosthread;
     std::vector<QGraphicsPixmapItem*> laserscans;

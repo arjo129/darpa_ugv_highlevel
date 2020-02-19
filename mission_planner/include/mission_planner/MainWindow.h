@@ -89,7 +89,7 @@ class MainWindow : public QMainWindow {
                                                 const std::string artifactTypeStr);
 
     public slots:
-        void addPixmap(uint8_t robotNum, const QPixmap& map, int x, int y, float theta);
+        void addPixmap(int robotNum, const QPixmap& map, int x, int y, float theta);
         void sliderMoved(int value);
         void artifactBtnClicked();
         void propagateChanges();
@@ -98,7 +98,7 @@ class MainWindow : public QMainWindow {
                                  int32_t numReportsLeft, int32_t currentScore);
         void artifactStatusReceived(std::string result);
         void mapUpdateReceived(bool success, std::string errorStr);
-        void eStopBtnClicked(bool isEStop, uint8_t robotNum);
+        void eStopBtnClicked(bool isEStop, int robotNum);
         void eStopAllBtnClicked();
         void startAllBtnClicked();
 };

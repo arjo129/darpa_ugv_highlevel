@@ -455,13 +455,6 @@ color: rgb(238, 238, 236);</string>
              </property>
             </widget>
            </item>
-           <item row="0" column="1">
-            <widget class="QLabel" name="currentRobotDisplayLabel_1">
-             <property name="text">
-              <string>Not Available</string>
-             </property>
-            </widget>
-           </item>
            <item row="5" column="2">
             <layout class="QFormLayout" name="formLayoutArtifactX">
              <item row="0" column="0">
@@ -540,6 +533,35 @@ color: rgb(238, 238, 236);</string>
              <property name="text">
               <string>Send Goal</string>
              </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="comboBox">
+             <item>
+              <property name="text">
+               <string>robot_1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>robot_2</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>robot_3</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>robot_4</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>robot_5</string>
+              </property>
+             </item>
             </widget>
            </item>
           </layout>

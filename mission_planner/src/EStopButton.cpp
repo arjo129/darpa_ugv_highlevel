@@ -2,7 +2,7 @@
 
 EStopButton::~EStopButton() {}
 
-void EStopButton::setType(const bool isEStop, const uint8_t robotNum) {
+void EStopButton::setType(const bool isEStop, const int robotNum) {
     this->isEStop = isEStop;
     this->robotNum = robotNum;
     connect(this, &QPushButton::clicked, this, &EStopButton::reemitClicked);

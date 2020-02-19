@@ -1,6 +1,6 @@
 #include <mission_planner/RosThread.h>
 
-ROSThread::ROSThread(ros::NodeHandle parentNh, uint8_t robotNum): nh(parentNh, ROBOT_NAME(robotNum)) 
+ROSThread::ROSThread(ros::NodeHandle parentNh, int robotNum): nh(parentNh, ROBOT_NAME(robotNum)) 
 {
     laserScanSub = nh.subscribe(ROBOT_SCAN_TOPIC(robotNum), 10, &ROSThread::onLaserScan, this);
     odometrySub = nh.subscribe(ROBOT_ODOM_TOPIC(robotNum),10,  &ROSThread::onNavMsg, this);
