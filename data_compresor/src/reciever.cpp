@@ -206,7 +206,7 @@ void flushAllRobotsBuffers() {
 int main(int argc, char** argv) {
     ros::init(argc, argv, "basestation_relay");
     nh = new ros::NodeHandle();
-    ros::Rate rate(10);
+    ros::Rate rate(0.3);
     loraSub = nh->subscribe("/lora/rx", 10, &onRecieveRx);
     loraPub = nh->advertise<wireless_msgs::LoraPacket>("/lora/tx", 10);
     initRobots(5);
