@@ -12,7 +12,7 @@ wifi_device = "wlp2s0"
 cmd = "nmcli device wifi rescan && iwlist %s scan | egrep 'Cell |Encryption|Quality|Last beacon|ESSID'" % wifi_device
 
 def odom_callback(msg):
-    odom = msg.data
+    odom = msg
 
 def talker():
     pub = rospy.Publisher('/wifi_ap', wifiArray, queue_size=10)
