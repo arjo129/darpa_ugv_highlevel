@@ -1,4 +1,4 @@
 <launch>
-    <node pkg="data_compresor" type="compressor_node" name="data_compressor_node" respawn="true"></node>
+    <node pkg="data_compresor" type="compressor_node" name="data_compressor_node" respawn="true" output="screen"></node>
     <node pkg="teensy_bridge" type="teensy_bridge_node" name="teensy_bridge_node" respawn="true" output="screen"></node>
 </launch>
