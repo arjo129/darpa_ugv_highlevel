@@ -93,7 +93,7 @@ class CompressedTelemetrySender {
             wireless_msgs::LoraPacket respPacket;
             std::vector<uint8_t> response;
             respPacket.to = packet.from;
-            reponse.push_back((uint8_t)MessageType::GOAL_ACK);
+            response.push_back((uint8_t)MessageType::GOAL_ACK);
             respPacket.data = compressZip(response);
             loraPub.publish(respPacket);
         }
