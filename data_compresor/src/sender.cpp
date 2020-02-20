@@ -96,7 +96,7 @@ class CompressedTelemetrySender {
             goal.target_pose.pose.orientation.z = targetYawQt.z();
             goal.target_pose.pose.orientation.w = targetYawQt.w();
             
-            //moveBaseClient->sendGoal(goal);
+            moveBaseClient->sendGoal(goal);
             std::cout << "recieved goal" <<std::endl;
             
             wireless_msgs::LoraPacket respPacket;
@@ -109,11 +109,13 @@ class CompressedTelemetrySender {
 
         if(data[0] == (uint8_t) MessageType::DROP_NODE) {
             vehicle_drive::Dropper dropmsg;
+            if(dropper_index>2) return;
             dropper_states[dropper_index] = 0;
             dropmsg.dropper_angles[0] = dropper_states[0];
             dropmsg.dropper_angles[1] = dropper_states[1];
             dropmsg.dropper_angles[2] = dropper_states[2];
             dropperPub.publish(dropmsg);
+            dropper_index++;
         }
     }
 
@@ -157,10 +159,10 @@ int main(int argc, char** argv) {
     ros::init(argc, argv, "compression_node");
     ros::NodeHandle nh;
     CompressedTelemetrySender telemetry(nh);
-    /*moveBaseClient = new MoveBaseClient("move_base", true);
+    moveBaseClient = new MoveBaseClient("move_base", true);
     while(!moveBaseClient->waitForServer(ros::Duration(5.0))){
         ROS_INFO("Waiting for the move_base action server to come up");
-    }*/
+    }
     ros::Rate rate(1.5);
     while(ros::ok()){
         ros::spinOnce();
