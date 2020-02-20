@@ -83,8 +83,8 @@ class Robot {
 
     void onRecieveGoal(geometry_msgs::Pose pose){
         Goal goal;
-        goal.x = pose.x*100;
-        goal.y = pose.y*100;
+        goal.x = pose.position.x*100;
+        goal.y = pose.position.y*100;
         loraPub.publish(toLoraPacket(goal));
     }
 
