@@ -85,7 +85,7 @@ class Robot {
         Goal goal;
         goal.x = pose.position.x*100;
         goal.y = pose.position.y*100;
-        wireless_msgs::LoraPacket packet = toLoraPacket(goal);]
+        wireless_msgs::LoraPacket packet = toLoraPacket(goal);
         packet.to.data = robot_name;
         loraPub.publish(packet);
     }
