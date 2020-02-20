@@ -6,6 +6,9 @@
 #include <nav_msgs/Odometry.h>
 #include <data_compresor/ScanStamped.h>
 #include <std_msgs/String.h>
+#include <geometry_msgs/Pose.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf/tf.h>
 #include <QThread>
 #include <QBitmap> 
@@ -32,6 +35,7 @@ inline std::string stringConcat(const std::string& a, const std::string& b)
     #define ROBOT_ODOM_TOPIC(x) "/odom_rf2o" 
     #define ROBOT_ESTOP_TOPIC(x) "/e_stop"
     #define ROBOT_START_TOPIC(x) "/start"
+    #define ROBOT_GOAL_TOPIC(x) "/goal"
     
 
 #endif
@@ -49,6 +53,7 @@ inline std::string stringConcat(const std::string& a, const std::string& b)
     #define ROBOT_ODOM_TOPIC(x) stringConcat(ROBOT_NAME(x), "/odom") 
     #define ROBOT_ESTOP_TOPIC(x) stringConcat(ROBOT_NAME(x), "/e_stop")
     #define ROBOT_START_TOPIC(x) stringConcat(ROBOT_NAME(x), "/start")
+    #define ROBOT_GOAL_TOPIC(x) stringConcat(ROBOT_NAME(x), "/goal")
 
 #endif
 
@@ -63,6 +68,7 @@ class ROSThread: public QThread {
         ros::Subscriber scanStampedSub;
         ros::Publisher robotStartPub; // cancels E-stop
         ros::Publisher robotEStopPub;
+        ros::Publisher robotGoalPub;
         nav_msgs::Odometry recentOdom;
         bool running;
         int robotNum;
@@ -74,6 +80,7 @@ class ROSThread: public QThread {
         void onNavMsg(nav_msgs::Odometry odometry);
         void startRobot();
         void eStopRobot();
+        void sendRobotGoal(double x, double y, double theta);
     signals:
         void scanRecieved(int robotNum, const QPixmap& map, int x, int y, float theta);
 };

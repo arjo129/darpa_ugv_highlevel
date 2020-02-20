@@ -3,8 +3,9 @@
 ROSThread::ROSThread(ros::NodeHandle parentNh, int robotNum): nh(parentNh, ROBOT_NAME(robotNum)) 
 {
     scanStampedSub = nh.subscribe(ROBOT_SCAN_TOPIC(robotNum), 10, &ROSThread::onLaserScanStamped, this);
-    robotStartPub = nh.advertise<std_msgs::String>(ROBOT_START_TOPIC(robotNum), 1);
-    robotEStopPub = nh.advertise<std_msgs::String>(ROBOT_ESTOP_TOPIC(robotNum), 1);
+    this->robotStartPub = nh.advertise<std_msgs::String>(ROBOT_START_TOPIC(robotNum), 1);
+    this->robotEStopPub = nh.advertise<std_msgs::String>(ROBOT_ESTOP_TOPIC(robotNum), 1);
+    this->robotGoalPub = nh.advertise<geometry_msgs::Pose>(ROBOT_GOAL_TOPIC(robotNum), 1);
     this->robotNum = robotNum;
     this->running = true;
 }
@@ -77,6 +78,21 @@ void ROSThread::eStopRobot()
     msg.data = "estop"; // any non-empty string will work
     robotEStopPub.publish(msg);
     ROS_INFO("E-Stopping Robot number %d", this->robotNum);
+}
+
+void ROSThread::sendRobotGoal(double x, double y, double theta) 
+{
+    geometry_msgs::Pose pose;
+    pose.position.x = x;
+    pose.position.y = y;
+
+    tf2::Quaternion quatTF;
+    double yawRad = theta * M_PI / 180.0;
+    quatTF.setRPY(0, 0, yawRad);
+    geometry_msgs::Quaternion quatMsg = tf2::toMsg(quatTF);
+    pose.orientation = quatMsg;
+
+    this->robotGoalPub.publish(pose);
 }
 
 void ROSThread::run() 

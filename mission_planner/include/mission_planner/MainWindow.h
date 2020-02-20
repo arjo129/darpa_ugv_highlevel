@@ -50,8 +50,9 @@ class MainWindow : public QMainWindow {
         QDoubleSpinBox* artifactZBox;
         QDoubleSpinBox* goalXBox;
         QDoubleSpinBox* goalYBox;
-        QDoubleSpinBox* goalZBox;
+        QDoubleSpinBox* goalThetaBox;
         QComboBox* comboBoxArtifactType;
+        QComboBox* comboBoxGoalRobotNum;
 
         EStopButton** eStopButtons;
 
@@ -73,12 +74,14 @@ class MainWindow : public QMainWindow {
         void initDarpaInterfaceUI();
         void initMapUI();
         void initEStopUI();
+        void initGoalUI();
         QTransform getTransform(QPointF translation, double rotationAngle);
         void applyTransformList(std::vector<QGraphicsPixmapItem*> laserscans, int startIdx, 
                                 int endIdx, QTransform transform, double rotationAngleTransform);
         void applyTransform(QGraphicsPixmapItem* item, 
                             QTransform transform, double rotationAngleTransform);
         QVector3D getArtifactPos();
+        QVector3D getRobotGoalPos();
         std::string getArtifactTypeStr();
     public:
         MainWindow(ros::NodeHandle nh);
@@ -92,6 +95,7 @@ class MainWindow : public QMainWindow {
         void addPixmap(int robotNum, const QPixmap& map, int x, int y, float theta);
         void sliderMoved(int value);
         void artifactBtnClicked();
+        void sendGoalBtnClicked();
         void propagateChanges();
         void rotatePixMap(RotateState rotateState);
         void darpaStatusRecieved(std::string teamName, double currentTime, 

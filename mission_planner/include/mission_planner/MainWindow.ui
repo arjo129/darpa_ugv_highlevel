@@ -486,14 +486,14 @@ color: rgb(238, 238, 236);</string>
            <item row="0" column="4">
             <layout class="QFormLayout" name="formLayoutGoalZ">
              <item row="0" column="0">
-              <widget class="QLabel" name="zLabelDisplay_1">
+              <widget class="QLabel" name="thetaLabelDisplay_1">
                <property name="text">
-                <string>Z</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-family:'Roboto,arial,sans-serif'; font-size:16px; color:#222222; background-color:#ffffff;&quot;&gt;θ&lt;/span&gt;</string>
                </property>
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="goalZInput"/>
+              <widget class="QDoubleSpinBox" name="goalThetaInput"/>
              </item>
             </layout>
            </item>
@@ -536,7 +536,7 @@ color: rgb(238, 238, 236);</string>
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QComboBox" name="comboBox">
+            <widget class="QComboBox" name="comboBoxGoalRobotNum">
              <item>
               <property name="text">
                <string>robot_1</string>

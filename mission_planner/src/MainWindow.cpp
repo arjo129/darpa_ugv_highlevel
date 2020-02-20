@@ -12,6 +12,7 @@ MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), darpaServerThread(_nh) {
     initMapUI();
     initDarpaInterfaceUI();
     initEStopUI();
+    initGoalUI();
 
     ui->horizontalSplitPanel->setStretchFactor(0,2);
 
@@ -70,9 +71,6 @@ void MainWindow::initDarpaInterfaceUI() {
     artifactXBox = ui->artifactXInput;
     artifactYBox = ui->artifactYInput;
     artifactZBox = ui->artifactZInput;
-    goalXBox = ui->goalXInput;
-    goalYBox = ui->goalYInput;
-    goalZBox = ui->goalZInput;
     comboBoxArtifactType = ui->comboBoxArtifactType;
 
     connect(&darpaServerThread, &DarpaServerThread::darpaStatusRecieved, this, &MainWindow::darpaStatusRecieved);
@@ -111,11 +109,29 @@ void MainWindow::initEStopUI() {
     connect(ui->startAllBtn, &QPushButton::clicked, this, &MainWindow::startAllBtnClicked);
 }
 
+void MainWindow::initGoalUI() {
+    goalXBox = ui->goalXInput;
+    goalYBox = ui->goalYInput;
+    goalThetaBox = ui->goalThetaInput;
+    comboBoxGoalRobotNum = ui->comboBoxGoalRobotNum;
+
+    connect(ui->sendGoalBtn, &QPushButton::pressed, this, &MainWindow::sendGoalBtnClicked);
+}
+
 QVector3D MainWindow::getArtifactPos() {
 
     double x = artifactXBox->value();
     double y = artifactYBox->value();
     double z = artifactZBox->value();
+
+    return QVector3D(x,y,z);
+}
+
+QVector3D MainWindow::getRobotGoalPos() {
+
+    double x = goalXBox->value();
+    double y = goalYBox->value();
+    double z = goalThetaBox->value();
 
     return QVector3D(x,y,z);
 }
@@ -264,6 +280,21 @@ void MainWindow::artifactBtnClicked() {
     QVector3D pos3d = getArtifactPos();
     std::string artifactTypeStr = getArtifactTypeStr();
     emit reportArtifact(pos3d.x(), pos3d.y(), pos3d.z(), artifactTypeStr);
+}
+
+void MainWindow::sendGoalBtnClicked() {
+    ROS_INFO("Btn Clicked");
+    std::string robotName = (comboBoxGoalRobotNum->currentText()).toStdString();
+    int robotNum = robotName.back() - '0';
+
+    if (robotNum < 1 || robotNum > NUM_ROBOTS) {
+        ROS_ERROR("Goal given to non-existent robot_%d\nAborting goal.", robotNum);
+        return;
+    }
+
+    QVector3D pos = getRobotGoalPos(); // z refers to theta, not height
+    robots[robotNum-1]->rosthread.sendRobotGoal(pos.x(), pos.y(), pos.z());
+    ROS_INFO("Sent Goal X,Y,Theta: (%f, %f, %f) to %s", pos.x(), pos.y(), pos.z(), robotName.c_str());
 }
 
 void MainWindow::darpaStatusRecieved(std::string teamName, double currentTime, 
