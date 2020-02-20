@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="vehicle_drive" type="estop.py" name="cmd_vel_forwarder" respawn="true" output="screen"></node>
+</launch>
