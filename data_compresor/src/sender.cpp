@@ -105,6 +105,10 @@ class CompressedTelemetrySender {
             response.push_back((uint8_t)MessageType::GOAL_ACK);
             respPacket.data = compressZip(response);
             loraPub.publish(respPacket);
+
+            std_msgs::String str;
+            str.data = "hi";
+            startPub.publish(str);
         }
 
         if(data[0] == (uint8_t) MessageType::DROP_NODE) {
