@@ -34,7 +34,7 @@ local_costmap:
         frontier_travel_point: "middle"
         explore_clear_space: false
     inflation:
-        inflation_radius: 0.10
+        inflation_radius: 0.15
 
 global_costmap:
     global_frame: odom
