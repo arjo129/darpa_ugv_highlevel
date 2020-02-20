@@ -18,6 +18,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   interface_protocol
+  data_compresor
+  wireless_msgs
 )
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 ## System dependencies are found with CMake's conventions

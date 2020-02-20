@@ -2,12 +2,16 @@
 
 ROSThread::ROSThread(ros::NodeHandle parentNh, int robotNum): nh(parentNh, ROBOT_NAME(robotNum)) 
 {
-    scanStampedSub = nh.subscribe(ROBOT_SCAN_TOPIC(robotNum), 10, &ROSThread::onLaserScanStamped, this);
+    scanStampedSub = nh.subscribe(ROBOT_SCAN_TOPIC(robotNum), 10, &ROSThread::onLaserScanStampedCb, this);
+    co2Sub = nh.subscribe(ROBOT_CO2_TOPIC(robotNum), 10, &ROSThread::onCo2Cb, this);
+    wifiSignalSub = nh.subscribe(ROBOT_WIFI_TOPIC(robotNum), 10, &ROSThread::onWifiSignalCb, this);
     this->robotStartPub = nh.advertise<std_msgs::String>(ROBOT_START_TOPIC(robotNum), 1);
     this->robotEStopPub = nh.advertise<std_msgs::String>(ROBOT_ESTOP_TOPIC(robotNum), 1);
     this->robotGoalPub = nh.advertise<geometry_msgs::Pose>(ROBOT_GOAL_TOPIC(robotNum), 1);
+    this->robotLoraDropPub = nh.advertise<std_msgs::String>(ROBOT_DROP_TOPIC(robotNum), 1);
     this->robotNum = robotNum;
     this->running = true;
+    this->numLoraDropped = 0;
 }
 
 ROSThread::~ROSThread() 
@@ -15,10 +19,31 @@ ROSThread::~ROSThread()
     this->running = false;
 }
 
-void ROSThread::onLaserScanStamped(data_compresor::ScanStamped scanStamped)
+void ROSThread::onLaserScanStampedCb(data_compresor::ScanStamped scanStamped)
 {
     onNavMsg(scanStamped.odom);
     onLaserScan(scanStamped.scan);
+}
+
+void ROSThread::onCo2Cb(wireless_msgs::Co2 co2) 
+{
+    std::string details = "Seq No: " + std::to_string(co2.header.seq) + \
+                                ", C02-Conc: " + std::to_string(co2.concentration);
+    emit artifactReceived(co2.position.x, co2.position.y, co2.position.z, details);
+    ROS_INFO("Received CO2 signal data");
+}
+
+void ROSThread::onWifiSignalCb(wireless_msgs::WifiArray wifiReport)
+{
+    for (int idx = 0; idx < wifiReport.data.size(); idx++) {
+        wireless_msgs::Wifi wifi = wifiReport.data[idx];
+        std::string details = "Seq No: " + std::to_string(wifiReport.header.seq);
+        details += ", SSID: " + std::string(wifi.ssid.data.c_str()) + \
+                            ", Signal: " + std::string(wifi.signal.data.c_str());
+        emit artifactReceived(wifiReport.position.x, wifiReport.position.y, wifiReport.position.z, details);
+    }
+
+    ROS_INFO("Received wifi signal data");
 }
 
 void ROSThread::onLaserScan(sensor_msgs::LaserScan lscan) 
@@ -93,6 +118,18 @@ void ROSThread::sendRobotGoal(double x, double y, double theta)
     pose.orientation = quatMsg;
 
     this->robotGoalPub.publish(pose);
+}
+
+void ROSThread::dropLoraNode() 
+{
+    std_msgs::String stringMsg;
+    stringMsg.data = "Dropping LORA";
+    this->robotLoraDropPub.publish(stringMsg);
+    this->numLoraDropped++;
+    float x = this->recentOdom.pose.pose.position.x;
+    float y = this->recentOdom.pose.pose.position.y;
+    float z = this->recentOdom.pose.pose.position.z;
+    ROS_INFO("Robot_%d: Dropping LORA number %d at (%f, %f, %f)", this->robotNum, this->numLoraDropped, x, y, z);
 }
 
 void ROSThread::run() 
