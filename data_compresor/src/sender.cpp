@@ -4,14 +4,20 @@
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
 #include <sensor_msgs/LaserScan.h>
+#include <std_msgs/UInt16.h>
+#include <vehicle_drive/Dropper.h>
 #include <wireless_msgs/LoraPacket.h>
 #include <data_compressor/msgs/laserscan.h>
 #include <data_compressor/msgs/co2.h>
 #include <data_compressor/msgs/WifiArray.h>
+#include <data_compressor/msgs/goal.h>
 #include <data_compressor/protocol.h>
 #include <data_compressor/parser.h>
 #include <data_compressor/zip.h>
-
+#include <move_base_msgs/MoveBaseAction.h>
+#include <actionlib/client/simple_action_client.h>
+typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+MoveBaseClient* moveBaseClient;
 
 class CompressedTelemetrySender {
 
@@ -23,12 +29,16 @@ class CompressedTelemetrySender {
     wireless_msgs::LoraPacket scanPacket; 
     
     void compressScan(sensor_msgs::LaserScan scan) {
+        static int count = 0;
         if(!recieved_odom){
             return;
         }
         std::vector<AdaptiveTelemetryScan> result = convertLaserScan(scan, lastOdom, 4);
         scanPacket = toLoraPacket(result[0]);
-        loraPub.publish(scanPacket);
+        scanPacket.to.data = "base_station";
+        if(count%50 ==0)
+            loraPub.publish(scanPacket);
+        count++;
     }
 
     void onRecieveOdom(nav_msgs::Odometry odom) {
@@ -55,6 +65,44 @@ class CompressedTelemetrySender {
             ROS_INFO("Stopping due to E-Stop signal");
             return;
         }
+        if(data[0] == (uint8_t) MessageType::START){
+            std_msgs::String str;
+            str.data = "hi";
+            startPub.publish(str);
+        }
+        if(data[0] == (uint8_t) MessageType::GOTO_GOAL){
+            Goal target = decodeGoal(data);
+            move_base_msgs::MoveBaseGoal goal;
+            goal.target_pose.header.frame_id = "base_link";
+            goal.target_pose.pose.position.x = (float)target.x/100;
+            goal.target_pose.pose.position.y = (float)target.y/100;
+            goal.target_pose.pose.position.z = 0;
+            float targetYaw = atan2(target.y, target.x);
+            tf::Quaternion targetYawQt(tf::Vector3(0,0,1), targetYaw);
+            goal.target_pose.pose.orientation.x = targetYawQt.x();
+            goal.target_pose.pose.orientation.y = targetYawQt.y();
+            goal.target_pose.pose.orientation.z = targetYawQt.z();
+            goal.target_pose.pose.orientation.w = targetYawQt.w();
+        }
+    }
+
+    void onCO2Reading(std_msgs::UInt16 reading){
+        //if(reading.data > 1800){
+            Co2 co2;
+            co2.concentration = reading.data;
+            co2.x = lastOdom.pose.pose.position.x;
+            co2.y = lastOdom.pose.pose.position.y;
+            co2.z = lastOdom.pose.pose.position.z;
+            co2.timestamp = ros::Time::now().toNSec();
+            wireless_msgs::LoraPacket packet = toLoraPacket(co2);
+            packet.to.data = "base_station";
+            loraPub.publish(packet);
+        //}
+    }
+
+    void onWifiScan(wireless_msgs::WifiArray wifi){
+        wireless_msgs::LoraPacket packet = toLoraPacket(wifi);
+        loraPub.publish(packet);
     }
 
 public:
@@ -66,8 +114,8 @@ public:
         this->tfListener = new tf::TransformListener();
         this->laserscan = nh.subscribe("/scan", 10, &CompressedTelemetrySender::compressScan, this);
         this->odomSub = nh.subscribe("/odom", 10, &CompressedTelemetrySender::onRecieveOdom, this);
-        //this->co2 = nh.subscribe("/co2", 10, &CompressedTelemetrySender::compressScan, this);
-        //this->wifi = nh.subscribe("/wifi", 10, &CompressedTelemetrySender::compressScan, this);
+        this->co2 = nh.subscribe("/co2", 10, &CompressedTelemetrySender::onCO2Reading, this);
+        this->wifi = nh.subscribe("/wifi", 10, &CompressedTelemetrySender::onWifiScan, this);
         this->loraSubscriber = nh.subscribe("/lora/rx", 10, &CompressedTelemetrySender::onRecieveLora, this);  
     }
 

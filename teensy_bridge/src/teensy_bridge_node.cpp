@@ -119,11 +119,11 @@ class TeensyBridgeNode {
             new_msg = false;
             #ifdef DEBUG
             std::cout << "wrote" ;
-            #endif
             for(int i = 0; i < length; i++) {
                 std::cout << (unsigned int)buffer[i] << " ";
             }
             std::cout << std::endl;
+            #endif
         }
         
     }

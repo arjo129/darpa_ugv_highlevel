@@ -9,6 +9,7 @@ enum class MessageType: uint8_t {
     CO2_SIGNATURE = 0xFB, 
     ESTOP = 0xFA,
     GOTO_GOAL = 0xF9,
-    ESTOP_ACK = 0xF8
+    ESTOP_ACK = 0xF8,
+    START = 0xF9
 };
 #endif

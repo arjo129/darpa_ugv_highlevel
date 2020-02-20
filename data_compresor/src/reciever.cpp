@@ -14,6 +14,7 @@
 #include <data_compressor/msgs/laserscan.h>
 #include <data_compressor/msgs/co2.h>
 #include <data_compressor/msgs/WifiArray.h>
+#include <data_compressor/msgs/goal.h>
 #include <data_compresor/ScanStamped.h>
 
 /*Global cause who gives a damn about coding standards 1 week before a competition*/
@@ -51,6 +52,8 @@ class Robot {
         odomPub = nh->advertise<nav_msgs::Odometry>(robot_name+"/odom", 10);
 
         estop = nh->subscribe(robot_name+"/e_stop", 10, &Robot::onRecieveEstop, this);
+        startSub = nh->subscribe(robot_name+"/start", 10, &Robot::onRecieveStart, this);
+        robotGoal = nh->subscribe(robot_name+"/goal", 10, &Robot::onRecieveGoal, this);
         this->state = RobotState::OK;
     }
 
@@ -74,6 +77,17 @@ class Robot {
         EStop();
     }
 
+    void onRecieveStart(std_msgs::String str) {
+        start();
+    }
+
+    void onRecieveGoal(geometry_msgs::Pose pose){
+        Goal goal;
+        goal.x = pose.x*100;
+        goal.y = pose.y*100;
+        loraPub.publish(toLoraPacket(goal));
+    }
+
     void EStop() {
         this->state = RobotState::ESTOP_IN_PROG;
     }
@@ -83,7 +97,12 @@ class Robot {
     }
 
     void start(){
-
+        wireless_msgs::LoraPacket packet;
+        packet.to.data = robot_name;
+        std::vector<uint8_t> signal;
+        signal.push_back((uint8_t)MessageType::START);
+        packet.data  = compressZip(signal);
+        loraPub.publish(packet);
     }
 
     std::vector<wireless_msgs::LoraPacket> flushLoraOut(){

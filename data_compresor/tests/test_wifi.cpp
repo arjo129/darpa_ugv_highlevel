@@ -1,10 +1,23 @@
 #include <data_compressor/msgs/WifiArray.h>
+#include <data_compressor/msgs/goal.h>
 #include <data_compressor/protocol.h>
 #include <data_compressor/parser.h>
 #include <data_compressor/zip.h>
 #include <gtest/gtest.h>
 #include <random>
 #include <limits>
+
+
+TEST(GoalCompressor, compress_decompress_integration){
+  Goal goal;
+  goal.x = -123;
+  goal.y = 56;
+  wireless_msgs::LoraPacket packet = toLoraPacket(goal);
+  std::vector<uint8_t> data = uncompressZip(packet.data);
+  Goal res = decodeGoal(data);
+  ASSERT_EQ(goal,res);
+
+}
 
 TEST(WifiArrayCompressor, compress_decompress_integration_test) {
     WifiArray wa;
