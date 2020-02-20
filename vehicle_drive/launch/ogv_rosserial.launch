@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="rosserial_python" type="serial_node.py" name="robot_rosserial" output="screen" respawn="true">
+        <param name="port" value="/dev/arduino"/>
+        <remap from="/cmd_vel" to="/controller/cmd_vel"/>
+    </node>
+</launch>
