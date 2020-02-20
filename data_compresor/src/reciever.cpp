@@ -16,7 +16,6 @@
 #include <data_compressor/msgs/WifiArray.h>
 #include <data_compressor/msgs/goal.h>
 #include <data_compresor/ScanStamped.h>
-
 /*Global cause who gives a damn about coding standards 1 week before a competition*/
 ros::NodeHandle *nh;
 ros::Subscriber loraSub;
@@ -45,6 +44,7 @@ class Robot {
     ros::Subscriber robotGoal;
     ros::Subscriber estop;
     ros::Subscriber startSub;
+    ros::Subscriber dropper;
 
     std::string robot_name;
 
@@ -62,8 +62,18 @@ class Robot {
         estop = nh->subscribe(robot_name+"/e_stop", 10, &Robot::onRecieveEstop, this);
         startSub = nh->subscribe(robot_name+"/start", 10, &Robot::onRecieveStart, this);
         robotGoal = nh->subscribe(robot_name+"/goal", 10, &Robot::onRecieveGoal, this);
+        dropper = nh->subscribe(robot_name+"/dropper", 10, &Robot::dropNode, this);
         this->state = RobotState::OK;
         goalstate = GoalState::NO_GOAL;
+    }
+
+    void dropNode(std_msgs::String  str) {
+        wireless_msgs::LoraPacket packet;
+        packet.to.data = robot_name;
+        std::vector<uint8_t> signal;
+        signal.push_back((uint8_t)MessageType::DROP_NODE);
+        packet.data  = compressZip(signal);
+        loraPub.publish(packet);
     }
 
     void publish(data_compresor::ScanStamped scan){

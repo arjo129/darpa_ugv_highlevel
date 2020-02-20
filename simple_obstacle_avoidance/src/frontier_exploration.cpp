@@ -10,6 +10,7 @@
 #include <sensor_msgs/Range.h>
 #include <std_msgs/String.h>
 
+
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
         std::default_random_engine gen;
 

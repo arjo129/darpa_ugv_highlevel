@@ -21,7 +21,7 @@ MoveBaseClient* moveBaseClient;
 
 class CompressedTelemetrySender {
 
-    ros::Publisher loraPub, estopPub, startPub;
+    ros::Publisher loraPub, estopPub, startPub, dropperPub;
     ros::Subscriber laserscan, co2, wifi, loraSubscriber, odomSub;
     nav_msgs::Odometry lastOdom;
     bool recieved_odom = false;
@@ -48,6 +48,15 @@ class CompressedTelemetrySender {
     }
 
     void onRecieveLora(wireless_msgs::LoraPacket packet) {
+        static int dropper_states[3];
+        static int dropper_index = 0;
+        static bool first = true;
+        if(first){
+            first =false;
+            dropper_states[0] = 60;
+            dropper_states[1] = 60;
+            dropper_states[2] = 60;
+        }
         std::vector<uint8_t> data = uncompressZip(packet.data);
         if(data.size() < 0){
             ROS_ERROR("Failed to decompress packet");
@@ -97,6 +106,15 @@ class CompressedTelemetrySender {
             respPacket.data = compressZip(response);
             loraPub.publish(respPacket);
         }
+
+        if(data[0] == (uint8_t) MessageType::DROP_NODE) {
+            vehicle_drive::Dropper dropmsg;
+            dropper_states[dropper_index] = 0;
+            dropmsg.dropper_angles[0] = dropper_states[0];
+            dropmsg.dropper_angles[1] = dropper_states[1];
+            dropmsg.dropper_angles[2] = dropper_states[2];
+            dropperPub.publish(dropmsg);
+        }
     }
 
     void onCO2Reading(std_msgs::UInt16 reading){
@@ -124,6 +142,7 @@ public:
         
         this->loraPub = nh.advertise<wireless_msgs::LoraPacket>("/lora/tx", 10);
         this->estopPub = nh.advertise<std_msgs::String>("/e_stop", 10);
+        this->dropperPub = nh.advertise<vehicle_drive::Dropper>("droppers",10);
         this->tfListener = new tf::TransformListener();
         this->laserscan = nh.subscribe("/scan", 10, &CompressedTelemetrySender::compressScan, this);
         this->odomSub = nh.subscribe("/odom", 10, &CompressedTelemetrySender::onRecieveOdom, this);
