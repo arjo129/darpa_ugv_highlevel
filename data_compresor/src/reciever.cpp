@@ -28,6 +28,12 @@ enum class RobotState {
     ESTOP_IN_PROG, ESTOPPED, OK
 };
 /**
+ * Goal State
+ */ 
+enum class GoalState {
+    GOAL_INPROG, NO_GOAL
+};
+/**
  * Define an individual robot
  */ 
 class Robot {
@@ -42,6 +48,8 @@ class Robot {
 
     std::string robot_name;
 
+    GoalState goalstate;
+    wireless_msgs::LoraPacket lastGoal;
     RobotState state;
  public:
     Robot(){}//Hack to silence compiler errors.
@@ -55,6 +63,7 @@ class Robot {
         startSub = nh->subscribe(robot_name+"/start", 10, &Robot::onRecieveStart, this);
         robotGoal = nh->subscribe(robot_name+"/goal", 10, &Robot::onRecieveGoal, this);
         this->state = RobotState::OK;
+        goalstate = GoalState::NO_GOAL;
     }
 
     void publish(data_compresor::ScanStamped scan){
@@ -87,7 +96,9 @@ class Robot {
         goal.y = pose.position.y*100;
         wireless_msgs::LoraPacket packet = toLoraPacket(goal);
         packet.to.data = robot_name;
+        lastGoal = packet;
         loraPub.publish(packet);
+        this->goalstate = GoalState::GOAL_INPROG;
     }
 
     void EStop() {
@@ -96,6 +107,10 @@ class Robot {
 
     void EStopAck() {
         this->state = RobotState::ESTOPPED;
+    }
+
+    void goalAck() {
+        this->goalstate = GoalState::NO_GOAL;
     }
 
     void start(){
@@ -117,6 +132,9 @@ class Robot {
             packet.data  = compressZip(signal);
             packets.push_back(packet);
             
+        }
+        if(this->goalstate == GoalState::GOAL_INPROG){
+            packets.push_back(lastGoal);
         }
         return packets;
     }
@@ -189,6 +207,10 @@ void handleEStopAck(std::string from, std::vector<uint8_t> data) {
     lookupOrCreateRobot(from)->EStopAck();
 }
 
+void handleGoalAck(std::string from, std::vector<uint8_t> data){
+    lookupOrCreateRobot(from)->goalAck();
+}
+
 /**
  * Routes the packet to the correct decompressor
  */ 
@@ -209,6 +231,9 @@ void onRecieveRx(wireless_msgs::LoraPacket packet) {
             break;
         case (uint8_t)MessageType::WIFI_SIGNAL:
             handleWifiArray(packet.from.data, data);
+            break;
+        case (uint8_t)MessageType::GOAL_ACK:
+            handleGoalAck(packet.from.data, data);
             break;
         default:
             ROS_ERROR("Handler not found");

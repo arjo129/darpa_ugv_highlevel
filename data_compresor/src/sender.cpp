@@ -44,6 +44,7 @@ class CompressedTelemetrySender {
     void onRecieveOdom(nav_msgs::Odometry odom) {
         this->lastOdom = odom;
         this->recieved_odom = true;
+        //std::cout << "recieved odom" << odom <<std::endl;
     }
 
     void onRecieveLora(wireless_msgs::LoraPacket packet) {
@@ -69,9 +70,11 @@ class CompressedTelemetrySender {
             std_msgs::String str;
             str.data = "hi";
             startPub.publish(str);
+            return;
         }
         if(data[0] == (uint8_t) MessageType::GOTO_GOAL){
             Goal target = decodeGoal(data);
+
             move_base_msgs::MoveBaseGoal goal;
             goal.target_pose.header.frame_id = "base_link";
             goal.target_pose.pose.position.x = (float)target.x/100;
@@ -83,6 +86,16 @@ class CompressedTelemetrySender {
             goal.target_pose.pose.orientation.y = targetYawQt.y();
             goal.target_pose.pose.orientation.z = targetYawQt.z();
             goal.target_pose.pose.orientation.w = targetYawQt.w();
+            
+            //moveBaseClient->sendGoal(goal);
+            std::cout << "recieved goal" <<std::endl;
+            
+            wireless_msgs::LoraPacket respPacket;
+            std::vector<uint8_t> response;
+            respPacket.to = packet.from;
+            reponse.push_back((uint8_t)MessageType::GOAL_ACK);
+            respPacket.data = compressZip(response);
+            loraPub.publish(respPacket);
         }
     }
 
@@ -116,7 +129,8 @@ public:
         this->odomSub = nh.subscribe("/odom", 10, &CompressedTelemetrySender::onRecieveOdom, this);
         this->co2 = nh.subscribe("/co2", 10, &CompressedTelemetrySender::onCO2Reading, this);
         this->wifi = nh.subscribe("/wifi", 10, &CompressedTelemetrySender::onWifiScan, this);
-        this->loraSubscriber = nh.subscribe("/lora/rx", 10, &CompressedTelemetrySender::onRecieveLora, this);  
+        this->loraSubscriber = nh.subscribe("/lora/rx", 10, &CompressedTelemetrySender::onRecieveLora, this); 
+        this->startPub = nh.advertise<std_msgs::String>("/start", 10); 
     }
 
 };
@@ -124,6 +138,10 @@ int main(int argc, char** argv) {
     ros::init(argc, argv, "compression_node");
     ros::NodeHandle nh;
     CompressedTelemetrySender telemetry(nh);
+    /*moveBaseClient = new MoveBaseClient("move_base", true);
+    while(!moveBaseClient->waitForServer(ros::Duration(5.0))){
+        ROS_INFO("Waiting for the move_base action server to come up");
+    }*/
     ros::Rate rate(1.5);
     while(ros::ok()){
         ros::spinOnce();
