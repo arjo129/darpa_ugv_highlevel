@@ -20,6 +20,8 @@
 
 #define ROTATION_INCREMENT 1 // 1 degree increment per signal from onRotate()
 
+Q_DECLARE_METATYPE (std::string)
+
 enum class SliderState {
     EDITING,
     LIVE_VIEW
@@ -92,10 +94,12 @@ class MainWindow : public QMainWindow {
                                                 const std::string artifactTypeStr);
 
     public slots:
-        void addPixmap(int robotNum, const QPixmap& map, int x, int y, float theta);
+        void addPixmap(int robotNum, const QPixmap& map, float x, float y, float theta);
+        void addArtifactData(float x, float y, float z, std::string details);
         void sliderMoved(int value);
         void artifactBtnClicked();
         void sendGoalBtnClicked();
+        void loraDropBtnClicked();
         void propagateChanges();
         void rotatePixMap(RotateState rotateState);
         void darpaStatusRecieved(std::string teamName, double currentTime, 

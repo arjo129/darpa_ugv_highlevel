@@ -3,6 +3,7 @@
 MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), darpaServerThread(_nh) {
     qRegisterMetaType<QPixmap>("QPixmap");
     qRegisterMetaType<RotateState>("RotateState");
+    qRegisterMetaType<std::string>("std::string");
 
     initRobots();
     darpaServerThread.start();
@@ -64,6 +65,7 @@ void MainWindow::initRobots() {
     for (int idx = 1; idx <= NUM_ROBOTS; idx++) {
         robots[idx-1] = new Robot(nh, idx);
         connect(&(robots[idx-1]->rosthread), &ROSThread::scanRecieved, this, &MainWindow::addPixmap);
+        connect(&(robots[idx-1]->rosthread), &ROSThread::artifactReceived, this, &MainWindow::addArtifactData);
     }
 }
 
@@ -116,6 +118,7 @@ void MainWindow::initGoalUI() {
     comboBoxGoalRobotNum = ui->comboBoxGoalRobotNum;
 
     connect(ui->sendGoalBtn, &QPushButton::pressed, this, &MainWindow::sendGoalBtnClicked);
+    connect(ui->loraDropBtn, &QPushButton::pressed, this, &MainWindow::loraDropBtnClicked);
 }
 
 QVector3D MainWindow::getArtifactPos() {
@@ -178,7 +181,7 @@ void MainWindow::applyTransform(QGraphicsPixmapItem* item,
 
 // TODO: Slider and return button still configured for map 1, 
 //       find a way to extend UI editing for all N maps
-void MainWindow::addPixmap(int robotNum, const QPixmap& map, int x, int y, float theta) {
+void MainWindow::addPixmap(int robotNum, const QPixmap& map, float x, float y, float theta) {
     if (std::isnan(theta)) {
         ROS_ERROR("Yaw of map provided is NAN. Rejecting.");
         return;
@@ -205,6 +208,20 @@ void MainWindow::addPixmap(int robotNum, const QPixmap& map, int x, int y, float
     }
     ui->progressSlider->setRange(0, robots[robotNum-1]->laserscans.size());
     robots[robotNum-1]->laserscans.push_back(item);
+}
+
+void MainWindow::addArtifactData(float x, float y, float z, std::string details) {
+    // QLabel *label = new QLabel;
+    QString displayText = "Pos: " + QString::number(x, 'f', 2) + ", " + QString::number(y, 'f', 2) + \
+                                    ", " +QString::number(z, 'f', 2) + ", " + QString::fromUtf8(details.c_str()) + "\n";
+    // label->setAlignment(Qt::AlignTop);
+    // label->setText(displayText);
+    // ui->artifactVLayout->setWidget(label);
+    // ui->artifactScrollArea->setWidgetResizable(false);
+    // ui->artifactScrollArea->setWidget(ui->artifactLabel);
+    // ui->artifactLabel->setWordWrap(true);
+    // ui->artifactLabel->setText(ui->artifactLabel->text() + displayText);
+    ui->artifactTextEdit->insertPlainText(displayText);
 }
 
 void MainWindow::sliderMoved(int value) {
@@ -283,7 +300,6 @@ void MainWindow::artifactBtnClicked() {
 }
 
 void MainWindow::sendGoalBtnClicked() {
-    ROS_INFO("Btn Clicked");
     std::string robotName = (comboBoxGoalRobotNum->currentText()).toStdString();
     int robotNum = robotName.back() - '0';
 
@@ -295,6 +311,19 @@ void MainWindow::sendGoalBtnClicked() {
     QVector3D pos = getRobotGoalPos(); // z refers to theta, not height
     robots[robotNum-1]->rosthread.sendRobotGoal(pos.x(), pos.y(), pos.z());
     ROS_INFO("Sent Goal X,Y,Theta: (%f, %f, %f) to %s", pos.x(), pos.y(), pos.z(), robotName.c_str());
+}
+
+void MainWindow::loraDropBtnClicked() {
+    std::string robotName = (comboBoxGoalRobotNum->currentText()).toStdString();
+    int robotNum = robotName.back() - '0';
+
+    if (robotNum < 1 || robotNum > NUM_ROBOTS) {
+        ROS_ERROR("LORA Drop command given to non-existent robot_%d\nAborting drop.", robotNum);
+        return;
+    }
+
+    ROS_INFO("UI Triggering robot_%d lora drop", robotNum);
+    robots[robotNum-1]->rosthread.dropLoraNode();
 }
 
 void MainWindow::darpaStatusRecieved(std::string teamName, double currentTime, 

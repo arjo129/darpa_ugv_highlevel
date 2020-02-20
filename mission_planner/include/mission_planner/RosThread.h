@@ -14,6 +14,8 @@
 #include <QBitmap> 
 #include <QImage>
 #include <mission_planner/Config.h>
+#include <wireless_msgs/Co2.h>
+#include <wireless_msgs/WifiArray.h>
 
 inline std::string stringConcat(const std::string& a, const std::string& b)
 {
@@ -36,6 +38,7 @@ inline std::string stringConcat(const std::string& a, const std::string& b)
     #define ROBOT_ESTOP_TOPIC(x) "/e_stop"
     #define ROBOT_START_TOPIC(x) "/start"
     #define ROBOT_GOAL_TOPIC(x) "/goal"
+    #define ROBOT_DROP_TOPIC(x) "/dropper"
     
 
 #endif
@@ -54,6 +57,7 @@ inline std::string stringConcat(const std::string& a, const std::string& b)
     #define ROBOT_ESTOP_TOPIC(x) stringConcat(ROBOT_NAME(x), "/e_stop")
     #define ROBOT_START_TOPIC(x) stringConcat(ROBOT_NAME(x), "/start")
     #define ROBOT_GOAL_TOPIC(x) stringConcat(ROBOT_NAME(x), "/goal")
+    #define ROBOT_DROP_TOPIC(x) stringConcat(ROBOT_NAME(x), "/dropper")
 
 #endif
 
@@ -66,23 +70,31 @@ class ROSThread: public QThread {
     private:
         ros::NodeHandle nh;
         ros::Subscriber scanStampedSub;
+        ros::Subscriber co2Sub;
+        ros::Subscriber wifiSignalSub;
         ros::Publisher robotStartPub; // cancels E-stop
         ros::Publisher robotEStopPub;
         ros::Publisher robotGoalPub;
-        nav_msgs::Odometry recentOdom;
+        ros::Publisher robotLoraDropPub;
         bool running;
         int robotNum;
+        int numLoraDropped;
+        nav_msgs::Odometry recentOdom; 
     public:
         ROSThread(ros::NodeHandle parentNh, int robotNum);
         ~ROSThread();
-        void onLaserScanStamped(data_compresor::ScanStamped scanStamped);
+        void onLaserScanStampedCb(data_compresor::ScanStamped scanStamped);
+        void onCo2Cb(wireless_msgs::Co2);
+        void onWifiSignalCb(wireless_msgs::WifiArray);
         void onLaserScan(sensor_msgs::LaserScan);
         void onNavMsg(nav_msgs::Odometry odometry);
         void startRobot();
         void eStopRobot();
         void sendRobotGoal(double x, double y, double theta);
+        void dropLoraNode();
     signals:
-        void scanRecieved(int robotNum, const QPixmap& map, int x, int y, float theta);
+        void scanRecieved(int robotNum, const QPixmap& map, float x, float y, float theta);
+        void artifactReceived(float x, float y, float z, std::string details);
 };
 #endif
 

@@ -13,15 +13,18 @@
   <build_depend>sensor_msgs</build_depend>
   <build_depend>interface_protocol</build_depend>
   <build_depend>data_compresor</build_depend>
+  <build_depend>wireless_msgs</build_depend>
   <build_export_depend>cv_bridge</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>sensor_msgs</build_export_depend>
   <build_export_depend>data_compresor</build_export_depend>
+  <build_export_depend>wireless_msgs</build_export_depend>
   <exec_depend>cv_bridge</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>interface_protocol</exec_depend>
   <exec_depend>data_compresor</exec_depend>
+  <exec_depend>wireless_msgs</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

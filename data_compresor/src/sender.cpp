@@ -36,7 +36,7 @@ class CompressedTelemetrySender {
         std::vector<AdaptiveTelemetryScan> result = convertLaserScan(scan, lastOdom, 4);
         scanPacket = toLoraPacket(result[0]);
         scanPacket.to.data = "base_station";
-        if(count%50 ==0)
+        if(count%100 ==0)
             loraPub.publish(scanPacket);
         count++;
     }
