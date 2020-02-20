@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="xbee_estop" type="xbee_estop.py" name="xbee_estop" respawn="true" output="screen"></node>
+</launch>

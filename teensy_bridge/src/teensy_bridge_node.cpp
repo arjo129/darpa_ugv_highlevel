@@ -28,6 +28,7 @@ int openSerialPort(const char* port) {
     // Read in existing settings, and handle any error
     if(tcgetattr(serial_port, &tty) != 0) {
         printf("Error %i from tcgetattr: %s\n", errno, strerror(errno));
+        exit(-1);
     }
 
     tty.c_cflag &= ~PARENB; // Clear parity bit, disabling parity (most common)
@@ -59,6 +60,7 @@ int openSerialPort(const char* port) {
     // Save tty settings, also checking for error
     if (tcsetattr(serial_port, TCSANOW, &tty) != 0) {
         printf("Error %i from tcsetattr: %s\n", errno, strerror(errno));
+        exit(-1);
     }
     return serial_port;
 }
@@ -105,17 +107,23 @@ class TeensyBridgeNode {
     void sendMsg() {
         uint8_t buffer[255];
         int length = handler.serializeMessage(mostRecentPacket, buffer);
+        #ifdef DEBUG
         std::cout << "status "<< new_msg<< std::endl;
+        #endif
         if(this->messageQueueEmpty & new_msg){
+            #ifdef DEBUG
             std::cout << "hello " <<std::endl;
+            #endif
             writeSerialPort(serialPort, buffer, length);
             this->messageQueueEmpty =false;
             new_msg = false;
+            #ifdef DEBUG
             std::cout << "wrote" ;
             for(int i = 0; i < length; i++) {
                 std::cout << (unsigned int)buffer[i] << " ";
             }
             std::cout << std::endl;
+            #endif
         }
         
     }
@@ -131,7 +139,9 @@ public:
             std::cout << "no data recv" << std::endl;
         }
         for (int i = 0; i < length; i++){
-            std::cout <<  buffer[i] << " ";
+            #ifdef DEBUG
+            std::cout <<  (int)buffer[i] << " ";
+            #endif
             if(parser.addByteToPacket(buffer[i])){
                 if(parser.getMessageType() == SerialResponseMessageType::PACKET_RECIEVED) {
                     wireless_msgs::LoraPacket pkt = parser.retrievePacket();
@@ -139,12 +149,14 @@ public:
                 }
                 if(parser.getMessageType() == SerialResponseMessageType::LORA_STATUS_READY) {
                     this->messageQueueEmpty = true;
+                    #ifdef DEBUG
                     std::cout << "Queue Empty"<< std::endl;
+                    #endif
                     parser.reset();
 
                 }
                 if (parser.getMessageType() == SerialResponseMessageType::THERMAL_FRONT) {
-                    std::cout << "retrieve packet" << std::endl;
+                   // std::cout << "retrieve packet" << std::endl;
                     cv::Mat img = parser.retrieveThermalPacket();
                     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", img).toImageMsg();
 		            pubThermal.publish(msg);                
@@ -172,7 +184,9 @@ public:
                 }*/
             }
         }
+        #ifdef DEBUG
         std::cout << std::endl;
+        #endif
         sendMsg();
     }
 

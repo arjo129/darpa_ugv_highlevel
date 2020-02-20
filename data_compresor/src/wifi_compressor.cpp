@@ -69,3 +69,18 @@ wireless_msgs::LoraPacket toLoraPacket(WifiArray wa) {
     packet.data = compressZip(encodeWifiArray(wa));
 }
 
+wireless_msgs::LoraPacket toLoraPacket(wireless_msgs::WifiArray array){
+    WifiArray out_array;
+    out_array.x = array.position.x;
+    out_array.y = array.position.y;
+    out_array.z = array.position.z;
+    for(int i = 0; i < array.data.size(); i++){
+        Wifi w;
+        w.ssid = array.data[i].ssid.data;
+        w.quality = array.data[i].quality.data;
+        w.signal = array.data[i].signal.data;
+        out_array.data.push_back(w);
+    }
+    return toLoraPacket(out_array);
+}
+

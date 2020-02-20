@@ -15,6 +15,8 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   tf
   amapper
+  move_base
+  vehicle_drive
 )
 
 ## System dependencies are found with CMake's conventions
@@ -112,7 +114,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES data_compresor
-  CATKIN_DEPENDS wireless_msgs nav_msgs sensor_msgs roscpp
+  CATKIN_DEPENDS wireless_msgs nav_msgs sensor_msgs roscpp vehicle_drive
 #  DEPENDS system_lib
 )
 

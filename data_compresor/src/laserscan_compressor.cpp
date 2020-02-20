@@ -12,13 +12,13 @@ std::vector<AdaptiveTelemetryScan> convertLaserScan(sensor_msgs::LaserScan scan,
         scanFragments[i].sub_order = i;
         scanFragments[i].distances = new uint16_t[scan.ranges.size()/skip_vector];
         scanFragments[i].length = scan.ranges.size()/skip_vector;
-        scanFragments[i].x = odom.pose.pose.position.x;
-        scanFragments[i].y = odom.pose.pose.position.y;
-        scanFragments[i].z = odom.pose.pose.position.z;
-        scanFragments[i].rotateX = odom.pose.pose.orientation.x;
-        scanFragments[i].rotateY = odom.pose.pose.orientation.y;
-        scanFragments[i].rotateZ = odom.pose.pose.orientation.z;
-        scanFragments[i].rotateW = odom.pose.pose.orientation.w;
+        scanFragments[i].x = odom.pose.pose.position.x*10;
+        scanFragments[i].y = odom.pose.pose.position.y*10;
+        scanFragments[i].z = odom.pose.pose.position.z*10;
+        scanFragments[i].rotateX = odom.pose.pose.orientation.x*1000;
+        scanFragments[i].rotateY = odom.pose.pose.orientation.y*1000;
+        scanFragments[i].rotateZ = odom.pose.pose.orientation.z*1000;
+        scanFragments[i].rotateW = odom.pose.pose.orientation.w*1000;
     }
     for(int i = 0; i < scan.ranges.size(); i++) {
         if(isinf(scan.ranges[i]))
@@ -55,13 +55,13 @@ sensor_msgs::LaserScan toLaserScan(AdaptiveTelemetryScan cscan) {
 
 nav_msgs::Odometry getOdom(AdaptiveTelemetryScan scan) {
     nav_msgs::Odometry odom;
-    odom.pose.pose.position.x = scan.x;
-    odom.pose.pose.position.y = scan.y;
-    odom.pose.pose.position.z = scan.z;
-    odom.pose.pose.orientation.w = scan.rotateW;
-    odom.pose.pose.orientation.x = scan.rotateX;
-    odom.pose.pose.orientation.y = scan.rotateY;
-    odom.pose.pose.orientation.z = scan.rotateZ;
+    odom.pose.pose.position.x = (float)scan.x/10;
+    odom.pose.pose.position.y = (float)scan.y/10;
+    odom.pose.pose.position.z = (float)scan.z/10;
+    odom.pose.pose.orientation.w = (float)scan.rotateW/1000;
+    odom.pose.pose.orientation.x = (float)scan.rotateX/1000;
+    odom.pose.pose.orientation.y = (float)scan.rotateY/1000;
+    odom.pose.pose.orientation.z = (float)scan.rotateZ/1000;
     return odom; 
 }
 

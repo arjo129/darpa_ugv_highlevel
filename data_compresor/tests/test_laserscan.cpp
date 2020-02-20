@@ -5,7 +5,14 @@
 #include <gtest/gtest.h>
 #include <random>
 #include <limits>
-
+TEST(LaserScanCompressor, compress_decompress_odom) {
+  sensor_msgs::LaserScan scan;
+  nav_msgs::Odometry odom;
+  /*odom.x = 92;
+  odom.y = 45;
+  odom.z = 64;
+  odom.*/
+}
 TEST(LaserScanCompressor, compress_decompress_integration_test) {
     
     AdaptiveTelemetryScan scan;
@@ -19,6 +26,7 @@ TEST(LaserScanCompressor, compress_decompress_integration_test) {
     std::vector<uint8_t> data = encodeScan(scan);
     AdaptiveTelemetryScan result = decodeScan(data);
     ASSERT_EQ(scan, result);
+    
 }
 
 int main(int argc, char **argv){

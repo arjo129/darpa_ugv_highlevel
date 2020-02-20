@@ -38,4 +38,5 @@ void encodeWifi(std::vector<uint8_t>& bytestream, Wifi w);
 WifiArray decodeWifiArray(std::vector<uint8_t> packet);
 Wifi decodeWifi(PacketParser& state, std::vector<uint8_t>& packet);
 wireless_msgs::LoraPacket toLoraPacket(WifiArray wa);
+wireless_msgs::LoraPacket toLoraPacket(wireless_msgs::WifiArray array);
 #endif

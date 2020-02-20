@@ -17,7 +17,7 @@ bool DarpaServerThread::initInterfaceProtocolServices() {
     this->markersReportSrvClient = this->nh.serviceClient<interface_protocol::MappingUpdate>("post_markers_update");
 
 
-    uint8_t numRetries = MAX_PROTOCOL_RETRIES;
+    int numRetries = MAX_PROTOCOL_RETRIES;
     bool isServiceUp = false;
     while (ros::ok() && numRetries > 0) {
         if (!(this->artifactReportSrvClient.exists() && this->darpaStatusSrvClient.exists() && this->mapReportSrvClient.exists() && 

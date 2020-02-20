@@ -4,19 +4,25 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 #include <nav_msgs/Odometry.h>
+#include <data_compresor/ScanStamped.h>
 #include <std_msgs/String.h>
+#include <geometry_msgs/Pose.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf/tf.h>
 #include <QThread>
 #include <QBitmap> 
 #include <QImage>
 #include <mission_planner/Config.h>
+#include <wireless_msgs/Co2.h>
+#include <wireless_msgs/WifiArray.h>
 
 inline std::string stringConcat(const std::string& a, const std::string& b)
 {
     return a + b;
 }
 
-#define ROBOT_NAME(x) stringConcat("/robot", std::to_string(x))
+#define ROBOT_NAME(x) stringConcat("/robot_", std::to_string(x))
 
 // Definitions for single robot debugging over ROS network
 #ifdef SINGLE_ROBOT_DEBUG
@@ -29,8 +35,10 @@ inline std::string stringConcat(const std::string& a, const std::string& b)
     #define ROBOT_STATUS_TOPIC(x) "/status"
     #define ROBOT_POOP_TRAIL_TOPIC(x) "/poop_trail"
     #define ROBOT_ODOM_TOPIC(x) "/odom_rf2o" 
-    #define ROBOT_ESTOP_TOPIC(x) "/estop"
+    #define ROBOT_ESTOP_TOPIC(x) "/e_stop"
     #define ROBOT_START_TOPIC(x) "/start"
+    #define ROBOT_GOAL_TOPIC(x) "/goal"
+    #define ROBOT_DROP_TOPIC(x) "/dropper"
     
 
 #endif
@@ -46,8 +54,10 @@ inline std::string stringConcat(const std::string& a, const std::string& b)
     #define ROBOT_STATUS_TOPIC(x) stringConcat(ROBOT_NAME(x), "/status")
     #define ROBOT_POOP_TRAIL_TOPIC(x) stringConcat(ROBOT_NAME(x), "/poop_trail")
     #define ROBOT_ODOM_TOPIC(x) stringConcat(ROBOT_NAME(x), "/odom") 
-    #define ROBOT_ESTOP_TOPIC(x) stringConcat(ROBOT_NAME(x), "/estop")
+    #define ROBOT_ESTOP_TOPIC(x) stringConcat(ROBOT_NAME(x), "/e_stop")
     #define ROBOT_START_TOPIC(x) stringConcat(ROBOT_NAME(x), "/start")
+    #define ROBOT_GOAL_TOPIC(x) stringConcat(ROBOT_NAME(x), "/goal")
+    #define ROBOT_DROP_TOPIC(x) stringConcat(ROBOT_NAME(x), "/dropper")
 
 #endif
 
@@ -59,22 +69,32 @@ class ROSThread: public QThread {
         void run() override;
     private:
         ros::NodeHandle nh;
-        ros::Subscriber laserScanSub;
-        ros::Subscriber odometrySub;
+        ros::Subscriber scanStampedSub;
+        ros::Subscriber co2Sub;
+        ros::Subscriber wifiSignalSub;
         ros::Publisher robotStartPub; // cancels E-stop
         ros::Publisher robotEStopPub;
-        nav_msgs::Odometry recentOdom;
+        ros::Publisher robotGoalPub;
+        ros::Publisher robotLoraDropPub;
         bool running;
-        uint8_t robotNum;
+        int robotNum;
+        int numLoraDropped;
+        nav_msgs::Odometry recentOdom; 
     public:
-        ROSThread(ros::NodeHandle parentNh, uint8_t robotNum);
+        ROSThread(ros::NodeHandle parentNh, int robotNum);
         ~ROSThread();
-        void onLaserScan(sensor_msgs::LaserScan scan);
+        void onLaserScanStampedCb(data_compresor::ScanStamped scanStamped);
+        void onCo2Cb(wireless_msgs::Co2);
+        void onWifiSignalCb(wireless_msgs::WifiArray);
+        void onLaserScan(sensor_msgs::LaserScan);
         void onNavMsg(nav_msgs::Odometry odometry);
         void startRobot();
         void eStopRobot();
+        void sendRobotGoal(double x, double y, double theta);
+        void dropLoraNode();
     signals:
-        void scanRecieved(uint8_t robotNum, const QPixmap& map, int x, int y, float theta);
+        void scanRecieved(int robotNum, const QPixmap& map, float x, float y, float theta);
+        void artifactReceived(float x, float y, float z, std::string details);
 };
 #endif
 

@@ -65,9 +65,10 @@
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>wireless_msgs</exec_depend>
-    <build_depend>amapper</build_depend>
 
   <depend>wifi_sensor</depend>
+  <depend>vehicle_drive</depend>
+  <depend>move_base</depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

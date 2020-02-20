@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="mission_planner" type="mission_planner_node" name="mission_planner" output="screen"> </node>
+  <!-- <node pkg="interface_protocol" type="interface_server.py" name="interface_darpa_server" output="screen"> </node> -->
+</launch>

@@ -20,6 +20,8 @@
 
 #define ROTATION_INCREMENT 1 // 1 degree increment per signal from onRotate()
 
+Q_DECLARE_METATYPE (std::string)
+
 enum class SliderState {
     EDITING,
     LIVE_VIEW
@@ -50,8 +52,9 @@ class MainWindow : public QMainWindow {
         QDoubleSpinBox* artifactZBox;
         QDoubleSpinBox* goalXBox;
         QDoubleSpinBox* goalYBox;
-        QDoubleSpinBox* goalZBox;
+        QDoubleSpinBox* goalThetaBox;
         QComboBox* comboBoxArtifactType;
+        QComboBox* comboBoxGoalRobotNum;
 
         EStopButton** eStopButtons;
 
@@ -73,12 +76,14 @@ class MainWindow : public QMainWindow {
         void initDarpaInterfaceUI();
         void initMapUI();
         void initEStopUI();
+        void initGoalUI();
         QTransform getTransform(QPointF translation, double rotationAngle);
         void applyTransformList(std::vector<QGraphicsPixmapItem*> laserscans, int startIdx, 
                                 int endIdx, QTransform transform, double rotationAngleTransform);
         void applyTransform(QGraphicsPixmapItem* item, 
                             QTransform transform, double rotationAngleTransform);
         QVector3D getArtifactPos();
+        QVector3D getRobotGoalPos();
         std::string getArtifactTypeStr();
     public:
         MainWindow(ros::NodeHandle nh);
@@ -89,16 +94,19 @@ class MainWindow : public QMainWindow {
                                                 const std::string artifactTypeStr);
 
     public slots:
-        void addPixmap(uint8_t robotNum, const QPixmap& map, int x, int y, float theta);
+        void addPixmap(int robotNum, const QPixmap& map, float x, float y, float theta);
+        void addArtifactData(float x, float y, float z, std::string details);
         void sliderMoved(int value);
         void artifactBtnClicked();
+        void sendGoalBtnClicked();
+        void loraDropBtnClicked();
         void propagateChanges();
         void rotatePixMap(RotateState rotateState);
         void darpaStatusRecieved(std::string teamName, double currentTime, 
                                  int32_t numReportsLeft, int32_t currentScore);
         void artifactStatusReceived(std::string result);
         void mapUpdateReceived(bool success, std::string errorStr);
-        void eStopBtnClicked(bool isEStop, uint8_t robotNum);
+        void eStopBtnClicked(bool isEStop, int robotNum);
         void eStopAllBtnClicked();
         void startAllBtnClicked();
 };
