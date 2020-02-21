@@ -1,1 +1,1 @@
-float32[] dropper_angles
+uint8[] dropper_angles
