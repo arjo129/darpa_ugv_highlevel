@@ -767,6 +767,7 @@ color: rgb(238, 238, 236);</string>
     </property>
     <addaction name="actionArtifacts"/>
     <addaction name="actionRobots"/>
+    <addaction name="actionLocal_Map"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -800,6 +801,11 @@ color: rgb(238, 238, 236);</string>
   <action name="actionRedo">
    <property name="text">
     <string>&amp;Redo????</string>
+   </property>
+  </action>
+  <action name="actionLocal_Map">
+   <property name="text">
+    <string>Toggle Local/Global Map</string>
    </property>
   </action>
  </widget>

@@ -18,7 +18,7 @@ enum State {
     SELECTING_TARGET, MOVE_TO_TARGET, SELECT_RECOVERY_TARGET, RECOVERY, E_STOPPED
 };
 
-State state = SELECTING_TARGET;
+State state = E_STOPPED;
 
 AMapper::Grid *grid, *frontier, *frontierScore;
 AMapper::LaserScanner ls;

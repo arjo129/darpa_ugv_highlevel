@@ -63,7 +63,16 @@ void ROSThread::onLaserScan(sensor_msgs::LaserScan lscan)
             angle+=lscan.angle_increment;
             continue;
         }
+
         image->setPixelColor(x,y,QColor(255,0,0));
+        
+        for(int i = -1; i < 1; i++){
+            for(int j = -1; j < 1; j++){
+                if(x+i > 0 && x+i < size && y+j > 0 && y+j< size)
+                    image->setPixelColor(x+i,y+j,QColor(255,0,0));
+            }
+        }
+        
         angle+=lscan.angle_increment;
     }
     float x = 25*this->recentOdom.pose.pose.position.x;

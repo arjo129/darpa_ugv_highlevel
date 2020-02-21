@@ -46,6 +46,8 @@ class MainWindow : public QMainWindow {
     private:
         Ui::MainWindow* ui;
         CustomGraphicsScene** scenes;
+        LaserScanView** currentScanScene;
+        bool showGlobalMap = true;
         // XYZ values for artifact reporting and goals
         QDoubleSpinBox* artifactXBox; 
         QDoubleSpinBox* artifactYBox; 
@@ -109,5 +111,6 @@ class MainWindow : public QMainWindow {
         void eStopBtnClicked(bool isEStop, int robotNum);
         void eStopAllBtnClicked();
         void startAllBtnClicked();
+        void switchLocalGlobal();
 };
 #endif

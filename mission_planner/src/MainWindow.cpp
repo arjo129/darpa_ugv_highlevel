@@ -35,11 +35,31 @@ MainWindow::~MainWindow() {
     delete[] eStopButtons;
 }
 
+void MainWindow::switchLocalGlobal(){
+    this->showGlobalMap = !this->showGlobalMap;
+    ROS_INFO("toggling between local and global map");
+    if(this->showGlobalMap) {
+        ui->graphicsView_1->setScene(scenes[0]);
+        ui->graphicsView_2->setScene(scenes[1]);
+        ui->graphicsView_3->setScene(scenes[2]);
+        ui->graphicsView_4->setScene(scenes[3]);
+        ui->graphicsView_5->setScene(scenes[4]);
+    }
+    else {
+        ui->graphicsView_1->setScene(currentScanScene[0]);
+        ui->graphicsView_2->setScene(currentScanScene[1]);
+        ui->graphicsView_3->setScene(currentScanScene[2]);
+        ui->graphicsView_4->setScene(currentScanScene[3]);
+        ui->graphicsView_5->setScene(currentScanScene[4]);
+    }
+}
 void MainWindow::initMapUI() {
 
     scenes = new CustomGraphicsScene*[NUM_ROBOTS];
+    currentScanScene = new LaserScanView*[NUM_ROBOTS];
     for (int idx = 0; idx < NUM_ROBOTS; idx++) {
         scenes[idx] = new CustomGraphicsScene();
+        currentScanScene[idx] = new LaserScanView(robots[idx]);
     }
 
     ui->graphicsView_1->setScene(scenes[0]);
@@ -52,6 +72,7 @@ void MainWindow::initMapUI() {
     connect(ui->progressSlider, &QSlider::sliderMoved, this, &MainWindow::sliderMoved);
     connect(ui->returnDraw, &QPushButton::pressed, this, &MainWindow::propagateChanges);
     connect(scenes[0], &CustomGraphicsScene::onRotate, this, &MainWindow::rotatePixMap);
+    connect(ui->actionLocal_Map, &QAction::triggered, this, &MainWindow::switchLocalGlobal);
 
     this->sliderState = SliderState::LIVE_VIEW;
     this->editorState = EditorState::MOVE;
