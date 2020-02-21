@@ -385,7 +385,11 @@ QLabel{border:1px solid black;};
            <item row="0" column="2">
             <layout class="QFormLayout" name="formLayoutGoalX">
              <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="goalXInput"/>
+              <widget class="QDoubleSpinBox" name="goalXInput">
+               <property name="minimum">
+                <double>-99.000000000000000</double>
+               </property>
+              </widget>
              </item>
              <item row="0" column="0">
               <widget class="QLabel" name="xLabelDisplay_1">
@@ -470,7 +474,14 @@ color: rgb(238, 238, 236);</string>
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="artifactXInput"/>
+              <widget class="QDoubleSpinBox" name="artifactXInput">
+               <property name="minimum">
+                <double>-10000.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>10000.000000000000000</double>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -484,7 +495,11 @@ color: rgb(238, 238, 236);</string>
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="goalYInput"/>
+              <widget class="QDoubleSpinBox" name="goalYInput">
+               <property name="minimum">
+                <double>-99.000000000000000</double>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -498,7 +513,11 @@ color: rgb(238, 238, 236);</string>
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="goalThetaInput"/>
+              <widget class="QDoubleSpinBox" name="goalThetaInput">
+               <property name="minimum">
+                <double>-99.000000000000000</double>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -512,7 +531,14 @@ color: rgb(238, 238, 236);</string>
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="artifactYInput"/>
+              <widget class="QDoubleSpinBox" name="artifactYInput">
+               <property name="minimum">
+                <double>-10000.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>10000.000000000000000</double>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -526,7 +552,14 @@ color: rgb(238, 238, 236);</string>
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="artifactZInput"/>
+              <widget class="QDoubleSpinBox" name="artifactZInput">
+               <property name="minimum">
+                <double>-10000.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>10000.000000000000000</double>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
