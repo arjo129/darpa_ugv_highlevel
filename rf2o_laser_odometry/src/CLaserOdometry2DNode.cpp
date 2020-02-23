@@ -164,8 +164,11 @@ void CLaserOdometry2DNode::process(const ros::TimerEvent&)
   if( is_initialized() && scan_available() )
   {
     //Process odometry estimation
-    odometryCalculation(last_scan);
-    publish();
+    if (odometryCalculation(last_scan)) 
+    {
+        publish();
+    }
+
     new_scan_available = false; //avoids the possibility to run twice on the same laser scan
   }
   else
