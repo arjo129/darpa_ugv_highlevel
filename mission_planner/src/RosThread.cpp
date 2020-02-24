@@ -116,17 +116,24 @@ void ROSThread::eStopRobot()
 
 void ROSThread::sendRobotGoal(double x, double y, double theta) 
 {
+    ROS_INFO("%s %d", __FILE__, __LINE__);
     geometry_msgs::Pose pose;
     pose.position.x = x;
     pose.position.y = y;
+    ROS_INFO("%s %d", __FILE__, __LINE__);
 
     tf2::Quaternion quatTF;
     double yawRad = theta * M_PI / 180.0;
     quatTF.setRPY(0, 0, yawRad);
     geometry_msgs::Quaternion quatMsg = tf2::toMsg(quatTF);
     pose.orientation = quatMsg;
+        ROS_INFO("%s %d", __FILE__, __LINE__);
+    std::cout << pose << std::endl;
+    geometry_msgs::Pose pose3;
+    this->robotGoalPub.publish(pose3);
+    
+    ROS_INFO("%s %d", __FILE__, __LINE__);
 
-    this->robotGoalPub.publish(pose);
 }
 
 void ROSThread::dropLoraNode() 

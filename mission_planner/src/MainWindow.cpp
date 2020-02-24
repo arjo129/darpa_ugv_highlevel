@@ -211,9 +211,15 @@ void MainWindow::addPixmap(int robotNum, const QPixmap& map, float x, float y, f
     ROS_INFO("Laser Scan Received: robot_%d", robotNum);
     CustomGraphicsScene* scene = scenes[robotNum - 1];
     QGraphicsPixmapItem* item = scene->addPixmap(map);
+    currentScanScene[robotNum - 1]->currentScan->setPixmap(map);
+    scenes[robotNum - 1]->robot->setPos(x,y);
+    scenes[robotNum - 1]->robot->setRotation(theta*57.92);
     item->setPos(x,y);
     item->setRotation(theta*57.29);
     item->setTransformOriginPoint(map.rect().center());
+    scenes[robotNum - 1]->robot->setTransformOriginPoint(map.rect().center());
+
+    
 
     // apply latest transform to all incoming maps
     QTransform transform = offsetStack.top().qTransform;
@@ -226,7 +232,7 @@ void MainWindow::addPixmap(int robotNum, const QPixmap& map, float x, float y, f
     }
     else {
         item->setVisible(false);
-    }
+    } 
     ui->progressSlider->setRange(0, robots[robotNum-1]->laserscans.size());
     robots[robotNum-1]->laserscans.push_back(item);
 }

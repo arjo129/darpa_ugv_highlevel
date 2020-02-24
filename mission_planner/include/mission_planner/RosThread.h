@@ -58,6 +58,8 @@ inline std::string stringConcat(const std::string& a, const std::string& b)
     #define ROBOT_START_TOPIC(x) stringConcat(ROBOT_NAME(x), "/start")
     #define ROBOT_GOAL_TOPIC(x) stringConcat(ROBOT_NAME(x), "/goal")
     #define ROBOT_DROP_TOPIC(x) stringConcat(ROBOT_NAME(x), "/dropper")
+    #define ROBOT_AUTONOMY_STATE_TOPIC(x) stringConcat(ROBOT_NAME(x), "/autonomy_state")
+
 
 #endif
 
