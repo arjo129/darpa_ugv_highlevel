@@ -1,9 +1,8 @@
 #include <mission_planner/Robot.h>
 
-Robot::Robot(ros::NodeHandle nh, int robotNum) 
+Robot::Robot(ros::NodeHandle nh, int robotNum) : rosthread(nh, robotNum)
 {
-    rosthread = new ROSThread(nh, robotNum);
-    rosthread -> start();                                        
+    rosthread.start();                                        
 }
 
 Robot::~Robot() {}

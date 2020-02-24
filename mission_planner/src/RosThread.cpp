@@ -14,6 +14,19 @@ ROSThread::ROSThread(ros::NodeHandle parentNh, int robotNum): nh(parentNh, ROBOT
     this->numLoraDropped = 0;
 }
 
+ROSThread::ROSThread(const ROSThread& other): nh(other.nh, ROBOT_NAME(robotNum)) {
+    this->robotNum = other.robotNum;
+    this->numLoraDropped = other.numLoraDropped;
+    scanStampedSub = nh.subscribe(ROBOT_SCAN_TOPIC(robotNum), 10, &ROSThread::onLaserScanStampedCb, this);
+    co2Sub = nh.subscribe(ROBOT_CO2_TOPIC(robotNum), 10, &ROSThread::onCo2Cb, this);
+    wifiSignalSub = nh.subscribe(ROBOT_WIFI_TOPIC(robotNum), 10, &ROSThread::onWifiSignalCb, this);
+    this->robotStartPub = nh.advertise<std_msgs::String>(ROBOT_START_TOPIC(robotNum), 1);
+    this->robotEStopPub = nh.advertise<std_msgs::String>(ROBOT_ESTOP_TOPIC(robotNum), 1);
+    this->robotGoalPub = nh.advertise<geometry_msgs::Pose>(ROBOT_GOAL_TOPIC(robotNum), 1);
+    this->robotLoraDropPub = nh.advertise<std_msgs::String>(ROBOT_DROP_TOPIC(robotNum), 1);
+    this->running = true;
+}
+
 ROSThread::~ROSThread() 
 {
     this->running = false;
@@ -129,8 +142,7 @@ void ROSThread::sendRobotGoal(double x, double y, double theta)
     pose.orientation = quatMsg;
         ROS_INFO("%s %d", __FILE__, __LINE__);
     std::cout << pose << std::endl;
-    geometry_msgs::Pose pose3;
-    this->robotGoalPub.publish(pose3);
+    this->robotGoalPub.publish(pose);
     
     ROS_INFO("%s %d", __FILE__, __LINE__);
 
