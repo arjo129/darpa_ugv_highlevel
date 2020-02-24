@@ -12,6 +12,10 @@ enum class MessageType: uint8_t {
     ESTOP_ACK = 0xF8,
     START = 0xF7,
     GOAL_ACK = 0xF6,
-    DROP_NODE = 0xF5
+    DROP_NODE = 0xF5,
+    AUTONOMOUS_NOW = 0xF4,
+    AUTONOMOUS_ACK = 0xF3,
+    TELEOP_NOW = 0xF2,
+    TELEOP_ACK = 0xF1
 };
 #endif

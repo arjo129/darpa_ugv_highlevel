@@ -31,6 +31,7 @@ ros::Subscriber estopSubscriber;
 ros::Subscriber startSubscriber;
 ros::Subscriber imuSubscriber;
 ros::Subscriber sonarSubscriber;
+ros::Subscriber autonomyState;
 
  void onEstopRecieved(std_msgs::String estop){
      state = E_STOPPED;
@@ -39,9 +40,18 @@ ros::Subscriber sonarSubscriber;
  }
 
 void onStartRecieved(std_msgs::String start) {
-    state = SELECTING_TARGET;
+    //state = SELECTING_TARGET;
 }
 
+void onAutonomyStateRecieved(std_msgs::String autonomyState){
+    if(autonomyState.data == "autonomous") {
+        state = SELECTING_TARGET;
+    }
+    else {
+        state = E_STOPPED;
+        ROS_INFO("ESTOP RECIEVED");
+    }
+}
 void onSonarRecieved(sensor_msgs::Range range) {
     if(range.range > 0.4) {
         state = RECOVERY;
@@ -241,7 +251,7 @@ int main(int argc, char** argv) {
     ros::Subscriber sub = nh.subscribe("/scan", 1, onLaserScan);
     ros::Subscriber estopSub= nh.subscribe<std_msgs::String>("e_stop", 10, onEstopRecieved);
     ros::Subscriber start = nh.subscribe<std_msgs::String>("start", 10, onStartRecieved);
-
+    ros::Subscriber autonomySub = nh.subscribe<std_msgs::String>("autonomy_state", 10, onAutonomyStateRecieved);
     //Movebase initiallization
     moveBaseClient = new MoveBaseClient("move_base", true);
     while(!moveBaseClient->waitForServer(ros::Duration(5.0))){

@@ -21,7 +21,7 @@ MoveBaseClient* moveBaseClient;
 
 class CompressedTelemetrySender {
 
-    ros::Publisher loraPub, estopPub, startPub, dropperPub;
+    ros::Publisher loraPub, estopPub, startPub, dropperPub, autonomyState;
     ros::Subscriber laserscan, co2, wifi, loraSubscriber, odomSub;
     nav_msgs::Odometry lastOdom;
     bool recieved_odom = false;
@@ -121,12 +121,40 @@ class CompressedTelemetrySender {
             dropperPub.publish(dropmsg);
             dropper_index++;
         }
+
+        if(data[0] == (uint8_t) MessageType::AUTONOMOUS_NOW){
+            
+            wireless_msgs::LoraPacket respPacket;
+            std::vector<uint8_t> response;
+            respPacket.to = packet.from;
+            response.push_back((uint8_t)MessageType::AUTONOMOUS_ACK);
+            respPacket.data = compressZip(response);
+            loraPub.publish(respPacket);
+
+            std_msgs::String str;
+            str.data = "autonomous";
+            autonomyState.publish(str);
+        }
+
+        if(data[0] == (uint8_t) MessageType::TELEOP_NOW){
+            wireless_msgs::LoraPacket respPacket;
+            std::vector<uint8_t> response;
+            respPacket.to = packet.from;
+            response.push_back((uint8_t)MessageType::TELEOP_ACK);
+            respPacket.data = compressZip(response);
+            loraPub.publish(respPacket);
+
+            std_msgs::String str;
+            str.data = "teleop";
+            autonomyState.publish(str);
+        }
+
     }
 
-    void onCO2Reading(std_msgs::UInt16 reading){
+    void onCO2Reading(wireless_msgs::Co2 reading){
         //if(reading.data > 1800){
             Co2 co2;
-            co2.concentration = reading.data;
+            co2.concentration = reading.concentration;
             co2.x = lastOdom.pose.pose.position.x;
             co2.y = lastOdom.pose.pose.position.y;
             co2.z = lastOdom.pose.pose.position.z;
@@ -155,7 +183,9 @@ public:
         this->co2 = nh.subscribe("/co2", 10, &CompressedTelemetrySender::onCO2Reading, this);
         this->wifi = nh.subscribe("/wifi", 10, &CompressedTelemetrySender::onWifiScan, this);
         this->loraSubscriber = nh.subscribe("/lora/rx", 10, &CompressedTelemetrySender::onRecieveLora, this); 
-        this->startPub = nh.advertise<std_msgs::String>("/start", 10); 
+        this->startPub = nh.advertise<std_msgs::String>("/start", 10);
+        this->autonomyState = nh.advertise<std_msgs::String>("/autonomy_state", 10); 
+ 
     }
 
 };

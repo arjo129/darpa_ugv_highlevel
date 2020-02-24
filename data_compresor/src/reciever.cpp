@@ -32,6 +32,14 @@ enum class RobotState {
 enum class GoalState {
     GOAL_INPROG, NO_GOAL
 };
+
+/**
+ * E-Stop State
+ */ 
+enum class AutonomyState{
+    AUTONOMOUS_PENDING, AUTONOMOUS, TELEOP_PENDING, TELEOP
+};
+
 /**
  * Define an individual robot
  */ 
@@ -45,12 +53,14 @@ class Robot {
     ros::Subscriber estop;
     ros::Subscriber startSub;
     ros::Subscriber dropper;
+    ros::Subscriber autonomySub;
 
     std::string robot_name;
 
     GoalState goalstate;
     wireless_msgs::LoraPacket lastGoal;
     RobotState state;
+    AutonomyState autonomystate;
  public:
     Robot(){}//Hack to silence compiler errors.
     Robot(std::string name): robot_name(name) {
@@ -63,8 +73,17 @@ class Robot {
         startSub = nh->subscribe(robot_name+"/start", 10, &Robot::onRecieveStart, this);
         robotGoal = nh->subscribe(robot_name+"/goal", 10, &Robot::onRecieveGoal, this);
         dropper = nh->subscribe(robot_name+"/dropper", 10, &Robot::dropNode, this);
+        autonomySub = nh->subscribe(robot_name+"/autonomy_state", 10, &Robot::autonomyState, this);
         this->state = RobotState::OK;
         goalstate = GoalState::NO_GOAL;
+    }
+
+    void autonomyState(std_msgs::String state) {
+        if(state.data=="autonomous") {
+            this->autonomystate = AutonomyState::AUTONOMOUS_PENDING;
+        } else {
+            this->autonomystate = AutonomyState::TELEOP_PENDING;
+        }
     }
 
     void dropNode(std_msgs::String  str) {
@@ -123,6 +142,14 @@ class Robot {
         this->goalstate = GoalState::NO_GOAL;
     }
 
+    void autonomousAck() {
+        this->autonomystate = AutonomyState::AUTONOMOUS;
+    }
+
+    void teleopAck() {
+        this->autonomystate = AutonomyState::TELEOP;
+    }
+
     void start(){
         wireless_msgs::LoraPacket packet;
         packet.to.data = robot_name;
@@ -145,6 +172,22 @@ class Robot {
         }
         if(this->goalstate == GoalState::GOAL_INPROG){
             packets.push_back(lastGoal);
+        }
+        if(this->autonomystate == AutonomyState::AUTONOMOUS_PENDING) {
+            wireless_msgs::LoraPacket packet;
+            packet.to.data = robot_name;
+            std::vector<uint8_t> signal;
+            signal.push_back((uint8_t)MessageType::AUTONOMOUS_NOW);
+            packet.data  = compressZip(signal);
+            packets.push_back(packet);
+        }
+        if(this->autonomystate == AutonomyState::TELEOP_PENDING) {
+            wireless_msgs::LoraPacket packet;
+            packet.to.data = robot_name;
+            std::vector<uint8_t> signal;
+            signal.push_back((uint8_t)MessageType::TELEOP_NOW);
+            packet.data  = compressZip(signal);
+            packets.push_back(packet);
         }
         return packets;
     }
@@ -221,6 +264,14 @@ void handleGoalAck(std::string from, std::vector<uint8_t> data){
     lookupOrCreateRobot(from)->goalAck();
 }
 
+void handleAutonomousAck(std::string from, std::vector<uint8_t> data){
+    lookupOrCreateRobot(from)->autonomousAck();
+}
+
+void handleTeleopAck(std::string from, std::vector<uint8_t> data){
+    lookupOrCreateRobot(from)->teleopAck();
+}
+
 /**
  * Routes the packet to the correct decompressor
  */ 
@@ -243,6 +294,12 @@ void onRecieveRx(wireless_msgs::LoraPacket packet) {
             handleWifiArray(packet.from.data, data);
             break;
         case (uint8_t)MessageType::GOAL_ACK:
+            handleGoalAck(packet.from.data, data);
+            break;
+        case (uint8_t)MessageType::AUTONOMOUS_NOW:
+            handleAutonomousAck(packet.from.data, data);
+            break;
+        case (uint8_t)MessageType::TELEOP_NOW:
             handleGoalAck(packet.from.data, data);
             break;
         default:

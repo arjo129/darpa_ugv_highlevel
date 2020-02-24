@@ -89,7 +89,7 @@ class ROSThread: public QThread {
         void onLaserScanStampedCb(data_compresor::ScanStamped scanStamped);
         void onCo2Cb(wireless_msgs::Co2);
         void onWifiSignalCb(wireless_msgs::WifiArray);
-        void onLaserScan(sensor_msgs::LaserScan); at /usr/include/boost/smart_ptr/detail/operator_bool.hpp:63
+        void onLaserScan(sensor_msgs::LaserScan);
         void onNavMsg(nav_msgs::Odometry odometry);
         void startRobot();
         void eStopRobot();
