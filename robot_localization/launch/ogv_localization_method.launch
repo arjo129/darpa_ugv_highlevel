@@ -1,0 +1,11 @@
+<launch>
+  <arg name="use_rtab" />
+
+  <group if="$(arg use_rtab)">
+    <include file="$(find robot_localization)/launch/rtabmap.launch" />
+  </group>
+
+  <group unless="$(arg use_rtab)">
+    <include file="$(find rf2o_laser_odometry)/launch/rf2o_laser_odometry.launch" />
+  </group>
+</launch>

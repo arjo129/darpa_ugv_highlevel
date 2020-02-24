@@ -164,8 +164,11 @@ void CLaserOdometry2DNode::process(const ros::TimerEvent&)
   if( is_initialized() && scan_available() )
   {
     //Process odometry estimation
-    odometryCalculation(last_scan);
-    publish();
+    if (odometryCalculation(last_scan)) 
+    {
+        publish();
+    }
+
     new_scan_available = false; //avoids the possibility to run twice on the same laser scan
   }
   else
@@ -257,6 +260,13 @@ void CLaserOdometry2DNode::publish()
   odom.pose.pose.position.y = -robot_pose_.translation()(1);
   odom.pose.pose.position.z = 0.0;
   odom.pose.pose.orientation = tf::createQuaternionMsgFromYaw(rf2o::getYaw(robot_pose_.rotation()));
+  odom.pose.covariance[0] = cov_odo(0,0);
+  odom.pose.covariance[7] = cov_odo(1,1);
+  odom.pose.covariance[14] = 99999;
+  odom.pose.covariance[21] = 99999;
+  odom.pose.covariance[28] = 99999;
+  odom.pose.covariance[35] = cov_odo(2,2);
+  
   //set the velocity
   odom.child_frame_id = base_frame_id;
   odom.twist.twist.linear.x = lin_speed;    //linear speed

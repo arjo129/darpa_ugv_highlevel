@@ -3,10 +3,8 @@
                             output="screen">
     <rosparam command="load" file="$(find robot_localization)/params/ogv_kf_params.yaml" />
 
-    <!--  Placeholder for output topic remapping
-    <remap from="odometry/filtered" to=""/>
-    <remap from="accel/filtered" to=""/>
-    -->
+    <remap from="odometry/filtered" to="odom"/>
+    <remap from="accel/filtered" to="accel"/>
 
   </node>
 

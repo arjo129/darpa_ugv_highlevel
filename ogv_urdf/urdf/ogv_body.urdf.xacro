@@ -87,7 +87,7 @@
   <joint name="base_to_realsense" type="fixed">
     <parent link="base_link"/>
     <child link="realsense_base_link"/>
-    <origin xyz="0.196 0 -0.03"/>
+    <origin xyz="0.196 0 -0.03" rpy="0.05235 -0.14 0"/>
   </joint>
 
   <!-- WHEELS AND SERVOS -->
