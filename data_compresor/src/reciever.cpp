@@ -76,6 +76,7 @@ class Robot {
         autonomySub = nh->subscribe(robot_name+"/autonomy_state", 10, &Robot::autonomyState, this);
         this->state = RobotState::OK;
         goalstate = GoalState::NO_GOAL;
+        autonomystate = AutonomousState::TELEOP;
     }
 
     void autonomyState(std_msgs::String state) {
