@@ -206,7 +206,7 @@
           <param name="Odom/Strategy" value="1"/>
           <param name="OdomF2M/MaxSize" type="string" value="1000"/>
           <param name="Vis/MaxFeatures" type="string" value="600"/>
-          <param name="Reg/Force3DoF"    value="false" />
+          <param name="Reg/Force3DoF"    value="true" />
         </node>
       </group>
     </group>
@@ -291,7 +291,7 @@
       <param name="Mem/InitWMWithAllNodes" type="string" value="$(arg localization)"/>
 
       <!-- Self Optimizations -->
-      <param name="Reg/Force3DoF"    value="false" />
+      <param name="Reg/Force3DoF"    value="true" />
       <param name="Optimizer/Slam2D" value="false" />
       <param name="tf_delay" value="0.5" />
 
