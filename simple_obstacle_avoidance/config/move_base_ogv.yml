@@ -21,11 +21,15 @@ local_costmap:
     plugins:
         - {name: obstacles_laser,     type: "costmap_2d::ObstacleLayer"}
         # - {name: obstacles_realsense,     type: "costmap_2d::ObstacleLayer"}
+        - {name: obstacles_realsense_scan,     type: "costmap_2d::ObstacleLayer"}
         - {name: inflation,        type: "costmap_2d::InflationLayer"}
     obstacles_laser:
         observation_sources: laser
         laser: {data_type: LaserScan, clearing: true, marking: true, topic: /scan, obstacle_range: 20,
             raytrace_range: 20, inf_is_valid: true}
+    obstacles_realsense_scan:
+        observation_sources: realsense_scan
+        realsense_scan: {data_type: LaserScan, clearing: true, marking: true, topic: /camera/scan, obstacle_range: 5.0, raytrace_range: 10.0, inf_is_valid: true}
     obstacles_realsense:
         observation_sources: realsense
         realsense: {data_type: PointCloud2, clearing: true, marking: true, topic: /camera/depth/color/points, obstacle_range: 8.0,

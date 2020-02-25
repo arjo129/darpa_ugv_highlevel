@@ -1,0 +1,22 @@
+<launch>
+  <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan">
+    <!-- See all params at http://wiki.ros.org/pointcloud_to_laserscan -->
+      
+    <!-- Min and max height to sample from depth data - these values worked for my drone -->
+    <param name="min_height" value="-0.1"/>
+    <param name="max_height" value="0.3"/>
+      
+    <!-- Min and max range range of generated laser scan - set this to match your depth sensor -->
+    <param name="range_min" value="0.2"/>
+    <param name="range_max" value="5.0"/>
+    
+    <!-- Frame of your depth sensor -->
+    <param name="target_frame" value="camera_link"/>
+
+    <!-- Topic from which to read PointCloud2 -->
+    <remap from="cloud_in" to="/camera/depth/color/points"/>
+    
+    <!-- Topic to which LaserScan will be published -->
+    <remap from="scan" to="/camera/scan"/>
+  </node>
+</launch>
