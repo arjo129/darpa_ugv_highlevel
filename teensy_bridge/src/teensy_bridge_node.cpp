@@ -197,7 +197,7 @@ public:
         sub = this->nh.subscribe("/lora/tx", 10, &TeensyBridgeNode::onWirelessMessageRecieved, this);
         std::string port;
         this->nh.getParam("serial_port", port);
-        serialPort = openSerialPort("/dev/teensy");
+        serialPort = openSerialPort("/dev/teensy-lora");
         names->addNameRecord("base_station", 0);
         //thermal camera image publishing stuff
         image_transport::ImageTransport it(nh);
