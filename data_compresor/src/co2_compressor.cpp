@@ -41,4 +41,5 @@ wireless_msgs::LoraPacket toLoraPacket(Co2 co2) {
     wireless_msgs::LoraPacket packet;
     packet.to.data = "base_station";
     packet.data = compressZip(encodeCo2(co2));
+    return packet;
 }
