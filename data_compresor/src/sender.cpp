@@ -113,12 +113,24 @@ class CompressedTelemetrySender {
 
         if(data[0] == (uint8_t) MessageType::DROP_NODE) {
             vehicle_drive::Dropper dropmsg;
+	    ROS_INFO("Drop node %d", dropper_index);
             if(dropper_index>2) return;
             dropper_states[dropper_index] = 0;
-            dropmsg.dropper_angles[0] = dropper_states[0];
-            dropmsg.dropper_angles[1] = dropper_states[1];
-            dropmsg.dropper_angles[2] = dropper_states[2];
-            dropperPub.publish(dropmsg);
+	    ROS_INFO("Builsing message");
+            dropmsg.dropper_angles.push_back(dropper_states[0]);
+            dropmsg.dropper_angles.push_back(dropper_states[1]);
+            dropmsg.dropper_angles.push_back(dropper_states[2]);
+	    //ROS_INFO("publishing")
+            
+	    dropperPub.publish(dropmsg);
+	    wireless_msgs::LoraPacket respPacket;
+            std::vector<uint8_t> response;
+            respPacket.to = packet.from;
+            response.push_back((uint8_t)MessageType::DROP_NODE_ACK);
+            respPacket.data = compressZip(response);
+            loraPub.publish(respPacket);
+
+
             dropper_index++;
         }
 

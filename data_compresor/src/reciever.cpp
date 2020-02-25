@@ -61,6 +61,7 @@ class Robot {
     wireless_msgs::LoraPacket lastGoal;
     RobotState state;
     AutonomyState autonomystate;
+    bool dropping;
  public:
     Robot(){}//Hack to silence compiler errors.
     Robot(std::string name): robot_name(name) {
@@ -77,6 +78,7 @@ class Robot {
         this->state = RobotState::OK;
         goalstate = GoalState::NO_GOAL;
         autonomystate = AutonomyState::TELEOP;
+	dropping = false;
     }
 
     void autonomyState(std_msgs::String state) {
@@ -88,13 +90,8 @@ class Robot {
     }
 
     void dropNode(std_msgs::String  str) {
-        wireless_msgs::LoraPacket packet;
-        packet.to.data = robot_name;
-        std::vector<uint8_t> signal;
-        signal.push_back((uint8_t)MessageType::DROP_NODE);
-        packet.data  = compressZip(signal);
-        loraPub.publish(packet);
-    }
+    	this->dropping =true;
+    } 
 
     void publish(data_compresor::ScanStamped scan){
         laserPub.publish(scan);
@@ -136,19 +133,28 @@ class Robot {
     }
 
     void EStopAck() {
-        this->state = RobotState::ESTOPPED;
+        ROS_INFO("E-STOP ACKNOWLEDGED");
+	    this->state = RobotState::ESTOPPED;
     }
 
     void goalAck() {
+	ROS_INFO("Goal Recieved");
         this->goalstate = GoalState::NO_GOAL;
     }
 
     void autonomousAck() {
+	 ROS_INFO("Entered autonomous node");
         this->autonomystate = AutonomyState::AUTONOMOUS;
     }
 
     void teleopAck() {
+	 ROS_INFO("Entered Teleop Node");
         this->autonomystate = AutonomyState::TELEOP;
+    }
+
+    void dropperAck() {
+    	ROS_INFO("Dropped Node Successfully");
+	this->dropping = false;
     }
 
     void start(){
@@ -190,6 +196,15 @@ class Robot {
             packet.data  = compressZip(signal);
             packets.push_back(packet);
         }
+	if(this->dropping) {
+ wireless_msgs::LoraPacket packet;
+        packet.to.data = robot_name;
+        std::vector<uint8_t> signal;
+        signal.push_back((uint8_t)MessageType::DROP_NODE);
+        packet.data  = compressZip(signal);
+        packets.push_back(packet);
+
+	}
         return packets;
     }
 
@@ -273,6 +288,9 @@ void handleTeleopAck(std::string from, std::vector<uint8_t> data){
     lookupOrCreateRobot(from)->teleopAck();
 }
 
+void handleDropperAck(std::string from, std::vector<uint8_t> data){
+    lookupOrCreateRobot(from)->dropperAck();
+}
 /**
  * Routes the packet to the correct decompressor
  */ 
@@ -301,8 +319,11 @@ void onRecieveRx(wireless_msgs::LoraPacket packet) {
             handleAutonomousAck(packet.from.data, data);
             break;
         case (uint8_t)MessageType::TELEOP_NOW:
-            handleGoalAck(packet.from.data, data);
+            handleTeleopAck(packet.from.data, data);
             break;
+	case (uint8_t)MessageType::DROP_NODE_ACK:
+	    handleDropperAck(packet.from.data, data);
+	    break;
         default:
             ROS_ERROR("Handler not found");
     }
