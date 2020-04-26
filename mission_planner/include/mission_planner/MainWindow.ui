@@ -6,816 +6,1355 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1170</width>
-    <height>800</height>
+    <width>1368</width>
+    <height>918</height>
    </rect>
-  </property>
-  <property name="sizePolicy">
-   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-    <horstretch>0</horstretch>
-    <verstretch>0</verstretch>
-   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: rgb(255, 255, 255);</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-     <horstretch>1</horstretch>
-     <verstretch>1</verstretch>
-    </sizepolicy>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayoutMain" stretch="0">
-      <item>
-       <widget class="QSplitter" name="verticalSplitMain">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>1</horstretch>
-          <verstretch>1</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>421</height>
-         </size>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="handleWidth">
-         <number>4</number>
-        </property>
-        <widget class="QSplitter" name="horizontalSplitPanel">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="layoutDirection">
-          <enum>Qt::LeftToRight</enum>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="opaqueResize">
-          <bool>false</bool>
-         </property>
-         <property name="handleWidth">
-          <number>30</number>
-         </property>
-         <property name="childrenCollapsible">
-          <bool>false</bool>
-         </property>
-         <widget class="QWidget" name="verticalLayoutWidget">
-          <layout class="QGridLayout" name="gridLayoutDisplayPanel" rowstretch="1,0,2" columnstretch="0,0">
-           <item row="0" column="0">
-            <widget class="QGroupBox" name="darpaStatusPanel">
-             <property name="styleSheet">
-              <string notr="true">QGroupBox#groupBox { border: 3px solid black;}
-QLabel{border:1px solid black;};
-</string>
-             </property>
-             <property name="title">
-              <string>DARPA Official Status Report</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-             <property name="flat">
-              <bool>false</bool>
-             </property>
-             <property name="checkable">
-              <bool>false</bool>
-             </property>
-             <widget class="QWidget" name="formLayoutWidget_8">
-              <property name="geometry">
-               <rect>
-                <x>0</x>
-                <y>30</y>
-                <width>261</width>
-                <height>121</height>
-               </rect>
-              </property>
-              <layout class="QFormLayout" name="formLayout_8">
-               <item row="1" column="0">
-                <widget class="QLabel" name="label_11">
-                 <property name="text">
-                  <string>Current Time:</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="0">
-                <widget class="QLabel" name="label_12">
-                 <property name="text">
-                  <string>Number of Reports Left</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QLabel" name="currentTimeLabel">
-                 <property name="text">
-                  <string>NA</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <widget class="QLabel" name="reportsLeftLabel">
-                 <property name="text">
-                  <string>NA</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="0">
-                <widget class="QLabel" name="label_6">
-                 <property name="text">
-                  <string>Team Name:</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QLabel" name="teamNameLabel">
-                 <property name="text">
-                  <string>NA</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="0">
-                <widget class="QLabel" name="label_5">
-                 <property name="text">
-                  <string>Current Score:</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="1">
-                <widget class="QLabel" name="currentScoreLabel">
-                 <property name="text">
-                  <string>NA</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QGroupBox" name="groupBox_3">
-             <property name="title">
-              <string>Potential Artifact Alert</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-             <widget class="QTextEdit" name="artifactTextEdit">
-              <property name="geometry">
-               <rect>
-                <x>3</x>
-                <y>19</y>
-                <width>361</width>
-                <height>191</height>
-               </rect>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-             </widget>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QGroupBox" name="groupBox_4">
-             <property name="title">
-              <string>Poop Trail (WiFi Markers)</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-             <widget class="QWidget" name="verticalLayoutWidget_3">
-              <property name="geometry">
-               <rect>
-                <x>0</x>
-                <y>20</y>
-                <width>361</width>
-                <height>191</height>
-               </rect>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_3"/>
-             </widget>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QGroupBox" name="robotListPanel">
-             <property name="styleSheet">
-              <string notr="true">QGroupBox#groupBox_2 { border: 3px solid black;}</string>
-             </property>
-             <property name="title">
-              <string>NUSSEDS Robot List</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-             <widget class="QWidget" name="gridLayoutWidget">
-              <property name="geometry">
-               <rect>
-                <x>10</x>
-                <y>20</y>
-                <width>254</width>
-                <height>151</height>
-               </rect>
-              </property>
-              <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,0,0,0,0,0" columnstretch="0,0,1,2">
-               <item row="1" column="2">
-                <widget class="EStopButton" name="robot1StartBtn">
-                 <property name="styleSheet">
-                  <string notr="true">background-color: rgb(138, 226, 52);</string>
-                 </property>
-                 <property name="text">
-                  <string>Start</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <widget class="QLabel" name="label_2">
-                 <property name="text">
-                  <string>Robot_2</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="1">
-                <widget class="QLabel" name="label_3">
-                 <property name="text">
-                  <string>Robot_3</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QLabel" name="label">
-                 <property name="text">
-                  <string>Robot_1</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="3">
-                <widget class="EStopButton" name="robot1StopBtn">
-                 <property name="styleSheet">
-                  <string notr="true">background-color: rgb(239, 41, 41);</string>
-                 </property>
-                 <property name="text">
-                  <string>Stop</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="1">
-                <widget class="QLabel" name="label_4">
-                 <property name="text">
-                  <string>Robot_4</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="1">
-                <widget class="QLabel" name="label_19">
-                 <property name="text">
-                  <string>Robot_5</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="2">
-                <widget class="EStopButton" name="robot2StartBtn">
-                 <property name="styleSheet">
-                  <string notr="true">background-color: rgb(138, 226, 52);</string>
-                 </property>
-                 <property name="text">
-                  <string>Start</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="2">
-                <widget class="EStopButton" name="robot3StartBtn">
-                 <property name="styleSheet">
-                  <string notr="true">background-color: rgb(138, 226, 52);</string>
-                 </property>
-                 <property name="text">
-                  <string>Start</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="2">
-                <widget class="EStopButton" name="robot4StartBtn">
-                 <property name="styleSheet">
-                  <string notr="true">background-color: rgb(138, 226, 52);</string>
-                 </property>
-                 <property name="text">
-                  <string>Start</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="2">
-                <widget class="EStopButton" name="robot5StartBtn">
-                 <property name="styleSheet">
-                  <string notr="true">background-color: rgb(138, 226, 52);</string>
-                 </property>
-                 <property name="text">
-                  <string>Start</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="3">
-                <widget class="EStopButton" name="robot2StopBtn">
-                 <property name="styleSheet">
-                  <string notr="true">background-color: rgb(239, 41, 41);</string>
-                 </property>
-                 <property name="text">
-                  <string>Stop</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="3">
-                <widget class="EStopButton" name="robot3StopBtn">
-                 <property name="styleSheet">
-                  <string notr="true">background-color: rgb(239, 41, 41);</string>
-                 </property>
-                 <property name="text">
-                  <string>Stop</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="3">
-                <widget class="EStopButton" name="robot4StopBtn">
-                 <property name="styleSheet">
-                  <string notr="true">background-color: rgb(239, 41, 41);</string>
-                 </property>
-                 <property name="text">
-                  <string>Stop</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="3">
-                <widget class="EStopButton" name="robot5StopBtn">
-                 <property name="styleSheet">
-                  <string notr="true">background-color: rgb(239, 41, 41);</string>
-                 </property>
-                 <property name="text">
-                  <string>Stop</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="formLayoutWidget">
-          <layout class="QGridLayout" name="gridLayoutMovement" rowstretch="0,0,0,0,0,0,0" columnstretch="0,0,0,0,0">
-           <property name="spacing">
-            <number>3</number>
-           </property>
-           <item row="0" column="2">
-            <layout class="QFormLayout" name="formLayoutGoalX">
-             <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="goalXInput">
-               <property name="minimum">
-                <double>-99.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="xLabelDisplay_1">
-               <property name="text">
-                <string>X</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="2" column="2" colspan="3">
-            <widget class="QPushButton" name="eStopAllBtn">
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(164, 0, 0);
-color: rgb(238, 238, 236);</string>
-             </property>
-             <property name="text">
-              <string>E-Stop All</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0" colspan="2">
-            <widget class="QPushButton" name="startAllBtn">
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(78, 154, 6);
-color: rgb(238, 238, 236);</string>
-             </property>
-             <property name="text">
-              <string>Start All</string>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="1">
-            <widget class="QComboBox" name="comboBoxArtifactType">
-             <property name="maxCount">
-              <number>6</number>
-             </property>
-             <item>
-              <property name="text">
-               <string>Survivor</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Backpack</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Cell Phone</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Vent</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Gas</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item row="6" column="0">
-            <widget class="QPushButton" name="reportArtifactBtn">
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(241, 62, 190);</string>
-             </property>
-             <property name="text">
-              <string>Report Artifact</string>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="2">
-            <layout class="QFormLayout" name="formLayoutArtifactX">
-             <item row="0" column="0">
-              <widget class="QLabel" name="xLabelDisplay_2">
-               <property name="text">
-                <string>X</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="artifactXInput">
-               <property name="minimum">
-                <double>-10000.000000000000000</double>
-               </property>
-               <property name="maximum">
-                <double>10000.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="0" column="3">
-            <layout class="QFormLayout" name="formLayoutGoalY">
-             <item row="0" column="0">
-              <widget class="QLabel" name="yLabelDisplay_1">
-               <property name="text">
-                <string>Y</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="goalYInput">
-               <property name="minimum">
-                <double>-99.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="0" column="4">
-            <layout class="QFormLayout" name="formLayoutGoalZ">
-             <item row="0" column="0">
-              <widget class="QLabel" name="thetaLabelDisplay_1">
-               <property name="text">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-family:'Roboto,arial,sans-serif'; font-size:16px; color:#222222; background-color:#ffffff;&quot;&gt;θ&lt;/span&gt;</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="goalThetaInput">
-               <property name="minimum">
-                <double>-99.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="6" column="3">
-            <layout class="QFormLayout" name="formLayoutArtifactY">
-             <item row="0" column="0">
-              <widget class="QLabel" name="yLabelDisplay_2">
-               <property name="text">
-                <string>Y</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="artifactYInput">
-               <property name="minimum">
-                <double>-10000.000000000000000</double>
-               </property>
-               <property name="maximum">
-                <double>10000.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="6" column="4">
-            <layout class="QFormLayout" name="formLayoutArtifactZ">
-             <item row="0" column="0">
-              <widget class="QLabel" name="zLabelDisplay_2">
-               <property name="text">
-                <string>Z</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="artifactZInput">
-               <property name="minimum">
-                <double>-10000.000000000000000</double>
-               </property>
-               <property name="maximum">
-                <double>10000.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="0" column="0">
-            <widget class="QPushButton" name="sendGoalBtn">
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(114, 159, 207);</string>
-             </property>
-             <property name="text">
-              <string>Send Goal</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QComboBox" name="comboBoxGoalRobotNum">
-             <item>
-              <property name="text">
-               <string>robot_1</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>robot_2</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>robot_3</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>robot_4</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>robot_5</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QPushButton" name="loraDropBtn">
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(237, 212, 0)</string>
-             </property>
-             <property name="text">
-              <string>Drop LORA</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </widget>
-        <widget class="QTabWidget" name="tabMaps">
-         <property name="currentIndex">
-          <number>0</number>
-         </property>
-         <widget class="QWidget" name="map_1">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-            <horstretch>1</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+     <widget class="QScrollArea" name="MainScrollArea">
+      <property name="styleSheet">
+       <string notr="true">#MainScrollArea { 
+  border: 0px;
+}</string>
+      </property>
+      <property name="widgetResizable">
+       <bool>true</bool>
+      </property>
+      <widget class="QWidget" name="scrollAreaWidgetContents_4">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>-54</y>
+         <width>1336</width>
+         <height>932</height>
+        </rect>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_47">
+        <item>
+         <widget class="QFrame" name="MainFrame">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
           </property>
-          <attribute name="title">
-           <string>Map 1</string>
-          </attribute>
-          <layout class="QVBoxLayout" name="verticalLayout_4">
+          <property name="styleSheet">
+           <string notr="true">#MainFrame {
+	border: 0px;
+}</string>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_5">
            <item>
-            <widget class="QGraphicsView" name="graphicsView_1">
-             <property name="verticalScrollBarPolicy">
-              <enum>Qt::ScrollBarAlwaysOn</enum>
+            <widget class="QFrame" name="LeftFrame">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
              </property>
-             <property name="horizontalScrollBarPolicy">
-              <enum>Qt::ScrollBarAlwaysOn</enum>
+             <property name="styleSheet">
+              <string notr="true">#LeftFrame {
+	border: 0px;
+}</string>
              </property>
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout">
+              <item>
+               <widget class="QFrame" name="LeftContainerFrame">
+                <property name="styleSheet">
+                 <string notr="true">#LeftContainerFrame {
+	border: 0px;
+}</string>
+                </property>
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_3">
+                 <item>
+                  <widget class="QGraphicsView" name="graphicsView">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>400</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QFrame" name="SelectRobotsFrame">
+                   <property name="styleSheet">
+                    <string notr="true">#SelectRobotsFrame{
+	border: 0px;
+}</string>
+                   </property>
+                   <property name="frameShape">
+                    <enum>QFrame::StyledPanel</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Raised</enum>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_6">
+                    <item>
+                     <widget class="QScrollArea" name="SelectRobotScrollArea">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">#SelectRobotScrollArea {
+	border: 0px;
+}</string>
+                      </property>
+                      <property name="verticalScrollBarPolicy">
+                       <enum>Qt::ScrollBarAlwaysOff</enum>
+                      </property>
+                      <property name="widgetResizable">
+                       <bool>true</bool>
+                      </property>
+                      <widget class="QWidget" name="scrollAreaWidgetContents_3">
+                       <property name="geometry">
+                        <rect>
+                         <x>0</x>
+                         <y>0</y>
+                         <width>593</width>
+                         <height>68</height>
+                        </rect>
+                       </property>
+                       <layout class="QHBoxLayout" name="horizontalLayout_46">
+                        <item>
+                         <widget class="QPushButton" name="pushButton_8">
+                          <property name="minimumSize">
+                           <size>
+                            <width>100</width>
+                            <height>40</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string>Robot 1</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="pushButton">
+                          <property name="minimumSize">
+                           <size>
+                            <width>100</width>
+                            <height>40</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string>Robot 2</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="pushButton_10">
+                          <property name="minimumSize">
+                           <size>
+                            <width>100</width>
+                            <height>40</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string>Robot 3</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="pushButton_2">
+                          <property name="minimumSize">
+                           <size>
+                            <width>100</width>
+                            <height>40</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string>Robot 4</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="pushButton_9">
+                          <property name="minimumSize">
+                           <size>
+                            <width>100</width>
+                            <height>40</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string>Robot 5</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </widget>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QFrame" name="CommandFrame">
+                   <property name="styleSheet">
+                    <string notr="true">#CommandFrame {
+	border: 0px;
+}</string>
+                   </property>
+                   <property name="frameShape">
+                    <enum>QFrame::StyledPanel</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Raised</enum>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_3">
+                    <item>
+                     <widget class="QFrame" name="MovementFrame">
+                      <property name="styleSheet">
+                       <string notr="true">#MovementFrame {
+	border: 0px;
+}</string>
+                      </property>
+                      <property name="frameShape">
+                       <enum>QFrame::StyledPanel</enum>
+                      </property>
+                      <property name="frameShadow">
+                       <enum>QFrame::Raised</enum>
+                      </property>
+                      <layout class="QVBoxLayout" name="verticalLayout_2">
+                       <item>
+                        <widget class="QFrame" name="MovementButtonFrame">
+                         <property name="styleSheet">
+                          <string notr="true">#MovementButtonFrame {
+	border: 0px;
+}</string>
+                         </property>
+                         <property name="frameShape">
+                          <enum>QFrame::StyledPanel</enum>
+                         </property>
+                         <property name="frameShadow">
+                          <enum>QFrame::Raised</enum>
+                         </property>
+                         <layout class="QHBoxLayout" name="horizontalLayout_7">
+                          <item>
+                           <widget class="QPushButton" name="pushButton_5">
+                            <property name="minimumSize">
+                             <size>
+                              <width>100</width>
+                              <height>40</height>
+                             </size>
+                            </property>
+                            <property name="maximumSize">
+                             <size>
+                              <width>100</width>
+                              <height>40</height>
+                             </size>
+                            </property>
+                            <property name="text">
+                             <string>Start</string>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QPushButton" name="pushButton_3">
+                            <property name="minimumSize">
+                             <size>
+                              <width>100</width>
+                              <height>40</height>
+                             </size>
+                            </property>
+                            <property name="maximumSize">
+                             <size>
+                              <width>100</width>
+                              <height>40</height>
+                             </size>
+                            </property>
+                            <property name="text">
+                             <string>Stop</string>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFrame" name="MovementXFrame">
+                         <property name="styleSheet">
+                          <string notr="true">#MovementXFrame {
+	border: 0px;
+}</string>
+                         </property>
+                         <property name="frameShape">
+                          <enum>QFrame::StyledPanel</enum>
+                         </property>
+                         <property name="frameShadow">
+                          <enum>QFrame::Raised</enum>
+                         </property>
+                         <layout class="QGridLayout" name="gridLayout">
+                          <item row="0" column="1">
+                           <widget class="QFrame" name="MovementXTextFieldFrame">
+                            <property name="styleSheet">
+                             <string notr="true">#MovementXTextFieldFrame {
+	border: 0px;
+}</string>
+                            </property>
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                            <layout class="QHBoxLayout" name="horizontalLayout">
+                             <item>
+                              <widget class="QLineEdit" name="lineEdit_4"/>
+                             </item>
+                            </layout>
+                           </widget>
+                          </item>
+                          <item row="0" column="0">
+                           <widget class="QFrame" name="MovementXLabelFrame">
+                            <property name="minimumSize">
+                             <size>
+                              <width>50</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                            <property name="styleSheet">
+                             <string notr="true">#MovementXLabelFrame {
+	border: 0px;
+}</string>
+                            </property>
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                            <layout class="QHBoxLayout" name="horizontalLayout_8">
+                             <item>
+                              <widget class="QLabel" name="label">
+                               <property name="text">
+                                <string>x</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </widget>
+                          </item>
+                         </layout>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFrame" name="MovementYFrame">
+                         <property name="styleSheet">
+                          <string notr="true">#MovementYFrame {
+	border: 0px;
+}</string>
+                         </property>
+                         <property name="frameShape">
+                          <enum>QFrame::StyledPanel</enum>
+                         </property>
+                         <property name="frameShadow">
+                          <enum>QFrame::Raised</enum>
+                         </property>
+                         <layout class="QHBoxLayout" name="horizontalLayout_15">
+                          <item>
+                           <widget class="QFrame" name="MovementYLabelFrame">
+                            <property name="minimumSize">
+                             <size>
+                              <width>50</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                            <property name="styleSheet">
+                             <string notr="true">#MovementYLabelFrame {
+	border: 0px;
+}</string>
+                            </property>
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                            <layout class="QHBoxLayout" name="horizontalLayout_14">
+                             <item>
+                              <widget class="QLabel" name="label_3">
+                               <property name="text">
+                                <string>y</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QFrame" name="MovementYTextFieldFrame">
+                            <property name="styleSheet">
+                             <string notr="true">#MovementYTextFieldFrame {
+	border: 0px;
+}</string>
+                            </property>
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                            <layout class="QHBoxLayout" name="horizontalLayout_13">
+                             <item>
+                              <widget class="QLineEdit" name="lineEdit_3"/>
+                             </item>
+                            </layout>
+                           </widget>
+                          </item>
+                         </layout>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFrame" name="MovementZFrame">
+                         <property name="styleSheet">
+                          <string notr="true">#MovementZFrame {
+	border: 0px;
+}</string>
+                         </property>
+                         <property name="frameShape">
+                          <enum>QFrame::StyledPanel</enum>
+                         </property>
+                         <property name="frameShadow">
+                          <enum>QFrame::Raised</enum>
+                         </property>
+                         <layout class="QHBoxLayout" name="horizontalLayout_17">
+                          <item>
+                           <widget class="QFrame" name="MovementZLabelFrame">
+                            <property name="minimumSize">
+                             <size>
+                              <width>50</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                            <property name="styleSheet">
+                             <string notr="true">#MovementZLabelFrame {
+	border: 0px;
+}</string>
+                            </property>
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                            <layout class="QHBoxLayout" name="horizontalLayout_12">
+                             <item>
+                              <widget class="QLabel" name="label_4">
+                               <property name="text">
+                                <string>z</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QFrame" name="MovementZTextFieldFrame">
+                            <property name="styleSheet">
+                             <string notr="true">#MovementZTextFieldFrame {
+	border: 0px;
+}</string>
+                            </property>
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                            <layout class="QHBoxLayout" name="horizontalLayout_16">
+                             <item>
+                              <widget class="QLineEdit" name="lineEdit"/>
+                             </item>
+                            </layout>
+                           </widget>
+                          </item>
+                         </layout>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFrame" name="MovementYawFrame">
+                         <property name="styleSheet">
+                          <string notr="true">#MovementYawFrame {
+	border: 0px;
+}</string>
+                         </property>
+                         <property name="frameShape">
+                          <enum>QFrame::StyledPanel</enum>
+                         </property>
+                         <property name="frameShadow">
+                          <enum>QFrame::Raised</enum>
+                         </property>
+                         <layout class="QHBoxLayout" name="horizontalLayout_20">
+                          <item>
+                           <widget class="QFrame" name="MovementYawLabelFrame">
+                            <property name="minimumSize">
+                             <size>
+                              <width>50</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                            <property name="styleSheet">
+                             <string notr="true">#MovementYawLabelFrame {
+	border: 0px;
+}</string>
+                            </property>
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                            <layout class="QHBoxLayout" name="horizontalLayout_18">
+                             <item>
+                              <widget class="QLabel" name="label_5">
+                               <property name="text">
+                                <string>yaw</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QFrame" name="MovementYawTextFieldFrame">
+                            <property name="styleSheet">
+                             <string notr="true">#MovementYawTextFieldFrame {
+	border: 0px;
+}</string>
+                            </property>
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                            <layout class="QHBoxLayout" name="horizontalLayout_19">
+                             <item>
+                              <widget class="QLineEdit" name="lineEdit_5"/>
+                             </item>
+                            </layout>
+                           </widget>
+                          </item>
+                         </layout>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QFrame" name="LoraFrame">
+                      <property name="styleSheet">
+                       <string notr="true">#LoraFrame {
+	border: 0px;
+}</string>
+                      </property>
+                      <property name="frameShape">
+                       <enum>QFrame::StyledPanel</enum>
+                      </property>
+                      <property name="frameShadow">
+                       <enum>QFrame::Raised</enum>
+                      </property>
+                      <layout class="QVBoxLayout" name="verticalLayout_5">
+                       <item>
+                        <widget class="QFrame" name="LoraButtonFrame">
+                         <property name="styleSheet">
+                          <string notr="true">#LoraButtonFrame {
+	border: 0px;
+}</string>
+                         </property>
+                         <property name="frameShape">
+                          <enum>QFrame::StyledPanel</enum>
+                         </property>
+                         <property name="frameShadow">
+                          <enum>QFrame::Raised</enum>
+                         </property>
+                         <layout class="QHBoxLayout" name="horizontalLayout_4">
+                          <item>
+                           <widget class="QPushButton" name="pushButton_4">
+                            <property name="minimumSize">
+                             <size>
+                              <width>0</width>
+                              <height>40</height>
+                             </size>
+                            </property>
+                            <property name="maximumSize">
+                             <size>
+                              <width>100</width>
+                              <height>40</height>
+                             </size>
+                            </property>
+                            <property name="text">
+                             <string>Drop LORA</string>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFrame" name="LoraXFrame">
+                         <property name="styleSheet">
+                          <string notr="true">#LoraXFrame {
+	border: 0px;
+}</string>
+                         </property>
+                         <property name="frameShape">
+                          <enum>QFrame::StyledPanel</enum>
+                         </property>
+                         <property name="frameShadow">
+                          <enum>QFrame::Raised</enum>
+                         </property>
+                         <layout class="QHBoxLayout" name="horizontalLayout_9">
+                          <item>
+                           <widget class="QFrame" name="LoraXLabelFrame">
+                            <property name="minimumSize">
+                             <size>
+                              <width>50</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                            <property name="styleSheet">
+                             <string notr="true">#LoraXLabelFrame {
+	border: 0px;
+}</string>
+                            </property>
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                            <layout class="QHBoxLayout" name="horizontalLayout_11">
+                             <item>
+                              <widget class="QLabel" name="label_2">
+                               <property name="text">
+                                <string>x</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QFrame" name="LoraXTextFieldFrame">
+                            <property name="styleSheet">
+                             <string notr="true">#LoraXTextFieldFrame {
+	border: 0px;
+}</string>
+                            </property>
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                            <layout class="QHBoxLayout" name="horizontalLayout_10">
+                             <item>
+                              <widget class="QLineEdit" name="lineEdit_2"/>
+                             </item>
+                            </layout>
+                           </widget>
+                          </item>
+                         </layout>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFrame" name="LoraYFrame">
+                         <property name="styleSheet">
+                          <string notr="true">#LoraYFrame {
+	border: 0px;
+}</string>
+                         </property>
+                         <property name="frameShape">
+                          <enum>QFrame::StyledPanel</enum>
+                         </property>
+                         <property name="frameShadow">
+                          <enum>QFrame::Raised</enum>
+                         </property>
+                         <layout class="QHBoxLayout" name="horizontalLayout_23">
+                          <item>
+                           <widget class="QFrame" name="LoraYLabelFrame">
+                            <property name="minimumSize">
+                             <size>
+                              <width>50</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                            <property name="styleSheet">
+                             <string notr="true">#LoraYLabelFrame{
+	border: 0px;
+}</string>
+                            </property>
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                            <layout class="QHBoxLayout" name="horizontalLayout_21">
+                             <item>
+                              <widget class="QLabel" name="label_6">
+                               <property name="text">
+                                <string>y</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QFrame" name="LoraYTextFieldFrame">
+                            <property name="styleSheet">
+                             <string notr="true">#LoraYTextFieldFrame {
+	border: 0px;
+}</string>
+                            </property>
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                            <layout class="QHBoxLayout" name="horizontalLayout_22">
+                             <item>
+                              <widget class="QLineEdit" name="lineEdit_6"/>
+                             </item>
+                            </layout>
+                           </widget>
+                          </item>
+                         </layout>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFrame" name="LoraZFrame">
+                         <property name="styleSheet">
+                          <string notr="true">#LoraZFrame {
+	border: 0px;
+}</string>
+                         </property>
+                         <property name="frameShape">
+                          <enum>QFrame::StyledPanel</enum>
+                         </property>
+                         <property name="frameShadow">
+                          <enum>QFrame::Raised</enum>
+                         </property>
+                         <layout class="QHBoxLayout" name="horizontalLayout_26">
+                          <item>
+                           <widget class="QFrame" name="LoraZLabelFrame">
+                            <property name="minimumSize">
+                             <size>
+                              <width>50</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                            <property name="styleSheet">
+                             <string notr="true">#LoraZLabelFrame {
+	border: 0px;
+}</string>
+                            </property>
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                            <layout class="QHBoxLayout" name="horizontalLayout_24">
+                             <item>
+                              <widget class="QLabel" name="label_7">
+                               <property name="text">
+                                <string>z</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QFrame" name="LoraZTextFieldFrame">
+                            <property name="styleSheet">
+                             <string notr="true">#LoraZTextFieldFrame {
+	border: 0px;
+}</string>
+                            </property>
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                            <layout class="QHBoxLayout" name="horizontalLayout_25">
+                             <item>
+                              <widget class="QLineEdit" name="lineEdit_7"/>
+                             </item>
+                            </layout>
+                           </widget>
+                          </item>
+                         </layout>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QFrame" name="LoraTypeFrame">
+                         <property name="styleSheet">
+                          <string notr="true">#LoraTypeFrame {
+	border: 0px;
+}</string>
+                         </property>
+                         <property name="frameShape">
+                          <enum>QFrame::StyledPanel</enum>
+                         </property>
+                         <property name="frameShadow">
+                          <enum>QFrame::Raised</enum>
+                         </property>
+                         <layout class="QHBoxLayout" name="horizontalLayout_29">
+                          <item>
+                           <widget class="QFrame" name="LoraTypeLabelFrame">
+                            <property name="styleSheet">
+                             <string notr="true">#LoraTypeLabelFrame {
+	border: 0px;
+}</string>
+                            </property>
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                            <layout class="QHBoxLayout" name="horizontalLayout_27">
+                             <item>
+                              <widget class="QLabel" name="label_8">
+                               <property name="text">
+                                <string>type</string>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QFrame" name="LoraTypeTextFieldFrame">
+                            <property name="styleSheet">
+                             <string notr="true">#LoraTypeTextFieldFrame {
+	border: 0px;
+}</string>
+                            </property>
+                            <property name="frameShape">
+                             <enum>QFrame::StyledPanel</enum>
+                            </property>
+                            <property name="frameShadow">
+                             <enum>QFrame::Raised</enum>
+                            </property>
+                            <layout class="QHBoxLayout" name="horizontalLayout_28">
+                             <item>
+                              <widget class="QLineEdit" name="lineEdit_8"/>
+                             </item>
+                            </layout>
+                           </widget>
+                          </item>
+                         </layout>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QFrame" name="RightFrame">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">#RightFrame {
+	border: 0px;
+}</string>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_4">
+              <item>
+               <widget class="QFrame" name="RightContainerFrame">
+                <property name="styleSheet">
+                 <string notr="true">#RightContainerFrame {
+	border: 0px;
+}</string>
+                </property>
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_6">
+                 <item>
+                  <widget class="QFrame" name="TeamNameFrame">
+                   <property name="styleSheet">
+                    <string notr="true">#TeamNameFrame {
+	border: 0px;
+}</string>
+                   </property>
+                   <property name="frameShape">
+                    <enum>QFrame::StyledPanel</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Raised</enum>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_32">
+                    <item>
+                     <widget class="QFrame" name="TeamNameLabelFrame">
+                      <property name="styleSheet">
+                       <string notr="true">#TeamNameLabelFrame {
+	border: 0px;
+}</string>
+                      </property>
+                      <property name="frameShape">
+                       <enum>QFrame::StyledPanel</enum>
+                      </property>
+                      <property name="frameShadow">
+                       <enum>QFrame::Raised</enum>
+                      </property>
+                      <layout class="QHBoxLayout" name="horizontalLayout_31">
+                       <item>
+                        <widget class="QLabel" name="label_9">
+                         <property name="text">
+                          <string>Team Name:</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QFrame" name="TeamNameValueFrame">
+                      <property name="styleSheet">
+                       <string notr="true">#TeamNameValueFrame {
+	border: 0px;
+}</string>
+                      </property>
+                      <property name="frameShape">
+                       <enum>QFrame::StyledPanel</enum>
+                      </property>
+                      <property name="frameShadow">
+                       <enum>QFrame::Raised</enum>
+                      </property>
+                      <layout class="QHBoxLayout" name="horizontalLayout_30">
+                       <item>
+                        <widget class="QLabel" name="label_10">
+                         <property name="text">
+                          <string>NA</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QFrame" name="CurrentTimeFrame">
+                   <property name="styleSheet">
+                    <string notr="true">#CurrentTimeFrame {
+	border: 0px;
+}</string>
+                   </property>
+                   <property name="frameShape">
+                    <enum>QFrame::StyledPanel</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Raised</enum>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_35">
+                    <item>
+                     <widget class="QFrame" name="CurrentTimeLabelFrame">
+                      <property name="styleSheet">
+                       <string notr="true">#CurrentTimeLabelFrame {
+	border: 0px;
+}</string>
+                      </property>
+                      <property name="frameShape">
+                       <enum>QFrame::StyledPanel</enum>
+                      </property>
+                      <property name="frameShadow">
+                       <enum>QFrame::Raised</enum>
+                      </property>
+                      <layout class="QHBoxLayout" name="horizontalLayout_33">
+                       <item>
+                        <widget class="QLabel" name="label_11">
+                         <property name="text">
+                          <string>Current Time:</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QFrame" name="CurrentTimeValueFrame">
+                      <property name="styleSheet">
+                       <string notr="true">#CurrentTimeValueFrame {
+	border: 0px;
+}</string>
+                      </property>
+                      <property name="frameShape">
+                       <enum>QFrame::StyledPanel</enum>
+                      </property>
+                      <property name="frameShadow">
+                       <enum>QFrame::Raised</enum>
+                      </property>
+                      <layout class="QHBoxLayout" name="horizontalLayout_34">
+                       <item>
+                        <widget class="QLabel" name="label_12">
+                         <property name="text">
+                          <string>NA</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QFrame" name="ReportsPanel">
+                   <property name="styleSheet">
+                    <string notr="true">#ReportsPanel {
+	border: 0px;
+}</string>
+                   </property>
+                   <property name="frameShape">
+                    <enum>QFrame::StyledPanel</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Raised</enum>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_38">
+                    <item>
+                     <widget class="QFrame" name="ReportsLabelFrame">
+                      <property name="styleSheet">
+                       <string notr="true">#ReportsLabelFrame {
+	border: 0px;
+}</string>
+                      </property>
+                      <property name="frameShape">
+                       <enum>QFrame::StyledPanel</enum>
+                      </property>
+                      <property name="frameShadow">
+                       <enum>QFrame::Raised</enum>
+                      </property>
+                      <layout class="QHBoxLayout" name="horizontalLayout_36">
+                       <item>
+                        <widget class="QLabel" name="label_13">
+                         <property name="text">
+                          <string>Reports Left:</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QFrame" name="ReportsValueFrame">
+                      <property name="styleSheet">
+                       <string notr="true">#ReportsValueFrame {
+	border: 0px;
+}</string>
+                      </property>
+                      <property name="frameShape">
+                       <enum>QFrame::StyledPanel</enum>
+                      </property>
+                      <property name="frameShadow">
+                       <enum>QFrame::Raised</enum>
+                      </property>
+                      <layout class="QHBoxLayout" name="horizontalLayout_37">
+                       <item>
+                        <widget class="QLabel" name="label_14">
+                         <property name="text">
+                          <string>NA</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QFrame" name="ScoreFrame">
+                   <property name="styleSheet">
+                    <string notr="true">#ScoreFrame {
+	border: 0px;
+}</string>
+                   </property>
+                   <property name="frameShape">
+                    <enum>QFrame::StyledPanel</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Raised</enum>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_41">
+                    <item>
+                     <widget class="QFrame" name="ScoreLabelFrame">
+                      <property name="styleSheet">
+                       <string notr="true">#ScoreLabelFrame {
+	border: 0px;
+}</string>
+                      </property>
+                      <property name="frameShape">
+                       <enum>QFrame::StyledPanel</enum>
+                      </property>
+                      <property name="frameShadow">
+                       <enum>QFrame::Raised</enum>
+                      </property>
+                      <layout class="QHBoxLayout" name="horizontalLayout_39">
+                       <item>
+                        <widget class="QLabel" name="label_15">
+                         <property name="text">
+                          <string>Score:</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QFrame" name="ScoreValueFrame">
+                      <property name="styleSheet">
+                       <string notr="true">#ScoreValueFrame {
+	border: 0px;
+}</string>
+                      </property>
+                      <property name="frameShape">
+                       <enum>QFrame::StyledPanel</enum>
+                      </property>
+                      <property name="frameShadow">
+                       <enum>QFrame::Raised</enum>
+                      </property>
+                      <layout class="QHBoxLayout" name="horizontalLayout_40">
+                       <item>
+                        <widget class="QLabel" name="label_16">
+                         <property name="text">
+                          <string>NA</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QFrame" name="StartStopAllFrame">
+                   <property name="styleSheet">
+                    <string notr="true">#StartStopAllFrame {
+	border: 0px;
+}</string>
+                   </property>
+                   <property name="frameShape">
+                    <enum>QFrame::StyledPanel</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Raised</enum>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_42">
+                    <item>
+                     <widget class="QPushButton" name="pushButton_6">
+                      <property name="minimumSize">
+                       <size>
+                        <width>100</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>100</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>Start All</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="pushButton_7">
+                      <property name="minimumSize">
+                       <size>
+                        <width>100</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>100</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>Stop All</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QFrame" name="LogsFrame">
+                <property name="styleSheet">
+                 <string notr="true">#LogsFrame {
+	border: 0px;
+}</string>
+                </property>
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QHBoxLayout" name="horizontalLayout_43">
+                 <item>
+                  <widget class="QScrollArea" name="LogsScrollArea">
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">#LogsScrollArea {
+	border: 0px;
+}</string>
+                   </property>
+                   <property name="widgetResizable">
+                    <bool>true</bool>
+                   </property>
+                   <widget class="QWidget" name="scrollAreaWidgetContents">
+                    <property name="geometry">
+                     <rect>
+                      <x>0</x>
+                      <y>0</y>
+                      <width>611</width>
+                      <height>259</height>
+                     </rect>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayout_7">
+                     <item>
+                      <widget class="QTextEdit" name="textEdit"/>
+                     </item>
+                    </layout>
+                   </widget>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QFrame" name="ArtifactsFrame">
+                <property name="styleSheet">
+                 <string notr="true">#ArtifactsFrame {
+	border: 0px;
+}</string>
+                </property>
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QHBoxLayout" name="horizontalLayout_45">
+                 <item>
+                  <widget class="QScrollArea" name="ArtifactsScrollArea">
+                   <property name="styleSheet">
+                    <string notr="true">#ArtifactsScrollArea {
+	border: 0px;
+}</string>
+                   </property>
+                   <property name="widgetResizable">
+                    <bool>true</bool>
+                   </property>
+                   <widget class="QWidget" name="scrollAreaWidgetContents_2">
+                    <property name="geometry">
+                     <rect>
+                      <x>0</x>
+                      <y>0</y>
+                      <width>611</width>
+                      <height>259</height>
+                     </rect>
+                    </property>
+                    <layout class="QHBoxLayout" name="horizontalLayout_44">
+                     <item>
+                      <widget class="QPlainTextEdit" name="plainTextEdit"/>
+                     </item>
+                    </layout>
+                   </widget>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+             </layout>
             </widget>
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="map_2">
-          <attribute name="title">
-           <string>Map 2</string>
-          </attribute>
-          <layout class="QVBoxLayout" name="verticalLayout_5">
-           <item>
-            <widget class="QGraphicsView" name="graphicsView_2">
-             <property name="verticalScrollBarPolicy">
-              <enum>Qt::ScrollBarAlwaysOn</enum>
-             </property>
-             <property name="horizontalScrollBarPolicy">
-              <enum>Qt::ScrollBarAlwaysOn</enum>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="map_3">
-          <attribute name="title">
-           <string>Map 3</string>
-          </attribute>
-          <layout class="QVBoxLayout" name="verticalLayout_6">
-           <item>
-            <widget class="QGraphicsView" name="graphicsView_3">
-             <property name="verticalScrollBarPolicy">
-              <enum>Qt::ScrollBarAlwaysOn</enum>
-             </property>
-             <property name="horizontalScrollBarPolicy">
-              <enum>Qt::ScrollBarAlwaysOn</enum>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="map_4">
-          <attribute name="title">
-           <string>Map 4</string>
-          </attribute>
-          <layout class="QVBoxLayout" name="verticalLayout_7">
-           <item>
-            <widget class="QGraphicsView" name="graphicsView_4">
-             <property name="verticalScrollBarPolicy">
-              <enum>Qt::ScrollBarAlwaysOn</enum>
-             </property>
-             <property name="horizontalScrollBarPolicy">
-              <enum>Qt::ScrollBarAlwaysOn</enum>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="map_5">
-          <attribute name="title">
-           <string>Map 5</string>
-          </attribute>
-          <layout class="QVBoxLayout" name="verticalLayout_8">
-           <item>
-            <widget class="QGraphicsView" name="graphicsView_5">
-             <property name="verticalScrollBarPolicy">
-              <enum>Qt::ScrollBarAlwaysOn</enum>
-             </property>
-             <property name="horizontalScrollBarPolicy">
-              <enum>Qt::ScrollBarAlwaysOn</enum>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="map_combined">
-          <attribute name="title">
-           <string>Combined Map</string>
-          </attribute>
-          <layout class="QVBoxLayout" name="verticalLayout_9">
-           <item>
-            <widget class="QGraphicsView" name="graphicsView_6">
-             <property name="verticalScrollBarPolicy">
-              <enum>Qt::ScrollBarAlwaysOn</enum>
-             </property>
-             <property name="horizontalScrollBarPolicy">
-              <enum>Qt::ScrollBarAlwaysOn</enum>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </widget>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayoutBottom">
-      <item>
-       <widget class="QSlider" name="progressSlider">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="returnDraw">
-        <property name="text">
-         <string>Return</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+        </item>
+       </layout>
+      </widget>
+     </widget>
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1170</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuView">
-    <property name="title">
-     <string>V&amp;iew</string>
-    </property>
-    <addaction name="actionArtifacts"/>
-    <addaction name="actionRobots"/>
-    <addaction name="actionLocal_Map"/>
-   </widget>
-   <widget class="QMenu" name="menuEdit">
-    <property name="title">
-     <string>E&amp;dit</string>
-    </property>
-    <addaction name="actionUndo"/>
-    <addaction name="actionRedo"/>
-   </widget>
-   <addaction name="menuEdit"/>
-   <addaction name="menuView"/>
-  </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionArtifacts">
-   <property name="text">
-    <string>&amp;Artifact Report History</string>
-   </property>
-   <property name="iconText">
-    <string>Artifact Report History</string>
-   </property>
-  </action>
-  <action name="actionRobots">
-   <property name="text">
-    <string>&amp;Robots</string>
-   </property>
-  </action>
-  <action name="actionUndo">
-   <property name="text">
-    <string>&amp;Undo????</string>
-   </property>
-  </action>
-  <action name="actionRedo">
-   <property name="text">
-    <string>&amp;Redo????</string>
-   </property>
-  </action>
-  <action name="actionLocal_Map">
-   <property name="text">
-    <string>Toggle Local/Global Map</string>
-   </property>
-  </action>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>EStopButton</class>
-   <extends>QPushButton</extends>
-   <header>mission_planner/EStopButton.h</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>
