@@ -110,7 +110,7 @@ void ROSThread::onNavMsg(nav_msgs::Odometry odom)
 }
 
 // cancels the e-stop operation to make robot autonomous again
-void ROSThread::startRobot() 
+void ROSThread::start() 
 {
     std_msgs::String msg;
     msg.data = "start"; // any non-empty string will work
@@ -119,7 +119,7 @@ void ROSThread::startRobot()
 }
 
 // stop the robot immediately
-void ROSThread::eStopRobot() 
+void ROSThread::stop() 
 {
     std_msgs::String msg;
     msg.data = "estop"; // any non-empty string will work
@@ -148,7 +148,7 @@ void ROSThread::sendGoal(double x, double y, double theta)
 
 }
 
-void ROSThread::dropLoraNode() 
+void ROSThread::dropLora() 
 {
     std_msgs::String stringMsg;
     stringMsg.data = "Dropping LORA";

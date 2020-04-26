@@ -91,10 +91,10 @@ class ROSThread: public QThread {
         void onWifiSignalCb(wireless_msgs::WifiArray);
         void onLaserScan(sensor_msgs::LaserScan);
         void onNavMsg(nav_msgs::Odometry odometry);
-        void startRobot();
-        void eStopRobot();
+        void start();
+        void stop();
         void sendGoal(double x, double y, double theta);
-        void dropLoraNode();
+        void dropLora();
     signals:
         void scanRecieved(int robotNum, const QPixmap& map, float x, float y, float theta);
         void artifactReceived(float x, float y, float z, std::string details);

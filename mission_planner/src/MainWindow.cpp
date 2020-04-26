@@ -6,13 +6,13 @@ MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), darpaServerThread(_nh) {
     qRegisterMetaType<std::string>("std::string");
 
     initRobots();
-    // darpaServerThread.start();
+    darpaServerThread.start();
     ui = new Ui::MainWindow();
     ui->setupUi(this);
     
     // initMapUI();
     // initDarpaInterfaceUI();
-    // initEStopUI();
+    initEStopUI();
     initGoalUI();
 
     // ui->horizontalSplitPanel->setStretchFactor(0,2);
@@ -105,32 +105,10 @@ void MainWindow::initDarpaInterfaceUI() {
 }
 
 void MainWindow::initEStopUI() {
-    // ui->robot1StartBtn->setType(false, 1);
-    // ui->robot2StartBtn->setType(false, 2);
-    // ui->robot3StartBtn->setType(false, 3);
-    // ui->robot4StartBtn->setType(false, 4);
-    // ui->robot5StartBtn->setType(false, 5);
-
-    // connect(ui->robot1StartBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
-    // connect(ui->robot2StartBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
-    // connect(ui->robot3StartBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
-    // connect(ui->robot4StartBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
-    // connect(ui->robot5StartBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
-
-    // ui->robot1StopBtn->setType(true, 1);
-    // ui->robot2StopBtn->setType(true, 2);
-    // ui->robot3StopBtn->setType(true, 3);
-    // ui->robot4StopBtn->setType(true, 4);
-    // ui->robot5StopBtn->setType(true, 5);
-
-    // connect(ui->robot1StopBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
-    // connect(ui->robot2StopBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
-    // connect(ui->robot3StopBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
-    // connect(ui->robot4StopBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
-    // connect(ui->robot5StopBtn, &EStopButton::clicked, this, &MainWindow::eStopBtnClicked);
-
-    // connect(ui->eStopAllBtn, &QPushButton::clicked, this, &MainWindow::eStopAllBtnClicked);
-    // connect(ui->startAllBtn, &QPushButton::clicked, this, &MainWindow::startAllBtnClicked);
+    connect(ui->startBtnClicked, &QPushButton::clicked, this, &MainWindow::startBtnClicked);
+    connect(ui->stopBtnClicked, &QPushButton::clicked, this, &MainWindow::stopBtnClicked);
+    connect(ui->startAllBtnClicked, &QPushButton::clicked, this, &MainWindow::startAllBtnClicked);
+    connect(ui->stopAllBtnClicked, &QPushButton::clicked, this, &MainWindow::stopAllBtnClicked);
 }
 
 void MainWindow::initGoalUI() {
@@ -141,7 +119,7 @@ void MainWindow::initGoalUI() {
     ROS_INFO("Initializing LORA and GOAL Functionality");
 
     connect(ui->sendGoalBtnClicked, &QPushButton::clicked, this, &MainWindow::sendGoalBtnClicked);
-    // connect(ui->loraDropBtn, &QPushButton::pressed, this, &MainWindow::loraDropBtnClicked);
+    connect(ui->loraDropBtnClicked, &QPushButton::clicked, this, &MainWindow::loraDropBtnClicked);
 }
 
 QVector3D MainWindow::getArtifactPos() {
@@ -343,22 +321,20 @@ void MainWindow::sendGoalBtnClicked() {
 }
 
 void MainWindow::loraDropBtnClicked() {
-    // std::string robotName = (comboBoxGoalRobotNum->currentText()).toStdString();
-    // int robotNum = robotName.back() - '0';
-
-    // if (robotNum < 1 || robotNum > NUM_ROBOTS) {
-    //     ROS_ERROR("LORA Drop command given to non-existent robot_%d\nAborting drop.", robotNum);
-    //     return;
-    // }
-
-    // ROS_INFO("UI Triggering robot_%d lora drop", robotNum);
-    // robots[robotNum-1]->rosthread.dropLoraNode();
+    ROS_INFO("Droppring LORA on Robot %d.", activeRobotId);
+    if (activeRobotId < 1 || activeRobotId > NUM_ROBOTS) {
+        ROS_ERROR("Robot %d does not exist.", activeRobotId);
+        return;
+    }
+    robots[activeRobotId-1]->rosthread.dropLora();
+    ROS_INFO("Dropped LORA on Robot %d", activeRobotId);
 }
 
 void MainWindow::darpaStatusRecieved(std::string teamName, double currentTime, 
                                  int32_t numReportsLeft, int32_t currentScore) {
 
 }
+
 void MainWindow::artifactStatusReceived(std::string result) {
     // QMessageBox* resultDialog = new QMessageBox(this);
     // resultDialog->setText(QString::fromStdString(result));
@@ -371,24 +347,23 @@ void MainWindow::mapUpdateReceived(bool success, std::string errorStr) {
 
 }
 
-void MainWindow::eStopBtnClicked(bool isEStop, int robotNum) {
-    // if (isEStop) {
-    //     robots[robotNum-1]->rosthread.eStopRobot();
-    // }
-    // else {
-    //     robots[robotNum-1]->rosthread.startRobot();
-    // }
+void MainWindow::stopBtnClicked() {
+    robots[activeRobotId-1]->rosthread.stop();
 }
 
-void MainWindow::eStopAllBtnClicked() {
-    // for (int idx = 0;idx < NUM_ROBOTS; idx++) {
-    //     robots[idx]->rosthread.eStopRobot();
-    // }
+void MainWindow::startBtnClicked() {
+    robots[activeRobotId-1]->rosthread.start();
+}
+
+void MainWindow::stopAllBtnClicked() {
+    for (int robotId = 0; robotId < NUM_ROBOTS; robotId++) {
+        robots[robotId]->rosthread.stop();
+    }
 }
 
 void MainWindow::startAllBtnClicked() {
-    // for (int idx = 0;idx < NUM_ROBOTS; idx++) {
-    //     robots[idx]->rosthread.startRobot();
-    // }
+    for (int robotId = 0; robotId < NUM_ROBOTS; robotId++) {
+        robots[robotId]->rosthread.start();
+    }
 }
 

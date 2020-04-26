@@ -120,9 +120,10 @@ class MainWindow : public QMainWindow {
                                  int32_t numReportsLeft, int32_t currentScore);
         void artifactStatusReceived(std::string result);
         void mapUpdateReceived(bool success, std::string errorStr);
-        void eStopBtnClicked(bool isEStop, int robotNum);
-        void eStopAllBtnClicked();
+        void startBtnClicked();
+        void stopBtnClicked();
         void startAllBtnClicked();
+        void stopAllBtnClicked();
         void switchLocalGlobal();
 };
 #endif
