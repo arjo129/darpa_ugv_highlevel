@@ -46,7 +46,7 @@ public slots:
         ROS_INFO("Object at %.f, %.f", currentScan->scenePos().rx(), currentScan->scenePos().ry());
         auto position = currentScan->mapFromScene(event->scenePos()); 
         ROS_INFO("relative position %f %f", (250-position.rx())/25, (250-position.ry())/25);
-        robot->rosthread.sendRobotGoal((250-position.rx())/25, (250-position.ry())/25, 0);
+        robot->rosthread.sendGoal((250-position.rx())/25, (250-position.ry())/25, 0);
     }
 };
 #endif /* CUSTOM_GRAPHICS_SCENCE_H */

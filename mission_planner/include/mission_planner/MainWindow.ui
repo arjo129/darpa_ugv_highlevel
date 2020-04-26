@@ -32,9 +32,9 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-54</y>
-         <width>1336</width>
-         <height>932</height>
+         <y>0</y>
+         <width>1350</width>
+         <height>878</height>
         </rect>
        </property>
        <layout class="QHBoxLayout" name="horizontalLayout_47">
@@ -140,7 +140,7 @@
                         <rect>
                          <x>0</x>
                          <y>0</y>
-                         <width>593</width>
+                         <width>600</width>
                          <height>68</height>
                         </rect>
                        </property>
@@ -329,7 +329,7 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout">
                              <item>
-                              <widget class="QLineEdit" name="lineEdit_4"/>
+                              <widget class="QLineEdit" name="goalXInput"/>
                              </item>
                             </layout>
                            </widget>
@@ -426,74 +426,7 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_13">
                              <item>
-                              <widget class="QLineEdit" name="lineEdit_3"/>
-                             </item>
-                            </layout>
-                           </widget>
-                          </item>
-                         </layout>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QFrame" name="MovementZFrame">
-                         <property name="styleSheet">
-                          <string notr="true">#MovementZFrame {
-	border: 0px;
-}</string>
-                         </property>
-                         <property name="frameShape">
-                          <enum>QFrame::StyledPanel</enum>
-                         </property>
-                         <property name="frameShadow">
-                          <enum>QFrame::Raised</enum>
-                         </property>
-                         <layout class="QHBoxLayout" name="horizontalLayout_17">
-                          <item>
-                           <widget class="QFrame" name="MovementZLabelFrame">
-                            <property name="minimumSize">
-                             <size>
-                              <width>50</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                            <property name="styleSheet">
-                             <string notr="true">#MovementZLabelFrame {
-	border: 0px;
-}</string>
-                            </property>
-                            <property name="frameShape">
-                             <enum>QFrame::StyledPanel</enum>
-                            </property>
-                            <property name="frameShadow">
-                             <enum>QFrame::Raised</enum>
-                            </property>
-                            <layout class="QHBoxLayout" name="horizontalLayout_12">
-                             <item>
-                              <widget class="QLabel" name="label_4">
-                               <property name="text">
-                                <string>z</string>
-                               </property>
-                              </widget>
-                             </item>
-                            </layout>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QFrame" name="MovementZTextFieldFrame">
-                            <property name="styleSheet">
-                             <string notr="true">#MovementZTextFieldFrame {
-	border: 0px;
-}</string>
-                            </property>
-                            <property name="frameShape">
-                             <enum>QFrame::StyledPanel</enum>
-                            </property>
-                            <property name="frameShadow">
-                             <enum>QFrame::Raised</enum>
-                            </property>
-                            <layout class="QHBoxLayout" name="horizontalLayout_16">
-                             <item>
-                              <widget class="QLineEdit" name="lineEdit"/>
+                              <widget class="QLineEdit" name="goalYInput"/>
                              </item>
                             </layout>
                            </widget>
@@ -560,7 +493,7 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_19">
                              <item>
-                              <widget class="QLineEdit" name="lineEdit_5"/>
+                              <widget class="QLineEdit" name="goalThetaInput"/>
                              </item>
                             </layout>
                            </widget>
@@ -748,73 +681,6 @@
                             <layout class="QHBoxLayout" name="horizontalLayout_22">
                              <item>
                               <widget class="QLineEdit" name="lineEdit_6"/>
-                             </item>
-                            </layout>
-                           </widget>
-                          </item>
-                         </layout>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QFrame" name="LoraZFrame">
-                         <property name="styleSheet">
-                          <string notr="true">#LoraZFrame {
-	border: 0px;
-}</string>
-                         </property>
-                         <property name="frameShape">
-                          <enum>QFrame::StyledPanel</enum>
-                         </property>
-                         <property name="frameShadow">
-                          <enum>QFrame::Raised</enum>
-                         </property>
-                         <layout class="QHBoxLayout" name="horizontalLayout_26">
-                          <item>
-                           <widget class="QFrame" name="LoraZLabelFrame">
-                            <property name="minimumSize">
-                             <size>
-                              <width>50</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                            <property name="styleSheet">
-                             <string notr="true">#LoraZLabelFrame {
-	border: 0px;
-}</string>
-                            </property>
-                            <property name="frameShape">
-                             <enum>QFrame::StyledPanel</enum>
-                            </property>
-                            <property name="frameShadow">
-                             <enum>QFrame::Raised</enum>
-                            </property>
-                            <layout class="QHBoxLayout" name="horizontalLayout_24">
-                             <item>
-                              <widget class="QLabel" name="label_7">
-                               <property name="text">
-                                <string>z</string>
-                               </property>
-                              </widget>
-                             </item>
-                            </layout>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QFrame" name="LoraZTextFieldFrame">
-                            <property name="styleSheet">
-                             <string notr="true">#LoraZTextFieldFrame {
-	border: 0px;
-}</string>
-                            </property>
-                            <property name="frameShape">
-                             <enum>QFrame::StyledPanel</enum>
-                            </property>
-                            <property name="frameShadow">
-                             <enum>QFrame::Raised</enum>
-                            </property>
-                            <layout class="QHBoxLayout" name="horizontalLayout_25">
-                             <item>
-                              <widget class="QLineEdit" name="lineEdit_7"/>
                              </item>
                             </layout>
                            </widget>
@@ -1282,8 +1148,8 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>611</width>
-                      <height>259</height>
+                      <width>618</width>
+                      <height>232</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -1326,8 +1192,8 @@
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>611</width>
-                      <height>259</height>
+                      <width>618</width>
+                      <height>232</height>
                      </rect>
                     </property>
                     <layout class="QHBoxLayout" name="horizontalLayout_44">

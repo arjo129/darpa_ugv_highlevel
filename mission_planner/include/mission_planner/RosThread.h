@@ -93,7 +93,7 @@ class ROSThread: public QThread {
         void onNavMsg(nav_msgs::Odometry odometry);
         void startRobot();
         void eStopRobot();
-        void sendRobotGoal(double x, double y, double theta);
+        void sendGoal(double x, double y, double theta);
         void dropLoraNode();
     signals:
         void scanRecieved(int robotNum, const QPixmap& map, float x, float y, float theta);

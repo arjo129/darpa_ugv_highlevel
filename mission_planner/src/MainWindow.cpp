@@ -82,13 +82,13 @@ void MainWindow::initMapUI() {
 
 // initialize the rosthread for each robot
 void MainWindow::initRobots() {
-    robotId = 1;
-    // robots = new Robot*[NUM_ROBOTS];
-    // for (int idx = 1; idx <= NUM_ROBOTS; idx++) {
-    //     robots[idx-1] = new Robot(nh, idx);
+    activeRobotId = 1;
+    robots = new Robot*[NUM_ROBOTS];
+    for (int robotId = 1; robotId <= NUM_ROBOTS; robotId++) {
+        robots[robotId-1] = new Robot(nh, robotId);
     //     connect(&(robots[idx-1]->rosthread), &ROSThread::scanRecieved, this, &MainWindow::addPixmap);
     //     connect(&(robots[idx-1]->rosthread), &ROSThread::artifactReceived, this, &MainWindow::addArtifactData);
-    // }
+    }
 }
 
 void MainWindow::initDarpaInterfaceUI() {
@@ -134,9 +134,9 @@ void MainWindow::initEStopUI() {
 }
 
 void MainWindow::initGoalUI() {
-    // goalXBox = ui->goalXInput;
-    // goalYBox = ui->goalYInput;
-    // goalThetaBox = ui->goalThetaInput;
+    goalXInput = ui->goalXInput;
+    goalYInput = ui->goalYInput;
+    goalThetaInput = ui->goalThetaInput;
     // comboBoxGoalRobotNum = ui->comboBoxGoalRobotNum;
     ROS_INFO("Initializing LORA and GOAL Functionality");
 
@@ -154,12 +154,15 @@ QVector3D MainWindow::getArtifactPos() {
 }
 
 QVector3D MainWindow::getRobotGoalPos() {
+    QString xInput =  goalXInput->text();
+    QString yInput = goalYInput->text();
+    QString thetaInput = goalThetaInput->text();
 
-    // double x = goalXBox->value();
-    // double y = goalYBox->value();
-    // double z = goalThetaBox->value();
+    double x = xInput.toDouble();
+    double y = yInput.toDouble();
+    double z = thetaInput.toDouble(); // Note that z refers to yaw and not height
 
-    return QVector3D(0,0,0);
+    return QVector3D(x, y, z);
 }
 
 std::string MainWindow::getArtifactTypeStr() {
@@ -329,18 +332,14 @@ void MainWindow::artifactBtnClicked() {
 }
 
 void MainWindow::sendGoalBtnClicked() {
-    ROS_INFO("Sending goal to Robot %s", std::to_string(robotId).c_str());
-    // std::string robotName = (comboBoxGoalRobotNum->currentText()).toStdString();
-    // int robotNum = robotName.back() - '0';
-
-    // if (robotNum < 1 || robotNum > NUM_ROBOTS) {
-    //     ROS_ERROR("Goal given to non-existent robot_%d\nAborting goal.", robotNum);
-    //     return;
-    // }
-
-    // QVector3D pos = getRobotGoalPos(); // z refers to theta, not height
-    // robots[robotNum-1]->rosthread.sendRobotGoal(pos.x(), pos.y(), pos.z());
-    // ROS_INFO("Sent Goal X,Y,Theta: (%f, %f, %f) to %s", pos.x(), pos.y(), pos.z(), robotName.c_str());
+    ROS_INFO("Sending goal to Robot %d.", activeRobotId);
+    if (activeRobotId < 1 || activeRobotId > NUM_ROBOTS) {
+        ROS_ERROR("Robot %d does not exist.", activeRobotId);
+        return;
+    }
+    QVector3D pos = getRobotGoalPos();
+    robots[activeRobotId-1]->rosthread.sendGoal(pos.x(), pos.y(), pos.z());
+    ROS_INFO("Sent Robot %d to X ,Y ,Theta: (%f, %f, %f)", activeRobotId, pos.x(), pos.y(), pos.z());
 }
 
 void MainWindow::loraDropBtnClicked() {

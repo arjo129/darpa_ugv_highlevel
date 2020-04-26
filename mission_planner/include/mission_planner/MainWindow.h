@@ -15,6 +15,7 @@
 #include <QTransform>
 #include <QDebug>
 #include <QVector3D>
+#include <QLineEdit>
 #include <stack>
 #include "ui_MainWindow.h"
 
@@ -48,9 +49,13 @@ class MainWindow : public QMainWindow {
         Ui::MainWindow* ui;
 
         // Widgets
+        // Goal Inputs
+        QLineEdit* goalXInput;
+        QLineEdit* goalYInput;
+        QLineEdit* goalThetaInput;
 
         // Robots
-        int robotId;
+        int activeRobotId;
 
         CustomGraphicsScene** scenes;
         LaserScanView** currentScanScene;

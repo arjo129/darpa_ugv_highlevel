@@ -127,7 +127,7 @@ void ROSThread::eStopRobot()
     ROS_INFO("E-Stopping Robot number %d", this->robotNum);
 }
 
-void ROSThread::sendRobotGoal(double x, double y, double theta) 
+void ROSThread::sendGoal(double x, double y, double theta) 
 {
     ROS_INFO("%s %d", __FILE__, __LINE__);
     geometry_msgs::Pose pose;
