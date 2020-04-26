@@ -260,7 +260,7 @@
                          </property>
                          <layout class="QHBoxLayout" name="horizontalLayout_7">
                           <item>
-                           <widget class="QPushButton" name="pushButton_5">
+                           <widget class="QPushButton" name="sendGoalBtnClicked">
                             <property name="minimumSize">
                              <size>
                               <width>100</width>

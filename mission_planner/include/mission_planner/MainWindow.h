@@ -44,7 +44,14 @@ typedef struct {
 class MainWindow : public QMainWindow {
     Q_OBJECT
     private:
+        // Default
         Ui::MainWindow* ui;
+
+        // Widgets
+
+        // Robots
+        int robotId;
+
         CustomGraphicsScene** scenes;
         LaserScanView** currentScanScene;
         bool showGlobalMap = true;

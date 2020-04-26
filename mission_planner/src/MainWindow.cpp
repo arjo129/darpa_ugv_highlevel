@@ -5,7 +5,7 @@ MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), darpaServerThread(_nh) {
     qRegisterMetaType<RotateState>("RotateState");
     qRegisterMetaType<std::string>("std::string");
 
-    // initRobots();
+    initRobots();
     // darpaServerThread.start();
     ui = new Ui::MainWindow();
     ui->setupUi(this);
@@ -13,7 +13,7 @@ MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), darpaServerThread(_nh) {
     // initMapUI();
     // initDarpaInterfaceUI();
     // initEStopUI();
-    // initGoalUI();
+    initGoalUI();
 
     // ui->horizontalSplitPanel->setStretchFactor(0,2);
 
@@ -82,6 +82,7 @@ void MainWindow::initMapUI() {
 
 // initialize the rosthread for each robot
 void MainWindow::initRobots() {
+    robotId = 1;
     // robots = new Robot*[NUM_ROBOTS];
     // for (int idx = 1; idx <= NUM_ROBOTS; idx++) {
     //     robots[idx-1] = new Robot(nh, idx);
@@ -137,8 +138,9 @@ void MainWindow::initGoalUI() {
     // goalYBox = ui->goalYInput;
     // goalThetaBox = ui->goalThetaInput;
     // comboBoxGoalRobotNum = ui->comboBoxGoalRobotNum;
+    ROS_INFO("Initializing LORA and GOAL Functionality");
 
-    // connect(ui->sendGoalBtn, &QPushButton::pressed, this, &MainWindow::sendGoalBtnClicked);
+    connect(ui->sendGoalBtnClicked, &QPushButton::clicked, this, &MainWindow::sendGoalBtnClicked);
     // connect(ui->loraDropBtn, &QPushButton::pressed, this, &MainWindow::loraDropBtnClicked);
 }
 
@@ -327,6 +329,7 @@ void MainWindow::artifactBtnClicked() {
 }
 
 void MainWindow::sendGoalBtnClicked() {
+    ROS_INFO("Sending goal to Robot %s", std::to_string(robotId).c_str());
     // std::string robotName = (comboBoxGoalRobotNum->currentText()).toStdString();
     // int robotNum = robotName.back() - '0';
 
