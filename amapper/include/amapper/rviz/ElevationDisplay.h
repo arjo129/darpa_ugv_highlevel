@@ -34,6 +34,7 @@ protected:
   // A helper to clear this display back to the initial state.
   virtual void reset();
   // Function to handle an incoming ROS message.
+private Q_SLOTS:
 private:
   void processMessage( const amapper::ElevationGridMsg::ConstPtr& msg );
 

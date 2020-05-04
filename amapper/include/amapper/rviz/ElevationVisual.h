@@ -8,6 +8,8 @@ namespace Ogre
 {
 class Vector3;
 class Quaternion;
+class SceneNode;
+class SceneManager;
 }
 
 namespace rviz

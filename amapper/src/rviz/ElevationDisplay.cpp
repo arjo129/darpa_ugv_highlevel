@@ -20,7 +20,7 @@ namespace amapper_elevation_rviz
 // constructor the parameters it needs to fully initialize.
 ElevationDisplay::ElevationDisplay()
 {
-  
+  ROS_INFO("Instantiated elevation plugin");
 }
 
 // After the top-level rviz::Display::initialize() does its own setup,
@@ -36,6 +36,7 @@ ElevationDisplay::ElevationDisplay()
 void ElevationDisplay::onInitialize()
 {
   MFDClass::onInitialize();
+  visuals_.rset_capacity(10);
   //updateHistoryLength();
 }
 

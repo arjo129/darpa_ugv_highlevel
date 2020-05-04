@@ -24,6 +24,13 @@ find_package(catkin REQUIRED
 find_package(PCL REQUIRED COMPONENTS common io)
 find_package(OpenCV REQUIRED)
 find_package(Qt5 COMPONENTS Core Gui Widgets PrintSupport)
+set(CMAKE_AUTOMOC ON)
+include($ENV{ROS_ROOT}/core/rosbuild/FindPkgConfig.cmake)
+pkg_check_modules(OGRE OGRE)
+include_directories( ${OGRE_INCLUDE_DIRS} )
+link_directories( ${OGRE_LIBRARY_DIRS} )
+
+
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
@@ -146,6 +153,8 @@ add_library(${PROJECT_NAME}
 add_library(elevation_rviz
   src/rviz/ElevationDisplay.cpp
   src/rviz/ElevationVisual.cpp
+  include/amapper/rviz/ElevationDisplay.h
+  include/amapper/rviz/ElevationVisual.h
 )
 
 ## Add cmake target dependencies of the library
@@ -176,6 +185,18 @@ target_link_libraries(laser_scan_example
    ${catkin_LIBRARIES}
    ${PCL_COMMON_LIBRARIES}
    ${PROJECT_NAME} 
+)
+
+target_link_libraries(elevation_rviz
+   ${catkin_LIBRARIES}
+   ${PCL_COMMON_LIBRARIES}
+   ${PROJECT_NAME} 
+   ${OGRE_LIBRARIES}
+   Qt5::Core
+   Qt5::Widgets
+   Qt5::Gui
+   Qt5::PrintSupport
+   
 )
 #############
 ## Install ##
