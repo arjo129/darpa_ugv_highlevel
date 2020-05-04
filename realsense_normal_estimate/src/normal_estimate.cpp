@@ -5,7 +5,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <Eigen/Eigen>
 #include <opencv2/opencv.hpp>
-#include <amapper/grid.h>
+#include <amapper/elevation_grid.h>
 
 #include <ros/ros.h>
 #include <pcl_ros/point_cloud.h>
@@ -42,7 +42,7 @@ private:
     ros::NodeHandle nh_;
     ros::Subscriber pcl_sub_;
     ros::Publisher grid_pub, pcl_pub, plane_normal_pub;
-    AMapper::Grid amapper_grid_map;
+    AMapper::ElevationGrid amapper_grid_map;
     std::vector<std::vector<double>> depth_map;
     std::vector<std::vector<std::vector<double>>> intermediate_depth_map;
     void onPCLReceived(const pcl::PointCloud<pcl::PointXYZ> & pcl_msg);
@@ -59,9 +59,9 @@ NormalEstimator::NormalEstimator(): amapper_grid_map(0, GRID_METRIC_HEIGHT / 2.0
                                     std::vector<double> > (GRID_CELL_WIDTH, std::vector<double>(1, LOWEST_GRID_DEPTH))),
                                     depth_map(GRID_CELL_HEIGHT, std::vector<double>(GRID_CELL_WIDTH, LOWEST_GRID_DEPTH)) {
     pcl_sub_ = nh_.subscribe("/camera/depth_registered/points", 1, &NormalEstimator::onPCLReceived, this);
-    grid_pub = nh_.advertise<nav_msgs::OccupancyGrid>("/plane_segmentation/grid_map", 1);
-    pcl_pub = nh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("/plane_segmentation/points", 1);
-    plane_normal_pub = nh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("/plane_segmentation/normal_plane_debug", 1);
+    grid_pub = nh_.advertise<amapper::ElevationGridMsg>("/plane_segmentation/grid_map", 1);
+    //pcl_pub = nh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("/plane_segmentation/points", 1);
+    //plane_normal_pub = nh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("/plane_segmentation/normal_plane_debug", 1);
     amapper_grid_map.setFrameId("camera_link");
     ROS_INFO("Starting 3D Map Node with parameters: \nGRID_METRIC_SIZE: %f x %f meters\nGRID_CELLS: %d x %d cells\nForward Offset = %f", 
                     GRID_CELL_WIDTH*GRID_RESOLUTION, GRID_CELL_HEIGHT*GRID_RESOLUTION, GRID_CELL_WIDTH, GRID_CELL_HEIGHT, FORWARD_DEADZONE);
@@ -184,8 +184,8 @@ void NormalEstimator::onPCLReceived(const pcl::PointCloud<pcl::PointXYZ> & pcl_m
             if (amapper_grid_map.isWithinGridCellMap(x_idx, y_idx)) {
                 pt.z += GROUND_DEPTH_OFFSET;
                 intermediate_depth_map[y_idx][x_idx].push_back(pt.z);
-                int orig_val = amapper_grid_map.data[y_idx][x_idx];
-                amapper_grid_map.data[y_idx][x_idx] = std::max(orig_val, int(100*pt.z)); // for debugging
+                double  orig_val = amapper_grid_map.data[y_idx][x_idx];
+                amapper_grid_map.data[y_idx][x_idx] = std::max(orig_val, pt.z); // for debugging
                 Eigen::Vector3d pos(pt.x, pt.y, pt.z);
                 points_arr.push_back(pos);
             }
@@ -195,10 +195,10 @@ void NormalEstimator::onPCLReceived(const pcl::PointCloud<pcl::PointXYZ> & pcl_m
     set2dGridMap(); // convert intermediate depth map to Amapper Grid
     std::pair<Eigen::Vector3d, Eigen::Vector3d> plane_normal_properties = bestPlaneFromPoints(points_arr);
     // std::cout << "Center: " << plane_normal_properties.first << std::endl << "Slope: " << plane_normal_properties.second << std::endl;
-    publishPlaneNormal(plane_normal_properties);
+    //publishPlaneNormal(plane_normal_properties);
     publishPclFromDepthMap();
 
-    nav_msgs::OccupancyGrid occupancy_grid_msg = amapper_grid_map.toOccupancyGrid();
+    amapper::ElevationGridMsg occupancy_grid_msg = amapper_grid_map.toRosMsg();
     grid_pub.publish(occupancy_grid_msg);
     // ROS_INFO("Map Published");
     clearMapData();
