@@ -86,9 +86,15 @@ nav_msgs::OccupancyGrid Grid::toOccupancyGrid() {
 
 void Grid::clear() {
     for(int i =0;i < this->gridHeight;i++){
-        this->data[i] = new int16_t[this->gridWidth];
         for(int j = 0; j < this->gridWidth; j++) this->data[i][j] = -1;
     }
+}
+
+Grid::~Grid() {
+    for(int i =0;i < this->gridHeight;i++) {
+        delete this->data[i];
+    }
+    delete this->data;
 }
 
 bool Grid::operator ==(const Grid &b) const{

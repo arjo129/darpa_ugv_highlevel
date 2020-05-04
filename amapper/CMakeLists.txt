@@ -16,12 +16,14 @@ find_package(catkin REQUIRED
   nav_msgs
   message_generation
   dynamic_reconfigure
+  rviz
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package(PCL REQUIRED COMPONENTS common io)
 find_package(OpenCV REQUIRED)
+find_package(Qt5 COMPONENTS Core Gui Widgets PrintSupport)
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
@@ -52,11 +54,10 @@ find_package(OpenCV REQUIRED)
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+  FILES
+  ElevationGridMsg.msg
+)
 
 ## Generate services in the 'srv' folder
 #add_service_files(
@@ -68,15 +69,16 @@ find_package(OpenCV REQUIRED)
 ## Generate actions in the 'action' folder
 # add_action_files(
 #   FILES
-#   Action1.action
+#   Action1.actiorn
 #   Action2.action
 # )
 
 ## Generate added messages and services with any dependencies listed here
-#generate_messages(
-# DEPENDENCIES
-# std_msgs  # Or other packages containing msgs
-#)
+generate_messages(
+ DEPENDENCIES
+ std_msgs  # Or other packages containing msgs
+ nav_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -123,11 +125,16 @@ include_directories(
  include
  ${catkin_INCLUDE_DIRS}
  ${PCL_INCLUDE_DIRS}
+ ${Qt5Core_INCLUDE_DIRS}
+ ${Qt5Gui_INCLUDE_DIRS}
+ ${Qt5Widgets_INCLUDE_DIRS}
+ ${Qt5PrintSupport_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
   src/${PROJECT_NAME}/grid.cpp
+  src/${PROJECT_NAME}/elevation_grid.cpp
   src/${PROJECT_NAME}/RayTracer.cpp
   src/${PROJECT_NAME}/cluster.cpp
   src/${PROJECT_NAME}/blur.cpp
@@ -136,10 +143,16 @@ add_library(${PROJECT_NAME}
   src/raytracers/NoClearing.cpp
 )
 
+add_library(elevation_rviz
+  src/rviz/ElevationDisplay.cpp
+  src/rviz/ElevationVisual.cpp
+)
+
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(elevation_rviz ${PROJECT_NAME})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context

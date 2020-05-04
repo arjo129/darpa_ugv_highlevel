@@ -1,8 +1,8 @@
-#ifndef _AMAPPER_GRID_
-#define _AMAPPER_GRID_
+#ifndef _AMAPPER_ELEVATION_GRID_H_
+#define _AMAPPER_ELEVATION_GRID_H_
 
+#include <amapper/ElevationGridMsg.h>
 #include <math.h>
-#include <nav_msgs/OccupancyGrid.h>
 
 namespace AMapper {
 
@@ -11,7 +11,7 @@ namespace AMapper {
      * Has an implementation of bressenham for fast ray tracing. 
      * Follows ROS ENU Convention.
      */ 
-    class Grid {
+    class ElevationGrid {
     private:
         float xAnchor, yAnchor; ///Units [m]
         float resolution; ///Units [m/cell]
@@ -33,13 +33,13 @@ namespace AMapper {
          * functions to manipulate the data. Note the access is
          * data[y][x].
          */ 
-        int16_t** data;
+        double** data;
 
-        Grid();
-        Grid(float xAnchor, float yAnchor, int16_t gridWidth, int16_t gridHeight, float resolution);
-        Grid(const Grid& grid);
-        Grid(nav_msgs::OccupancyGrid occupancyGrid);
-        ~Grid();
+        ElevationGrid();
+        ElevationGrid(float xAnchor, float yAnchor, int16_t gridWidth, int16_t gridHeight, float resolution);
+        ElevationGrid(const ElevationGrid& grid);
+        ElevationGrid(amapper::ElevationGridMsg occupancyGrid);
+        ~ElevationGrid();
 
         /**
          * Set the tf frame in which grid is in
@@ -53,7 +53,7 @@ namespace AMapper {
         /**
          * Convert to occupancy grid
          */ 
-        nav_msgs::OccupancyGrid toOccupancyGrid();
+        amapper::ElevationGridMsg toRosMsg();
 
 
         /**
@@ -91,13 +91,10 @@ namespace AMapper {
 
         void clear();
 
-        bool operator ==(const Grid &b) const;
+        bool operator ==(const ElevationGrid &b) const;
     };
 
-    /**
-     * Inflates an occupancy grid
-     */ 
-    Grid* inflate(Grid& grid, int radius);
+
 
     
 };

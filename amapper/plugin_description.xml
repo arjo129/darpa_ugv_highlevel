@@ -1,0 +1,9 @@
+<library path="lib/libelevation_rviz">
+  <class name="amapper_elevation_rviz/ElevationDisplay"
+         type="amapper_elevation_rviz::ElevationDisplay"
+         base_class_type="rviz::Display">
+    <description>
+      A class to visuallize elevation maps
+    </description>
+  </class>
+</library>

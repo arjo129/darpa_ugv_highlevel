@@ -57,10 +57,16 @@
   <build_depend>pcl_ros</build_depend>
   <build_depend>message_generation</build_depend>
   <build_depend>sensor_msgs</build_depend>
+   <build_depend>rviz</build_depend>
+  <exec_depend>rviz</exec_depend>
   <test_depend>rosunit</test_depend>
+   <build_depend>message_filters</build_depend>
+  <exec_depend>message_filters</exec_depend>
+  <build_depend>class_loader</build_depend>
+  <exec_depend>class_loader</exec_depend>
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->
-
+    <rviz plugin="${prefix}/plugin_description.xml"/>
   </export>
 </package>
