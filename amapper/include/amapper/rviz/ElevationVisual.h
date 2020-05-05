@@ -3,6 +3,7 @@
 #define ELEV_VISUAL_H
 
 #include <amapper/ElevationGridMsg.h>
+#include <rviz/ogre_helpers/point_cloud.h>
 
 namespace Ogre
 {
@@ -54,7 +55,7 @@ public:
 
 private:
   // The object implementing the actual arrow shape
-  boost::shared_ptr<rviz::Arrow> acceleration_arrow_;
+  boost::shared_ptr<rviz::PointCloud> point_cloud_;
 
   // A SceneNode whose pose is set to match the coordinate frame of
   // the Imu message header.

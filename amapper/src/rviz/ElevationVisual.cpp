@@ -1,10 +1,13 @@
+#include <ros/ros.h>
+
 #include <OGRE/OgreVector3.h>
 #include <OGRE/OgreSceneNode.h>
 #include <OGRE/OgreSceneManager.h>
 
-#include <rviz/ogre_helpers/arrow.h>
+#include <rviz/ogre_helpers/point_cloud.h>
 
 #include <amapper/rviz/ElevationVisual.h>
+#include <amapper/elevation_grid.h>
 
 namespace amapper_elevation_rviz
 {
@@ -24,8 +27,14 @@ ElevationVisual::ElevationVisual( Ogre::SceneManager* scene_manager, Ogre::Scene
   frame_node_ = parent_node->createChildSceneNode();
 
   // We create the arrow object within the frame node so that we can
-  // set its position and direction relative to its header frame.
-  acceleration_arrow_.reset(new rviz::Arrow( scene_manager_, frame_node_ ));
+  // set its position and direction relatArrowive to its header frame.
+  point_cloud_.reset(new rviz::PointCloud());
+  point_cloud_->setName("sname.str()");
+  point_cloud_->setRenderMode(rviz::PointCloud::RM_BOXES);
+  point_cloud_->setVisible(true);
+  point_cloud_->setDimensions(0.1,0.1,0.1);
+  frame_node_->attachObject(point_cloud_.get());
+
 }
 
 ElevationVisual::~ElevationVisual()
@@ -36,20 +45,24 @@ ElevationVisual::~ElevationVisual()
 
 void ElevationVisual::setMessage( const amapper::ElevationGridMsg::ConstPtr& msg )
 {
-
-  // Convert the geometry_msgs::Vector3 to an Ogre::Vector3.
-  Ogre::Vector3 acc( 0,0,10 );
-
-  // Find the magnitude of the acceleration vector.
-  float length = acc.length();
-
-  // Scale the arrow's thickness in each dimension along with its length.
-  Ogre::Vector3 scale( length, length, length );
-  acceleration_arrow_->setScale( scale );
-
-  // Set the orientation of the arrow to match the direction of the
-  // acceleration vector.
-  acceleration_arrow_->setDirection( acc );
+  ROS_INFO("Got elevation message");
+  AMapper::ElevationGrid grid(*msg);
+  point_cloud_->clear();
+  std::vector<rviz::PointCloud::Point> points;
+  for(int x = 0; x < grid.gridWidth; x++) {
+    for(int y = 0; y < grid.gridHeight; y++) {
+      double data = grid.data[y][x];
+      if(data != -INFINITY){
+        rviz::PointCloud::Point pt;
+        pt.position.x = grid.fromXIndex(x);
+        pt.position.y = grid.fromYIndex(y);
+        pt.position.z = data;
+        pt.setColor(1.0,0,1.0, 0.5);
+        points.push_back(pt);
+      }
+    }
+  }
+  point_cloud_->addPoints(points.data(), points.size());
 }
 
 // Position and orientation are passed through to the SceneNode.
@@ -66,7 +79,7 @@ void ElevationVisual::setFrameOrientation( const Ogre::Quaternion& orientation )
 // Color is passed through to the Arrow object.
 void ElevationVisual::setColor( float r, float g, float b, float a )
 {
-  acceleration_arrow_->setColor( r, g, b, a );
+ // point_cloud_->setColor( r, g, b, a );
 }
 // END_TUTORIAL
 

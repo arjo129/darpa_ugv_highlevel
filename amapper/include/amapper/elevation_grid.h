@@ -13,9 +13,11 @@ namespace AMapper {
      */ 
     class ElevationGrid {
     private:
-        float xAnchor, yAnchor; ///Units [m]
+        float xAnchor, yAnchor; ///This refers to the left corner of the grid. Units [m] 
         float resolution; ///Units [m/cell]
         std::string frameId;
+        ros::Time transform_time;
+        bool anchored;
     public:
         
         /**
