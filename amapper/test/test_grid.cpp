@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <gtest/gtest.h>
 #include <amapper/grid.h>
+#include <amapper/elevation_grid.h>
 
 TEST(AmapperGrid, equalityOperatorTest)
 {
@@ -43,6 +44,10 @@ TEST(AmapperGrid, setsFrameIdCorrectly)
   nav_msgs::OccupancyGrid out = grid1.toOccupancyGrid();
 
   ASSERT_TRUE(out.header.frame_id == "test");
+
+}
+
+TEST(AmapperElevationGrid, recallsAllFrames) {
 
 }
 

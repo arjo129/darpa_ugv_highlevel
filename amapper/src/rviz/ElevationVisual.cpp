@@ -46,21 +46,16 @@ ElevationVisual::~ElevationVisual()
 void ElevationVisual::setMessage( const amapper::ElevationGridMsg::ConstPtr& msg )
 {
   ROS_INFO("Got elevation message");
-  AMapper::ElevationGrid grid(*msg);
+  auto grid = boost::make_shared<AMapper::ElevationGrid>(*msg);
   point_cloud_->clear();
   std::vector<rviz::PointCloud::Point> points;
-  for(int x = 0; x < grid.gridWidth; x++) {
-    for(int y = 0; y < grid.gridHeight; y++) {
-      double data = grid.data[y][x];
-      if(data != -INFINITY){
-        rviz::PointCloud::Point pt;
-        pt.position.x = grid.fromXIndex(x);
-        pt.position.y = grid.fromYIndex(y);
-        pt.position.z = data;
-        pt.setColor(1.0,0,1.0, 0.5);
-        points.push_back(pt);
-      }
-    }
+  for(auto data: *grid) {
+    rviz::PointCloud::Point pt;
+    pt.position.x = data.x;
+    pt.position.y = data.y;
+    pt.position.z = data.elevation;
+    pt.setColor(1.0,0,1.0, 0.5);
+    points.push_back(pt);
   }
   point_cloud_->addPoints(points.data(), points.size());
 }

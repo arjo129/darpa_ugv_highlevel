@@ -1,3 +1,3 @@
 std_msgs/Header header
-nav_msgs/MapMetaData info
-float64[] data
+amapper/ElevationPoint[] data
+float64 resolution

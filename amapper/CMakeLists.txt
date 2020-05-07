@@ -63,6 +63,7 @@ link_directories( ${OGRE_LIBRARY_DIRS} )
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
+  ElevationPoint.msg
   ElevationGridMsg.msg
 )
 
@@ -142,6 +143,7 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/${PROJECT_NAME}/grid.cpp
   src/${PROJECT_NAME}/elevation_grid.cpp
+  src/${PROJECT_NAME}/elevation_iterator.cpp
   src/${PROJECT_NAME}/RayTracer.cpp
   src/${PROJECT_NAME}/cluster.cpp
   src/${PROJECT_NAME}/blur.cpp

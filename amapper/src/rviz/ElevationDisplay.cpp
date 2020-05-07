@@ -68,11 +68,6 @@ void ElevationDisplay::processMessage( const amapper::ElevationGridMsg::ConstPtr
     return;
   }
 
-  if(msg->data.size() != msg->info.height*msg->info.width) 
-  {
-    ROS_WARN("Mismatch in data length and height");
-    return;
-  } 
 
   // We are keeping a circular buffer of visual pointers.  This gets
   // the next one, or creates and stores it if the buffer is not full

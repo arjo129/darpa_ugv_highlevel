@@ -2,43 +2,44 @@
 #define _AMAPPER_ELEVATION_GRID_H_
 
 #include <amapper/ElevationGridMsg.h>
+#include <amapper/ElevationPoint.h>
 #include <math.h>
+#include <unordered_map>
+#include <boost/enable_shared_from_this.hpp>
+
 
 namespace AMapper {
+    class ElevationIterator ;
 
     /**
-     * Grid class: Essentially stores a grid. 
-     * Has an implementation of bressenham for fast ray tracing. 
-     * Follows ROS ENU Convention.
+     * Utility to hash pairs
      */ 
-    class ElevationGrid {
+    struct hash_pair { 
+        template <class T1, class T2> 
+        size_t operator()(const std::pair<T1, T2>& p) const
+        { 
+            auto hash1 = std::hash<T1>{}(p.first); 
+            auto hash2 = std::hash<T2>{}(p.second); 
+            return hash1 ^ hash2; 
+        } 
+    };
+
+    typedef std::pair<long,long> Coordinate;
+    template<typename T>
+    using GenericCoordinateStorage = std::unordered_map<std::pair<long,long>, T, hash_pair> ;
+    typedef GenericCoordinateStorage<double> CoordinateStorage;
+   
+    /**
+     * ElevationGrid class: Essentially stores a grid. 
+     */ 
+    class ElevationGrid: public boost::enable_shared_from_this<ElevationGrid> {
     private:
-        float xAnchor, yAnchor; ///This refers to the left corner of the grid. Units [m] 
-        float resolution; ///Units [m/cell]
+        double resolution; ///Units [m/cell]
         std::string frameId;
-        ros::Time transform_time;
-        bool anchored;
+        CoordinateStorage data;
     public:
-        
-        /**
-         * Size of the grid. Units in cells.
-         * Width is in x direction (east), height is in y direction (north).
-         */ 
-        int16_t gridWidth, gridHeight;
-
-        /**
-         * Size of the grid. Units in meters.
-         */ 
-        double gridMetricWidth, gridMetricHeight;
-        /**
-         * Raw data per grid. Making it public allows other 
-         * functions to manipulate the data. Note the access is
-         * data[y][x].
-         */ 
-        double** data;
-
         ElevationGrid();
-        ElevationGrid(float xAnchor, float yAnchor, int16_t gridWidth, int16_t gridHeight, float resolution);
+        ElevationGrid(double res);
         ElevationGrid(const ElevationGrid& grid);
         ElevationGrid(amapper::ElevationGridMsg occupancyGrid);
         ~ElevationGrid();
@@ -61,43 +62,66 @@ namespace AMapper {
         /**
          * Some helper functions to help with grid indexing
          */
-        inline bool isWithin(double val_to_test, double min_val, double max_val) {
-            return val_to_test >= min_val && val_to_test <= max_val;
+        inline long toYIndex(double yValue) {
+            return (long)round(yValue/resolution);
         }
 
-        inline bool isWithinMetricMap(double x, double y) {
-            return isWithin(x, xAnchor - gridMetricWidth / 2.0, xAnchor + gridMetricWidth / 2.0) && 
-                isWithin(y, yAnchor - gridMetricHeight / 2.0, yAnchor + gridMetricHeight / 2.0);
-        }
-
-        inline bool isWithinGridCellMap(int x_idx, int y_idx) {
-            return isWithin(x_idx, 0, gridWidth - 1) && 
-                   isWithin(y_idx, 0, gridHeight - 1);
-        }
-
-        inline int toYIndex(float yValue) {
-            return this->gridHeight/2 + (int)round((yValue-yAnchor)/resolution);
-        }
-
-        inline int toXIndex(float xValue) {
-            return this->gridWidth/2 + (int)round((xValue-xAnchor)/resolution);
+        inline long toXIndex(double xValue) {
+            return (long)round(xValue/resolution);
         }
 
         inline float fromXIndex(int xValue) {
-            return (xValue-this->gridWidth/2)*resolution + xAnchor;
+            return xValue*resolution;
         }
 
         inline float fromYIndex(int yValue) {
-            return (yValue-this->gridHeight/2)*resolution + yAnchor;
+            return yValue*resolution;
+        }
+
+        /**
+         * Set elevation at point
+         */ 
+        inline void add(amapper::ElevationPoint pt) {
+            std::pair<long, long> coordinate(toXIndex(pt.x), toYIndex(pt.y));
+            data[coordinate] = pt.elevation;
+        }
+
+        inline double queryElevation(double x, double y) {
+            std::pair<long, long> coordinate(toXIndex(x), toYIndex(y));
+            if(data.count(coordinate) != 0)
+                return data[coordinate];
+            return -INFINITY;
         }
 
         void clear();
 
         bool operator ==(const ElevationGrid &b) const;
+
+        ElevationIterator begin();
+        ElevationIterator end();
     };
-
-
-
+     /**
+     * This class makes it easy to iterate over the ElevationGrid class
+     */ 
+    class ElevationIterator {
+    private:
+        CoordinateStorage::iterator iterator;
+        boost::shared_ptr<ElevationGrid> egrid;
+    public:
+        typedef amapper::ElevationPoint     value_type;
+        typedef std::ptrdiff_t              difference_type;
+        typedef amapper::ElevationPoint*    pointer;
+        typedef amapper::ElevationPoint&    reference;
+        typedef std::input_iterator_tag iterator_category;
+        ElevationIterator(
+            boost::shared_ptr<ElevationGrid> grid,
+            CoordinateStorage::iterator top_level
+        );
+        bool operator==(const ElevationIterator& other) const;
+        bool operator!=(const ElevationIterator& other) const { return !(*this == other); };
+        amapper::ElevationPoint operator*() const;
+        ElevationIterator& operator++();
+    };
     
 };
 
