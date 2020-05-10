@@ -39,10 +39,10 @@ TransformMaintenance::TransformMaintenance()
 {
    // initialize odometry and odometry tf messages
    _laserOdometry2.header.frame_id = "/simple_cave_01";
-   _laserOdometry2.child_frame_id = "/X1_odom";
+   _laserOdometry2.child_frame_id = "/X1";
 
    _laserOdometryTrans2.frame_id_ = "/simple_cave_01";
-   _laserOdometryTrans2.child_frame_id_ = "/X1_odom";
+   _laserOdometryTrans2.child_frame_id_ = "/X1";
 }
 
 

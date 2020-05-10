@@ -40,10 +40,10 @@ LaserMapping::LaserMapping(const float& scanPeriod, const size_t& maxIterations)
 {
    // initialize mapping odometry and odometry tf messages
    _odomAftMapped.header.frame_id = "/simple_cave_01";
-   _odomAftMapped.child_frame_id = "/X1";
+   _odomAftMapped.child_frame_id = "/aft_mapped";
 
    _aftMappedTrans.frame_id_ = "/simple_cave_01";
-   _aftMappedTrans.child_frame_id_ = "/X1";
+   _aftMappedTrans.child_frame_id_ = "/aft_mapped";
 }
 
 
@@ -154,7 +154,7 @@ bool LaserMapping::setup(ros::NodeHandle& node, ros::NodeHandle& privateNode)
    // advertise laser mapping topics
    _pubLaserCloudSurround = node.advertise<sensor_msgs::PointCloud2>("/laser_cloud_surround", 1);
    _pubLaserCloudFullRes  = node.advertise<sensor_msgs::PointCloud2>("/velodyne_cloud_registered", 2);
-   _pubOdomAftMapped      = node.advertise<nav_msgs::Odometry>("/X1_to_init", 5);
+   _pubOdomAftMapped      = node.advertise<nav_msgs::Odometry>("/aft_mapped_to_init", 5);
 
    // subscribe to laser odometry topics
    _subLaserCloudCornerLast = node.subscribe<sensor_msgs::PointCloud2>
@@ -170,7 +170,7 @@ bool LaserMapping::setup(ros::NodeHandle& node, ros::NodeHandle& privateNode)
       ("/velodyne_cloud_3", 2, &LaserMapping::laserCloudFullResHandler, this);
 
    // subscribe to IMU topic
-   _subImu = node.subscribe<sensor_msgs::Imu>("/imu/data", 50, &LaserMapping::imuHandler, this);
+   _subImu = node.subscribe<sensor_msgs::Imu>("/X1/imu/data", 50, &LaserMapping::imuHandler, this);
 
    return true;
 }

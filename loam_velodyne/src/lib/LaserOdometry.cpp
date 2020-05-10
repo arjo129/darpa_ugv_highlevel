@@ -320,11 +320,11 @@ namespace loam
     if (_ioRatio < 2 || frameCount() % _ioRatio == 1)
     {
       ros::Time sweepTime = _timeSurfPointsLessFlat;
-      publishCloudMsg(_pubLaserCloudCornerLast, *lastCornerCloud(), sweepTime, "/camera");
-      publishCloudMsg(_pubLaserCloudSurfLast, *lastSurfaceCloud(), sweepTime, "/camera");
+      publishCloudMsg(_pubLaserCloudCornerLast, *lastCornerCloud(), sweepTime, "/X1");
+      publishCloudMsg(_pubLaserCloudSurfLast, *lastSurfaceCloud(), sweepTime, "/X1");
 
       transformToEnd(laserCloud());  // transform full resolution cloud to sweep end before sending it
-      publishCloudMsg(_pubLaserCloudFullRes, *laserCloud(), sweepTime, "/camera");
+      publishCloudMsg(_pubLaserCloudFullRes, *laserCloud(), sweepTime, "/X1");
     }
   }
 
