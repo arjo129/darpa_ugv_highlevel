@@ -53,6 +53,10 @@ class MainWindow : public QMainWindow {
         QLineEdit* goalXInput;
         QLineEdit* goalYInput;
         QLineEdit* goalThetaInput;
+        // Lora Inputs
+        QLineEdit* artifactXInput;
+        QLineEdit* artifactYInput;
+        QLineEdit* artifactTypeInput;
 
         // Robots
         int activeRobotId;
@@ -91,6 +95,8 @@ class MainWindow : public QMainWindow {
         void initMapUI();
         void initEStopUI();
         void initGoalUI();
+
+
         QTransform getTransform(QPointF translation, double rotationAngle);
         void applyTransformList(std::vector<QGraphicsPixmapItem*> laserscans, int startIdx, 
                                 int endIdx, QTransform transform, double rotationAngleTransform);
@@ -98,7 +104,7 @@ class MainWindow : public QMainWindow {
                             QTransform transform, double rotationAngleTransform);
         QVector3D getArtifactPos();
         QVector3D getRobotGoalPos();
-        std::string getArtifactTypeStr();
+        std::string getArtifactType();
     public:
         MainWindow(ros::NodeHandle nh);
         ~MainWindow();
@@ -108,10 +114,17 @@ class MainWindow : public QMainWindow {
                                                 const std::string artifactTypeStr);
 
     public slots:
+        void selectRobot1BtnClicked();
+        void selectRobot2BtnClicked();
+        void selectRobot3BtnClicked();
+        void selectRobot4BtnClicked();
+        void selectRobot5BtnClicked();
+
+        void reportArtifactBtnClicked();
+
         void addPixmap(int robotNum, const QPixmap& map, float x, float y, float theta);
         void addArtifactData(float x, float y, float z, std::string details);
         void sliderMoved(int value);
-        void artifactBtnClicked();
         void sendGoalBtnClicked();
         void loraDropBtnClicked();
         void propagateChanges();

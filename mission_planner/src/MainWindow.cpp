@@ -5,13 +5,14 @@ MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), darpaServerThread(_nh) {
     qRegisterMetaType<RotateState>("RotateState");
     qRegisterMetaType<std::string>("std::string");
 
-    initRobots();
     darpaServerThread.start();
+
     ui = new Ui::MainWindow();
     ui->setupUi(this);
-    
+
+    initRobots();
     // initMapUI();
-    // initDarpaInterfaceUI();
+    initDarpaInterfaceUI();
     initEStopUI();
     initGoalUI();
 
@@ -89,6 +90,11 @@ void MainWindow::initRobots() {
     //     connect(&(robots[idx-1]->rosthread), &ROSThread::scanRecieved, this, &MainWindow::addPixmap);
     //     connect(&(robots[idx-1]->rosthread), &ROSThread::artifactReceived, this, &MainWindow::addArtifactData);
     }
+    connect(ui->selectRobot1BtnClicked, &QPushButton::clicked, this, &MainWindow::selectRobot1BtnClicked);
+    connect(ui->selectRobot2BtnClicked, &QPushButton::clicked, this, &MainWindow::selectRobot2BtnClicked);
+    connect(ui->selectRobot3BtnClicked, &QPushButton::clicked, this, &MainWindow::selectRobot3BtnClicked);
+    connect(ui->selectRobot4BtnClicked, &QPushButton::clicked, this, &MainWindow::selectRobot4BtnClicked);
+    connect(ui->selectRobot5BtnClicked, &QPushButton::clicked, this, &MainWindow::selectRobot5BtnClicked);
 }
 
 void MainWindow::initDarpaInterfaceUI() {
@@ -101,7 +107,7 @@ void MainWindow::initDarpaInterfaceUI() {
     // connect(&darpaServerThread, &DarpaServerThread::artifactStatusReceived, this, &MainWindow::artifactStatusReceived);
     // connect(&darpaServerThread, &DarpaServerThread::mapUpdateReceived, this, &MainWindow::mapUpdateReceived);
     // connect(this, &MainWindow::reportArtifact, &darpaServerThread, &DarpaServerThread::reportArtifact);
-    // connect(ui->reportArtifactBtn, &QPushButton::pressed, this, &MainWindow::artifactBtnClicked);
+    connect(ui->reportArtifactBtnClicked, &QPushButton::pressed, this, &MainWindow::reportArtifactBtnClicked);
 }
 
 void MainWindow::initEStopUI() {
@@ -115,6 +121,10 @@ void MainWindow::initGoalUI() {
     goalXInput = ui->goalXInput;
     goalYInput = ui->goalYInput;
     goalThetaInput = ui->goalThetaInput;
+
+    artifactXInput = ui->artifactXInput;
+    artifactYInput = ui->artifactYInput;
+    artifactTypeInput = ui->artifactTypeInput;
     // comboBoxGoalRobotNum = ui->comboBoxGoalRobotNum;
     ROS_INFO("Initializing LORA and GOAL Functionality");
 
@@ -123,12 +133,13 @@ void MainWindow::initGoalUI() {
 }
 
 QVector3D MainWindow::getArtifactPos() {
+    QString xInput = artifactXInput->text();
+    QString yInput = artifactYInput->text();
 
-    // double x = artifactXBox->value();
-    // double y = artifactYBox->value();
-    // double z = artifactZBox->value();
+    double x = xInput.toDouble();
+    double y = yInput.toDouble();
 
-    return QVector3D(0,0,0);
+    return QVector3D(x,y,0);
 }
 
 QVector3D MainWindow::getRobotGoalPos() {
@@ -143,10 +154,9 @@ QVector3D MainWindow::getRobotGoalPos() {
     return QVector3D(x, y, z);
 }
 
-std::string MainWindow::getArtifactTypeStr() {
-    // std::string artifactTypeStr = (comboBoxArtifactType->currentText()).toStdString();
-    // ROS_INFO("%s artifact type selected", artifactTypeStr.c_str());
-    return ""; // artifactTypeStr;
+std::string MainWindow::getArtifactType() {
+    std::string typeInput = artifactTypeInput->text().toStdString();
+    return typeInput;
 }
 
 QTransform MainWindow::getTransform(QPointF translation, double rotationAngle) {
@@ -303,10 +313,12 @@ void MainWindow::rotatePixMap(RotateState rotateState) {
     
 }
 
-void MainWindow::artifactBtnClicked() {
-    // QVector3D pos3d = getArtifactPos();
-    // std::string artifactTypeStr = getArtifactTypeStr();
-    // emit reportArtifact(pos3d.x(), pos3d.y(), pos3d.z(), artifactTypeStr);
+void MainWindow::reportArtifactBtnClicked() {
+    ROS_INFO("Reporting artifact on Robot %d.", activeRobotId);
+    QVector3D pos3d = getArtifactPos();
+    std::string artifactType = getArtifactType();
+    emit reportArtifact(pos3d.x(), pos3d.y(), pos3d.z(), artifactType);
+    ROS_INFO("Reported artifact on Robot %d", activeRobotId);
 }
 
 void MainWindow::sendGoalBtnClicked() {
@@ -367,3 +379,22 @@ void MainWindow::startAllBtnClicked() {
     }
 }
 
+void MainWindow::selectRobot1BtnClicked() {
+    activeRobotId = 1;
+}
+
+void MainWindow::selectRobot2BtnClicked() {
+    activeRobotId = 2;
+}
+
+void MainWindow::selectRobot3BtnClicked() {
+    activeRobotId = 3;
+}
+
+void MainWindow::selectRobot4BtnClicked() {
+    activeRobotId = 4;
+}
+
+void MainWindow::selectRobot5BtnClicked() {
+    activeRobotId = 5;
+}

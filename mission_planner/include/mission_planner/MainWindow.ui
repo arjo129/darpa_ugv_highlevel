@@ -146,7 +146,7 @@
                        </property>
                        <layout class="QHBoxLayout" name="horizontalLayout_46">
                         <item>
-                         <widget class="QPushButton" name="pushButton_8">
+                         <widget class="QPushButton" name="selectRobot1BtnClicked">
                           <property name="minimumSize">
                            <size>
                             <width>100</width>
@@ -159,7 +159,7 @@
                          </widget>
                         </item>
                         <item>
-                         <widget class="QPushButton" name="pushButton">
+                         <widget class="QPushButton" name="selectRobot2BtnClicked">
                           <property name="minimumSize">
                            <size>
                             <width>100</width>
@@ -172,7 +172,7 @@
                          </widget>
                         </item>
                         <item>
-                         <widget class="QPushButton" name="pushButton_10">
+                         <widget class="QPushButton" name="selectRobot3BtnClicked">
                           <property name="minimumSize">
                            <size>
                             <width>100</width>
@@ -185,7 +185,7 @@
                          </widget>
                         </item>
                         <item>
-                         <widget class="QPushButton" name="pushButton_2">
+                         <widget class="QPushButton" name="selectRobot4BtnClicked">
                           <property name="minimumSize">
                            <size>
                             <width>100</width>
@@ -198,7 +198,7 @@
                          </widget>
                         </item>
                         <item>
-                         <widget class="QPushButton" name="pushButton_9">
+                         <widget class="QPushButton" name="selectRobot5BtnClicked">
                           <property name="minimumSize">
                            <size>
                             <width>100</width>
@@ -266,6 +266,25 @@
                       </property>
                       <property name="text">
                        <string>Stop</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="loraDropBtnClicked">
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>100</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>Drop LORA</string>
                       </property>
                      </widget>
                     </item>
@@ -391,7 +410,7 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_8">
                              <item>
-                              <widget class="QLabel" name="label">
+                              <widget class="QLabel" name="goalX">
                                <property name="text">
                                 <string>x</string>
                                </property>
@@ -438,7 +457,7 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_14">
                              <item>
-                              <widget class="QLabel" name="label_3">
+                              <widget class="QLabel" name="goalY">
                                <property name="text">
                                 <string>y</string>
                                </property>
@@ -505,7 +524,7 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_18">
                              <item>
-                              <widget class="QLabel" name="label_5">
+                              <widget class="QLabel" name="goalYaw">
                                <property name="text">
                                 <string>yaw</string>
                                </property>
@@ -569,10 +588,10 @@
                          </property>
                          <layout class="QHBoxLayout" name="horizontalLayout_4">
                           <item>
-                           <widget class="QPushButton" name="loraDropBtnClicked">
+                           <widget class="QPushButton" name="reportArtifactBtnClicked">
                             <property name="minimumSize">
                              <size>
-                              <width>0</width>
+                              <width>100</width>
                               <height>40</height>
                              </size>
                             </property>
@@ -583,7 +602,7 @@
                              </size>
                             </property>
                             <property name="text">
-                             <string>Drop LORA</string>
+                             <string>Report</string>
                             </property>
                            </widget>
                           </item>
@@ -625,7 +644,7 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_11">
                              <item>
-                              <widget class="QLabel" name="label_2">
+                              <widget class="QLabel" name="artifactX">
                                <property name="text">
                                 <string>x</string>
                                </property>
@@ -649,7 +668,7 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_10">
                              <item>
-                              <widget class="QLineEdit" name="lineEdit_2"/>
+                              <widget class="QLineEdit" name="artifactXInput"/>
                              </item>
                             </layout>
                            </widget>
@@ -692,7 +711,7 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_21">
                              <item>
-                              <widget class="QLabel" name="label_6">
+                              <widget class="QLabel" name="artifactY">
                                <property name="text">
                                 <string>y</string>
                                </property>
@@ -716,7 +735,7 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_22">
                              <item>
-                              <widget class="QLineEdit" name="lineEdit_6"/>
+                              <widget class="QLineEdit" name="artifactYInput"/>
                              </item>
                             </layout>
                            </widget>
@@ -753,7 +772,7 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_27">
                              <item>
-                              <widget class="QLabel" name="label_8">
+                              <widget class="QLabel" name="artifactTYpe">
                                <property name="text">
                                 <string>type</string>
                                </property>
@@ -777,7 +796,7 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_28">
                              <item>
-                              <widget class="QLineEdit" name="lineEdit_8"/>
+                              <widget class="QLineEdit" name="artifactTypeInput"/>
                              </item>
                             </layout>
                            </widget>
