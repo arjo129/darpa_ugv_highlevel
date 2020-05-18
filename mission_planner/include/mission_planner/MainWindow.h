@@ -16,6 +16,7 @@
 #include <QDebug>
 #include <QVector3D>
 #include <QLineEdit>
+#include <QFileSystemWatcher>
 #include <stack>
 #include "ui_MainWindow.h"
 
@@ -60,6 +61,9 @@ class MainWindow : public QMainWindow {
 
         // Robots
         int activeRobotId;
+
+        // Console
+        QFileSystemWatcher* watcher;
 
         CustomGraphicsScene** scenes;
         LaserScanView** currentScanScene;
@@ -138,5 +142,7 @@ class MainWindow : public QMainWindow {
         void startAllBtnClicked();
         void stopAllBtnClicked();
         void switchLocalGlobal();
+
+        void handleFileChanged(QString s);
 };
 #endif

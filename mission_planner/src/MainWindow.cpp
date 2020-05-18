@@ -9,6 +9,10 @@ MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), darpaServerThread(_nh) {
 
     ui = new Ui::MainWindow();
     ui->setupUi(this);
+    QFileSystemWatcher *watcher = new QFileSystemWatcher;
+    watcher->addPath("/home/nwjbrandon/.ros/log/latest/rosout.log");
+    connect(watcher, SIGNAL(fileChanged(QString)), this, SLOT(handleFileChanged(QString)));
+
 
     initRobots();
     // initMapUI();
@@ -397,4 +401,9 @@ void MainWindow::selectRobot4BtnClicked() {
 
 void MainWindow::selectRobot5BtnClicked() {
     activeRobotId = 5;
+}
+
+void MainWindow::handleFileChanged(QString s) {
+    std::string x = s.toStdString();
+    std::cout << "test"<< x << std::endl;
 }
