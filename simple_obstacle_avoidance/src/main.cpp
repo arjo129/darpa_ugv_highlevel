@@ -177,10 +177,10 @@ public:
 			mstate = STRAIGHT;
 			twist.linear.x = 0.1;
 			twist.angular.z = 0;
-			/*if(obstacles.left_wall_radius > 0.7)
+			if(obstacles.left_wall_radius > 0.7)
 				twist.angular.z = 0.1;
 			else if(obstacles.left_wall_radius <0.5)
-				twist.angular.z = -0.1;*/
+				twist.angular.z = -0.1;
 			velocityController.publish(twist);
 			std::cout << "Following wall" << std::endl;
 		} else if (obstacles.front_dist < 1){

@@ -32,7 +32,7 @@ ElevationVisual::ElevationVisual( Ogre::SceneManager* scene_manager, Ogre::Scene
   point_cloud_->setName("sname.str()");
   point_cloud_->setRenderMode(rviz::PointCloud::RM_BOXES);
   point_cloud_->setVisible(true);
-  point_cloud_->setDimensions(0.1,0.1,0.1);
+  point_cloud_->setDimensions(0.02,0.02,0.02);
   frame_node_->attachObject(point_cloud_.get());
 
 }
@@ -45,16 +45,17 @@ ElevationVisual::~ElevationVisual()
 
 void ElevationVisual::setMessage( const amapper::ElevationGridMsg::ConstPtr& msg )
 {
-  ROS_INFO("Got elevation message");
-  auto grid = boost::make_shared<AMapper::ElevationGrid>(*msg);
+  ///auto grid = boost::make_shared<AMapper::ElevationGrid>(*msg);
   point_cloud_->clear();
   std::vector<rviz::PointCloud::Point> points;
-  for(auto data: *grid) {
+  for(auto data: msg->data) {
+    if(fpclassify(data.elevation) != FP_NORMAL)
+      continue;
     rviz::PointCloud::Point pt;
     pt.position.x = data.x;
     pt.position.y = data.y;
     pt.position.z = data.elevation;
-    pt.setColor(1.0,0,1.0, 0.5);
+    pt.setColor(1.0, 0, 1.0, 0.5);
     points.push_back(pt);
   }
   point_cloud_->addPoints(points.data(), points.size());
