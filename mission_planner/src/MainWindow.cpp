@@ -25,13 +25,10 @@ MainWindow::~MainWindow() {
     // for(int i=0;i<NUM_ROBOTS;i++) {
     //     delete scenes[i];
     //     delete robots[i];
-    //     delete eStopButtons[2*i];
-    //     delete eStopButtons[2*i + 1];
     // }
 
     // delete[] scenes;
     // delete[] robots; 
-    // delete[] eStopButtons;
 }
 
 void MainWindow::switchLocalGlobal(){
@@ -81,7 +78,7 @@ void MainWindow::initMapUI() {
 
 // initialize the rosthread for each robot
 void MainWindow::initRobots() {
-    activeRobotId = 1;
+    selectRobot1BtnClicked();
     robots = new Robot*[NUM_ROBOTS];
     for (int robotId = 1; robotId <= NUM_ROBOTS; robotId++) {
         robots[robotId-1] = new Robot(nh, robotId);
@@ -387,26 +384,55 @@ void MainWindow::startAllBtnClicked() {
 }
 
 void MainWindow::selectRobot1BtnClicked() {
-    activeRobotId = 1;
+    handleSelectRobotBtnClicked(1);
 }
 
 void MainWindow::selectRobot2BtnClicked() {
-    activeRobotId = 2;
+    handleSelectRobotBtnClicked(2);
 }
 
 void MainWindow::selectRobot3BtnClicked() {
-    activeRobotId = 3;
+    handleSelectRobotBtnClicked(3);
 }
 
 void MainWindow::selectRobot4BtnClicked() {
-    activeRobotId = 4;
+    handleSelectRobotBtnClicked(4);
 }
 
 void MainWindow::selectRobot5BtnClicked() {
-    activeRobotId = 5;
+    handleSelectRobotBtnClicked(5);
 }
 
-void MainWindow::handleFileChanged(QString s) {
-    std::string x = s.toStdString();
-    std::cout << "test"<< x << std::endl;
+void MainWindow::handleSelectRobotBtnClicked(int robotNum) {
+    activeRobotId = robotNum;
+
+    if (robotNum == 1) {
+        ui->selectRobot1BtnClicked->setFont(QFont("Ubuntu", 13, QFont::Bold));
+    } else {
+        ui->selectRobot1BtnClicked->setFont(QFont("Ubuntu", 11));
+    }
+
+    if (robotNum == 2) {
+        ui->selectRobot2BtnClicked->setFont(QFont("Ubuntu", 13, QFont::Bold));
+    } else {
+        ui->selectRobot2BtnClicked->setFont(QFont("Ubuntu", 11));
+    }
+
+    if (robotNum == 3) {
+        ui->selectRobot3BtnClicked->setFont(QFont("Ubuntu", 13, QFont::Bold));
+    } else {
+        ui->selectRobot3BtnClicked->setFont(QFont("Ubuntu", 11));
+    }
+    
+    if (robotNum == 4) {
+        ui->selectRobot4BtnClicked->setFont(QFont("Ubuntu", 13, QFont::Bold));
+    } else {
+        ui->selectRobot4BtnClicked->setFont(QFont("Ubuntu", 11));
+    }
+
+    if (robotNum == 5) {
+        ui->selectRobot5BtnClicked->setFont(QFont("Ubuntu", 13, QFont::Bold));
+    } else {
+        ui->selectRobot5BtnClicked->setFont(QFont("Ubuntu", 11));
+    }
 }

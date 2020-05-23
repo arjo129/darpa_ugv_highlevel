@@ -148,12 +148,10 @@ add_executable(${PROJECT_NAME}_node
     src/DarpaServerThread.cpp
     src/Robot.cpp
     src/CustomGraphicsScene.cpp
-    src/EStopButton.cpp
     include/mission_planner/MainWindow.h
     include/mission_planner/RosThread.h
     include/mission_planner/DarpaServerThread.h
     include/mission_planner/CustomGraphicsScene.h
-    include/mission_planner/EStopButton.h
     include/mission_planner/Config.h)
 
 ## Rename C++ executable without prefix

@@ -4,7 +4,6 @@
 #include <mission_planner/RosThread.h>
 #include <mission_planner/DarpaServerThread.h>
 #include <mission_planner/CustomGraphicsScene.h>
-#include <mission_planner/EStopButton.h>
 #include <mission_planner/Robot.h>
 #include <mission_planner/Config.h>
 #include <QPixmap>
@@ -75,9 +74,6 @@ class MainWindow : public QMainWindow {
         QComboBox* comboBoxArtifactType;
         QComboBox* comboBoxGoalRobotNum;
 
-        EStopButton** eStopButtons;
-
-
         ros::NodeHandle nh;
         Robot** robots;
         DarpaServerThread darpaServerThread;
@@ -106,6 +102,13 @@ class MainWindow : public QMainWindow {
         QVector3D getArtifactPos();
         QVector3D getRobotGoalPos();
         std::string getArtifactType();
+        void selectRobot1BtnClicked();
+        void selectRobot2BtnClicked();
+        void selectRobot3BtnClicked();
+        void selectRobot4BtnClicked();
+        void selectRobot5BtnClicked();
+        void handleSelectRobotBtnClicked(int);
+
     public:
         MainWindow(ros::NodeHandle nh);
         ~MainWindow();
@@ -115,12 +118,6 @@ class MainWindow : public QMainWindow {
                                                 const std::string artifactTypeStr);
 
     public slots:
-        void selectRobot1BtnClicked();
-        void selectRobot2BtnClicked();
-        void selectRobot3BtnClicked();
-        void selectRobot4BtnClicked();
-        void selectRobot5BtnClicked();
-
         void reportArtifactBtnClicked();
 
         void addPixmap(int robotNum, const QPixmap& map, float x, float y, float theta);
@@ -140,7 +137,5 @@ class MainWindow : public QMainWindow {
         void startAllBtnClicked();
         void stopAllBtnClicked();
         void switchLocalGlobal();
-
-        void handleFileChanged(QString s);
 };
 #endif
