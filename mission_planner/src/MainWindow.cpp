@@ -83,7 +83,7 @@ void MainWindow::initRobots() {
     for (int robotId = 1; robotId <= NUM_ROBOTS; robotId++) {
         robots[robotId-1] = new Robot(nh, robotId);
     //     connect(&(robots[idx-1]->rosthread), &ROSThread::scanRecieved, this, &MainWindow::addPixmap);
-    //     connect(&(robots[idx-1]->rosthread), &ROSThread::artifactReceived, this, &MainWindow::addArtifactData);
+        connect(&(robots[robotId-1]->rosthread), &ROSThread::artifactReceived, this, &MainWindow::artifactReceived);
         connect(&(robots[robotId-1]->rosthread), &ROSThread::rosOutReceived, this, &MainWindow::rosOutReceived);
     }
     connect(ui->selectRobot1BtnClicked, &QPushButton::clicked, this, &MainWindow::selectRobot1BtnClicked);
@@ -94,15 +94,10 @@ void MainWindow::initRobots() {
 }
 
 void MainWindow::initDarpaInterfaceUI() {
-    // artifactXBox = ui->artifactXInput;
-    // artifactYBox = ui->artifactYInput;
-    // artifactZBox = ui->artifactZInput;
-    // comboBoxArtifactType = ui->comboBoxArtifactType;
-
-    // connect(&darpaServerThread, &DarpaServerThread::darpaStatusRecieved, this, &MainWindow::darpaStatusRecieved);
-    // connect(&darpaServerThread, &DarpaServerThread::artifactStatusReceived, this, &MainWindow::artifactStatusReceived);
-    // connect(&darpaServerThread, &DarpaServerThread::mapUpdateReceived, this, &MainWindow::mapUpdateReceived);
-    // connect(this, &MainWindow::reportArtifact, &darpaServerThread, &DarpaServerThread::reportArtifact);
+    connect(&darpaServerThread, &DarpaServerThread::darpaStatusRecieved, this, &MainWindow::darpaStatusRecieved);
+    connect(&darpaServerThread, &DarpaServerThread::artifactStatusReceived, this, &MainWindow::artifactStatusReceived);
+    connect(&darpaServerThread, &DarpaServerThread::mapUpdateReceived, this, &MainWindow::mapUpdateReceived);
+    connect(this, &MainWindow::reportArtifact, &darpaServerThread, &DarpaServerThread::reportArtifact);
     connect(ui->reportArtifactBtnClicked, &QPushButton::pressed, this, &MainWindow::reportArtifactBtnClicked);
 }
 
@@ -121,7 +116,6 @@ void MainWindow::initGoalUI() {
     artifactXInput = ui->artifactXInput;
     artifactYInput = ui->artifactYInput;
     artifactTypeInput = ui->artifactTypeInput;
-    // comboBoxGoalRobotNum = ui->comboBoxGoalRobotNum;
     ROS_INFO("Initializing LORA and GOAL Functionality");
 
     connect(ui->sendGoalBtnClicked, &QPushButton::clicked, this, &MainWindow::sendGoalBtnClicked);
@@ -226,7 +220,7 @@ void MainWindow::addPixmap(int robotNum, const QPixmap& map, float x, float y, f
     // robots[robotNum-1]->laserscans.push_back(item);
 }
 
-void MainWindow::addArtifactData(float x, float y, float z, std::string details) {
+void MainWindow::artifactReceived(float x, float y, float z, std::string details) {
     // QLabel *label = new QLabel;
     // QString displayText = "Pos: " + QString::number(x, 'f', 2) + ", " + QString::number(y, 'f', 2) + \
     //                                 ", " +QString::number(z, 'f', 2) + ", " + QString::fromUtf8(details.c_str()) + "\n";
@@ -352,11 +346,8 @@ void MainWindow::rosOutReceived(std::string msg, std::string name, std::string f
 }
 
 void MainWindow::artifactStatusReceived(std::string result) {
-    // QMessageBox* resultDialog = new QMessageBox(this);
-    // resultDialog->setText(QString::fromStdString(result));
-    // resultDialog->show();
-    // resultDialog->raise();
-    // resultDialog->activateWindow();
+    QString qstr = QString::fromStdString(result);
+    ui->artifactLogs->append(qstr);
 }
 
 void MainWindow::mapUpdateReceived(bool success, std::string errorStr) {

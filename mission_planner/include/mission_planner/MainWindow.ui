@@ -1495,10 +1495,7 @@
                 </property>
                 <layout class="QHBoxLayout" name="horizontalLayout_45">
                  <item>
-                  <widget class="QPlainTextEdit" name="artifactLogs">
-                   <property name="enabled">
-                    <bool>false</bool>
-                   </property>
+                  <widget class="QTextEdit" name="artifactLogs">
                    <property name="styleSheet">
                     <string notr="true">#artifactLogs {
 	background-color: #300A24;

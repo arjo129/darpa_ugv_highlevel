@@ -63,16 +63,6 @@ class MainWindow : public QMainWindow {
 
         CustomGraphicsScene** scenes;
         LaserScanView** currentScanScene;
-        bool showGlobalMap = true;
-        // XYZ values for artifact reporting and goals
-        QDoubleSpinBox* artifactXBox; 
-        QDoubleSpinBox* artifactYBox; 
-        QDoubleSpinBox* artifactZBox;
-        QDoubleSpinBox* goalXBox;
-        QDoubleSpinBox* goalYBox;
-        QDoubleSpinBox* goalThetaBox;
-        QComboBox* comboBoxArtifactType;
-        QComboBox* comboBoxGoalRobotNum;
 
         ros::NodeHandle nh;
         Robot** robots;
@@ -121,7 +111,7 @@ class MainWindow : public QMainWindow {
         void reportArtifactBtnClicked();
 
         void addPixmap(int robotNum, const QPixmap& map, float x, float y, float theta);
-        void addArtifactData(float x, float y, float z, std::string details);
+        void artifactReceived(float x, float y, float z, std::string details);
         void sliderMoved(int value);
         void sendGoalBtnClicked();
         void loraDropBtnClicked();
