@@ -85,10 +85,8 @@ class MainWindow : public QMainWindow {
 
 
         QTransform getTransform(QPointF translation, double rotationAngle);
-        void applyTransformList(std::vector<QGraphicsPixmapItem*> laserscans, int startIdx, 
-                                int endIdx, QTransform transform, double rotationAngleTransform);
-        void applyTransform(QGraphicsPixmapItem* item, 
-                            QTransform transform, double rotationAngleTransform);
+        void applyTransformList(std::vector<QGraphicsPixmapItem*> laserscans, int startIdx, int endIdx, QTransform transform, double rotationAngleTransform);
+        void applyTransform(QGraphicsPixmapItem* item, QTransform transform, double rotationAngleTransform);
         QVector3D getArtifactPos();
         QVector3D getRobotGoalPos();
         std::string getArtifactType();
@@ -104,8 +102,7 @@ class MainWindow : public QMainWindow {
         ~MainWindow();
     
     signals:
-        void reportArtifact(const double x, const double y, const double z, 
-                                                const std::string artifactTypeStr);
+        void reportArtifact(const double x, const double y, const double z, const std::string artifactTypeStr);
 
     public slots:
         void reportArtifactBtnClicked();
@@ -117,8 +114,7 @@ class MainWindow : public QMainWindow {
         void loraDropBtnClicked();
         void propagateChanges();
         void rotatePixMap(RotateState rotateState);
-        void darpaStatusRecieved(std::string teamName, double currentTime, 
-                                 int32_t numReportsLeft, int32_t currentScore);
+        void darpaStatusRecieved(std::string teamName, double currentTime, int32_t numReportsLeft, int32_t currentScore);
         void artifactStatusReceived(std::string result);
         void rosOutReceived(std::string, std::string, std::string, int);
         void mapUpdateReceived(bool success, std::string errorStr);

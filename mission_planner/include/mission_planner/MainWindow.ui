@@ -34,7 +34,7 @@
          <x>0</x>
          <y>0</y>
          <width>1336</width>
-         <height>917</height>
+         <height>947</height>
         </rect>
        </property>
        <layout class="QHBoxLayout" name="horizontalLayout_47">
@@ -513,6 +513,7 @@
 	border: 1px solid #AAAAAA;
 	color: #AAAAAA;
 	border-radius: 5px;
+	padding: 5px;
 }</string>
                                </property>
                               </widget>
@@ -628,6 +629,7 @@
 	border: 1px solid #AAAAAA;
 	color: #AAAAAA;
 	border-radius: 5px;
+	padding: 5px;
 }</string>
                                </property>
                               </widget>
@@ -708,6 +710,7 @@
 	border: 1px solid #AAAAAA;
 	color: #AAAAAA;
 	border-radius: 5px;
+	padding: 5px;
 }</string>
                                </property>
                               </widget>
@@ -854,6 +857,7 @@
 	border: 1px solid #AAAAAA;
 	color: #AAAAAA;
 	border-radius: 5px;
+	padding: 5px;
 }</string>
                                </property>
                               </widget>
@@ -934,6 +938,7 @@
 	border: 1px solid #AAAAAA;
 	color: #AAAAAA;
 	border-radius: 5px;
+	padding: 5px;
 }</string>
                                </property>
                               </widget>
@@ -1008,6 +1013,7 @@
 	border: 1px solid #AAAAAA;
 	color: #AAAAAA;
 	border-radius: 5px;
+	padding: 5px;
 }</string>
                                </property>
                               </widget>
