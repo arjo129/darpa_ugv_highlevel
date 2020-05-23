@@ -374,6 +374,12 @@ void testRotateTumble() {
     auto final = rotate(pt, result, tf::Vector3(4,0,1));
     tf_vec_debug("final rotation", final);
 }
+
+struct FinalPose {
+    float z;
+    bool ok;
+    tf::Quaternion quaternion;
+};
 /**
  * Builds a robot model 
  * Robot may be made of "Good" (wheels/track) and "Bad" contact points (body)
@@ -433,7 +439,6 @@ public:
 
         for(auto area : contactAreas){
             auto vec = getFirstContact(area.second, grid, pose);
-            //tf_vec_debug("wtf", vec.second);
             if(vec.z() == -INFINITY) continue;
             auto world_frame  = vec - tf::Vector3(0,0, this->elevation[area.first]); //HERE BE BUGS
             if(world_frame.z() == first_contact.z()) {
@@ -544,6 +549,96 @@ public:
     tf::Vector3 getCenterOfMass() {
         return tf::Vector3(0,0,0);
     }
+
+    tf::Quaternion determineRotation() {
+
+        assert(this->alreadyMadeContact.size() >= 3);
+
+        std::vector<tf::Vector3> contacts;
+        for(auto contactPoint: this->alreadyMadeContact) {
+            auto v = contactPoint.second;
+            contacts.push_back(v);
+        }
+
+        auto v1 = contacts[1] - contacts[0];
+        auto v2 = contacts[2] - contacts[0];
+        auto normal = v1.cross(v2);
+        tf::Vector3 zaxis(0,0,1);
+
+        auto rotation = normal.cross(zaxis);
+        auto w = zaxis.dot(normal) + sqrt(zaxis.length2()*normal.length2());
+
+        return tf::Quaternion(rotation.x(), rotation.y(), rotation.z(), w); 
+    }
+
+    FinalPose tumble(AMapper::ElevationGrid elevationMap, geometry_msgs::Pose pose) {
+        
+        this->determineFirstContactPoint(elevationMap, pose);
+        tf::Vector3 firstContact;
+            
+        if(this->alreadyMadeContact.size() >= 3){
+            FinalPose finalPose;
+            finalPose.ok = true;)
+            finalPose.z = this->alreadyMadeContact[0].z();
+            finalPose.quaternion = tf::Quaternion(0,0,0,1);
+            return finalPose;
+        }
+        
+        auto tumble1 = this->determineAxisOfTumble();
+        auto resultantTumble = this->secondContactPoint(elevationMap, tumble1, pose);
+       
+        for(auto pt: this->alreadyMadeContact){
+             tf_vec_debug(pt.first, pt.second);
+        }
+        
+        if(!resultantTumble.ok) {
+            FinalPose finalPose;
+            finalPose.ok = false;
+            return finalPose;
+        }
+
+        if(this->alreadyMadeContact.size() >= 3){
+            FinalPose finalPose;
+            finalPose.ok = false;
+            double sum = 0;
+            for(auto contactPoint: this->alreadyMadeContact) {
+                sum += contactPoint.second.z();
+            }
+            finalPose.z = sum/this->alreadyMadeContact.size();
+            finalPose.quaternion = determineRotation();
+            return finalPose;  
+        }
+        
+        auto com = this->getCenterOfMass();
+        tf::Transform trans(tf::Quaternion(0,0,0,1), tf::Vector3(0,0,firstContact.z()));
+        com = trans*com;
+        auto transformedCom = rotate(tumble1, resultantTumble, com);
+        auto qt = tf::Quaternion(tumble1.axis.axis, resultantTumble.angle);
+        tf::Transform tr(qt);
+        auto tumble2 = this->determineAxisOfTumble(tr*tf::Vector3(0,0,1), transformedCom);
+        TumbleResult res =  this->thirdContactPoint(elevationMap, tumble1, resultantTumble, tumble2, pose);
+        
+        if (!res.ok) {
+            FinalPose finalPose;
+            finalPose.ok = false;
+            return finalPose;
+        }
+
+        if(this->alreadyMadeContact.size() >= 3){
+            FinalPose finalPose;
+            finalPose.ok = false;
+            double sum = 0;
+            for(auto contactPoint: this->alreadyMadeContact) {
+                sum += contactPoint.second.z();
+            }
+            finalPose.z = sum/this->alreadyMadeContact.size();
+            finalPose.quaternion = determineRotation();
+            return finalPose;  
+        }
+        FinalPose finalPose;
+        finalPose.ok = false;
+        return finalPose;
+    }
 };
 
 
@@ -573,67 +668,7 @@ void testElevation() {
     pose.orientation.y = 0;
     pose.orientation.z = 0;
     pose.orientation.w = 1;
-    std::cout << "test elev"<<std::endl;
-    robot.determineFirstContactPoint(g, pose);
-    std::cout << "After first drop the following are in contact" <<std::endl;
-    tf::Vector3 firstContact;
-    for(auto pt: robot.alreadyMadeContact){
-        tf_vec_debug(pt.first, pt.second);
-        firstContact = pt.second;
-    }
-        
-
-    if(robot.alreadyMadeContact.size() >= 3){
-        std::cout << "Made contact after no tumble" <<std::endl;
-        return;
-    }
     
-    auto tumble1 = robot.determineAxisOfTumble();
-    std::cout << "Tumbling along the following coordinate system:" <<std::endl;
-    tf_vec_debug("\t axis: ", tumble1.axis.axis);
-    tf_vec_debug("\t origin: ", tumble1.axis.origin);
-    std::cout << "\t Count: " << tumble1.count << std::endl;
-    auto resultantTumble = robot.secondContactPoint(g, tumble1, pose);
-    std::cout << "simulating first tumble" <<std::endl;
-    
-    for(auto pt: robot.alreadyMadeContact){
-            tf_vec_debug(pt.first, pt.second);
-    }
-    
-    if(!resultantTumble.ok) {
-        std::cout << "fell off a bridge" << std::endl;
-        return;
-    }
-
-    if(robot.alreadyMadeContact.size() >= 3){
-        std::cout << "Made contact after one tumble" << std::endl;
-        return;      
-    }
-    
-    auto com = robot.getCenterOfMass();
-    tf::Transform trans(tf::Quaternion(0,0,0,1), tf::Vector3(0,0,firstContact.z()));
-    com = trans*com;
-    auto transformedCom = rotate(tumble1, resultantTumble, com);
-    auto qt = tf::Quaternion(tumble1.axis.axis, resultantTumble.angle);
-    tf::Transform tr(qt);
-    auto tumble2 = robot.determineAxisOfTumble(tr*tf::Vector3(0,0,1), transformedCom);
-    std::cout << "Tumbling along the following coordinate system:" <<std::endl;
-    tf_vec_debug("\t axis: ", tumble2.axis.axis);
-    tf_vec_debug("\t origin: ", tumble2.axis.origin);
-    std::cout << "\t Count: " << tumble2.count << std::endl;
-    TumbleResult res =  robot.thirdContactPoint(g, tumble1, resultantTumble, tumble2, pose);
-    if (!res.ok) {
-        std::cout << "fell over" << std::endl;
-        return;
-    }
-    if(robot.alreadyMadeContact.size() >= 3){
-        std::cout << "Made contact after two tumbles" << std::endl;
-        for(auto pt: robot.alreadyMadeContact){
-            tf_vec_debug(pt.first, pt.second);
-        }
-        return;
-    }
-    std::cout << "Gave up... " <<std::endl;
     //std::cout << "got second contact at " << second.first << ". Contact point is " << second.second.x() << ", " <<second.second.y() << ", " << second.second.z() << std::endl;
 }
 /*
