@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 #include <nav_msgs/Odometry.h>
+#include <rosgraph_msgs/Log.h>
 #include <data_compresor/ScanStamped.h>
 #include <std_msgs/String.h>
 #include <geometry_msgs/Pose.h>
@@ -78,6 +79,7 @@ class ROSThread: public QThread {
         ros::Publisher robotEStopPub;
         ros::Publisher robotGoalPub;
         ros::Publisher robotLoraDropPub;
+        ros::Subscriber rosout;
         bool running;
         int robotNum;
         int numLoraDropped;
@@ -89,6 +91,7 @@ class ROSThread: public QThread {
         void onLaserScanStampedCb(data_compresor::ScanStamped scanStamped);
         void onCo2Cb(wireless_msgs::Co2);
         void onWifiSignalCb(wireless_msgs::WifiArray);
+        void onRosOut(rosgraph_msgs::Log);
         void onLaserScan(sensor_msgs::LaserScan);
         void onNavMsg(nav_msgs::Odometry odometry);
         void start();
@@ -98,6 +101,7 @@ class ROSThread: public QThread {
     signals:
         void scanRecieved(int robotNum, const QPixmap& map, float x, float y, float theta);
         void artifactReceived(float x, float y, float z, std::string details);
+        void rosOutReceived(std::string, std::string, std::string, int);
 };
 #endif
 

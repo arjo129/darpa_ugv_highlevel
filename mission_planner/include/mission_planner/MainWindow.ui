@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">background-color: rgb(255, 255, 255);</string>
+   <string notr="true">background-color: #222324;</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -34,7 +34,7 @@
          <x>0</x>
          <y>0</y>
          <width>1336</width>
-         <height>929</height>
+         <height>917</height>
         </rect>
        </property>
        <layout class="QHBoxLayout" name="horizontalLayout_47">
@@ -93,12 +93,18 @@
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_3">
                  <item>
-                  <widget class="QGraphicsView" name="graphicsView">
+                  <widget class="QGraphicsView" name="map">
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
                      <height>400</height>
                     </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">#map {
+	border: 1px solid #AAAAAA;
+	border-radius: 5px;
+}</string>
                    </property>
                   </widget>
                  </item>
@@ -153,6 +159,19 @@
                             <height>40</height>
                            </size>
                           </property>
+                          <property name="styleSheet">
+                           <string notr="true">#selectRobot1BtnClicked {
+	background-color: #1890FF;
+	border-radius: 5px;
+	color: #FFFFFF;
+}
+
+#selectRobot1BtnClicked:hover {
+	background-color: #FFFFFF;
+	color: #1890FF;
+	border: 1px solid #1890FF;
+}</string>
+                          </property>
                           <property name="text">
                            <string>Robot 1</string>
                           </property>
@@ -165,6 +184,19 @@
                             <width>100</width>
                             <height>40</height>
                            </size>
+                          </property>
+                          <property name="styleSheet">
+                           <string notr="true">#selectRobot2BtnClicked {
+	background-color: #1890FF;
+	border-radius: 5px;
+	color: #FFFFFF;
+}
+
+#selectRobot2BtnClicked:hover {
+	background-color: #FFFFFF;
+	color: #1890FF;
+	border: 1px solid #1890FF;
+}</string>
                           </property>
                           <property name="text">
                            <string>Robot 2</string>
@@ -179,6 +211,19 @@
                             <height>40</height>
                            </size>
                           </property>
+                          <property name="styleSheet">
+                           <string notr="true">#selectRobot3BtnClicked {
+	background-color: #1890FF;
+	border-radius: 5px;
+	color: #FFFFFF;
+}
+
+#selectRobot3BtnClicked:hover {
+	background-color: #FFFFFF;
+	color: #1890FF;
+	border: 1px solid #1890FF;
+}</string>
+                          </property>
                           <property name="text">
                            <string>Robot 3</string>
                           </property>
@@ -192,6 +237,19 @@
                             <height>40</height>
                            </size>
                           </property>
+                          <property name="styleSheet">
+                           <string notr="true">#selectRobot4BtnClicked {
+	background-color: #1890FF;
+	border-radius: 5px;
+	color: #FFFFFF;
+}
+
+#selectRobot4BtnClicked:hover {
+	background-color: #FFFFFF;
+	color: #1890FF;
+	border: 1px solid #1890FF;
+}</string>
+                          </property>
                           <property name="text">
                            <string>Robot 4</string>
                           </property>
@@ -204,6 +262,19 @@
                             <width>100</width>
                             <height>40</height>
                            </size>
+                          </property>
+                          <property name="styleSheet">
+                           <string notr="true">#selectRobot5BtnClicked {
+	background-color: #1890FF;
+	border-radius: 5px;
+	color: #FFFFFF;
+}
+
+#selectRobot5BtnClicked:hover {
+	background-color: #FFFFFF;
+	color: #1890FF;
+	border: 1px solid #1890FF;
+}</string>
                           </property>
                           <property name="text">
                            <string>Robot 5</string>
@@ -245,6 +316,19 @@
                         <height>40</height>
                        </size>
                       </property>
+                      <property name="styleSheet">
+                       <string notr="true">#startBtnClicked {
+	background-color: #52C41A;
+	border-radius: 5px;
+	color: #FFFFFF;
+}
+
+#startBtnClicked:hover {
+	background-color: #FFFFFF;
+	color: #52C41A;
+	border: 1px solid #52C41A;
+}</string>
+                      </property>
                       <property name="text">
                        <string>Start</string>
                       </property>
@@ -264,6 +348,19 @@
                         <height>40</height>
                        </size>
                       </property>
+                      <property name="styleSheet">
+                       <string notr="true">#stopBtnClicked {
+	background-color: #F5222D;
+	border-radius: 5px;
+	color: #FFFFFF;
+}
+
+#stopBtnClicked:hover {
+	background-color: #FFFFFF;
+	color: #F5222D;
+	border: 1px solid #F5222D;
+}</string>
+                      </property>
                       <property name="text">
                        <string>Stop</string>
                       </property>
@@ -282,6 +379,19 @@
                         <width>100</width>
                         <height>40</height>
                        </size>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">#loraDropBtnClicked {
+	background-color: #FAAD14;
+	border-radius: 5px;
+	color: #FFFFFF;
+}
+
+#loraDropBtnClicked:hover {
+	background-color: #FFFFFF;
+	color: #FAAD14;
+	border: 1px solid #FAAD14;
+}</string>
                       </property>
                       <property name="text">
                        <string>Drop LORA</string>
@@ -347,6 +457,19 @@
                               <height>40</height>
                              </size>
                             </property>
+                            <property name="styleSheet">
+                             <string notr="true">#sendGoalBtnClicked {
+	background-color: #FAAD14;
+	border-radius: 5px;
+	color: #FFFFFF;
+}
+
+#sendGoalBtnClicked:hover {
+	background-color: #FFFFFF;
+	color: #FAAD14;
+	border: 1px solid #FAAD14;
+}</string>
+                            </property>
                             <property name="text">
                              <string>Move</string>
                             </property>
@@ -384,7 +507,15 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout">
                              <item>
-                              <widget class="QLineEdit" name="goalXInput"/>
+                              <widget class="QLineEdit" name="goalXInput">
+                               <property name="styleSheet">
+                                <string notr="true">#goalXInput {
+	border: 1px solid #AAAAAA;
+	color: #AAAAAA;
+	border-radius: 5px;
+}</string>
+                               </property>
+                              </widget>
                              </item>
                             </layout>
                            </widget>
@@ -411,6 +542,11 @@
                             <layout class="QHBoxLayout" name="horizontalLayout_8">
                              <item>
                               <widget class="QLabel" name="goalX">
+                               <property name="styleSheet">
+                                <string notr="true">#goalX {
+	color: #AAAAAA;
+}</string>
+                               </property>
                                <property name="text">
                                 <string>x</string>
                                </property>
@@ -458,6 +594,11 @@
                             <layout class="QHBoxLayout" name="horizontalLayout_14">
                              <item>
                               <widget class="QLabel" name="goalY">
+                               <property name="styleSheet">
+                                <string notr="true">#goalY {
+	color: #AAAAAA;
+}</string>
+                               </property>
                                <property name="text">
                                 <string>y</string>
                                </property>
@@ -481,7 +622,15 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_13">
                              <item>
-                              <widget class="QLineEdit" name="goalYInput"/>
+                              <widget class="QLineEdit" name="goalYInput">
+                               <property name="styleSheet">
+                                <string notr="true">#goalYInput {
+	border: 1px solid #AAAAAA;
+	color: #AAAAAA;
+	border-radius: 5px;
+}</string>
+                               </property>
+                              </widget>
                              </item>
                             </layout>
                            </widget>
@@ -525,6 +674,11 @@
                             <layout class="QHBoxLayout" name="horizontalLayout_18">
                              <item>
                               <widget class="QLabel" name="goalYaw">
+                               <property name="styleSheet">
+                                <string notr="true">#goalYaw {
+	color: #AAAAAA;
+}</string>
+                               </property>
                                <property name="text">
                                 <string>yaw</string>
                                </property>
@@ -548,7 +702,15 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_19">
                              <item>
-                              <widget class="QLineEdit" name="goalThetaInput"/>
+                              <widget class="QLineEdit" name="goalThetaInput">
+                               <property name="styleSheet">
+                                <string notr="true">#goalThetaInput {
+	border: 1px solid #AAAAAA;
+	color: #AAAAAA;
+	border-radius: 5px;
+}</string>
+                               </property>
+                              </widget>
                              </item>
                             </layout>
                            </widget>
@@ -601,6 +763,19 @@
                               <height>40</height>
                              </size>
                             </property>
+                            <property name="styleSheet">
+                             <string notr="true">#reportArtifactBtnClicked {
+	background-color: #FAAD14;
+	border-radius: 5px;
+	color: #FFFFFF;
+}
+
+#reportArtifactBtnClicked:hover {
+	background-color: #FFFFFF;
+	color: #FAAD14;
+	border: 1px solid #FAAD14;
+}</string>
+                            </property>
                             <property name="text">
                              <string>Report</string>
                             </property>
@@ -645,6 +820,11 @@
                             <layout class="QHBoxLayout" name="horizontalLayout_11">
                              <item>
                               <widget class="QLabel" name="artifactX">
+                               <property name="styleSheet">
+                                <string notr="true">#artifactX {
+	color: #AAAAAA;
+}</string>
+                               </property>
                                <property name="text">
                                 <string>x</string>
                                </property>
@@ -668,7 +848,15 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_10">
                              <item>
-                              <widget class="QLineEdit" name="artifactXInput"/>
+                              <widget class="QLineEdit" name="artifactXInput">
+                               <property name="styleSheet">
+                                <string notr="true">#artifactXInput {
+	border: 1px solid #AAAAAA;
+	color: #AAAAAA;
+	border-radius: 5px;
+}</string>
+                               </property>
+                              </widget>
                              </item>
                             </layout>
                            </widget>
@@ -712,6 +900,11 @@
                             <layout class="QHBoxLayout" name="horizontalLayout_21">
                              <item>
                               <widget class="QLabel" name="artifactY">
+                               <property name="styleSheet">
+                                <string notr="true">#artifactY {
+	color: #AAAAAA;
+}</string>
+                               </property>
                                <property name="text">
                                 <string>y</string>
                                </property>
@@ -735,7 +928,15 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_22">
                              <item>
-                              <widget class="QLineEdit" name="artifactYInput"/>
+                              <widget class="QLineEdit" name="artifactYInput">
+                               <property name="styleSheet">
+                                <string notr="true">#artifactYInput {
+	border: 1px solid #AAAAAA;
+	color: #AAAAAA;
+	border-radius: 5px;
+}</string>
+                               </property>
+                              </widget>
                              </item>
                             </layout>
                            </widget>
@@ -772,7 +973,12 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_27">
                              <item>
-                              <widget class="QLabel" name="artifactTYpe">
+                              <widget class="QLabel" name="artifactType">
+                               <property name="styleSheet">
+                                <string notr="true">#artifactType {
+	color: #AAAAAA;
+}</string>
+                               </property>
                                <property name="text">
                                 <string>type</string>
                                </property>
@@ -796,7 +1002,15 @@
                             </property>
                             <layout class="QHBoxLayout" name="horizontalLayout_28">
                              <item>
-                              <widget class="QLineEdit" name="artifactTypeInput"/>
+                              <widget class="QLineEdit" name="artifactTypeInput">
+                               <property name="styleSheet">
+                                <string notr="true">#artifactTypeInput {
+	border: 1px solid #AAAAAA;
+	color: #AAAAAA;
+	border-radius: 5px;
+}</string>
+                               </property>
+                              </widget>
                              </item>
                             </layout>
                            </widget>
@@ -879,7 +1093,12 @@
                       </property>
                       <layout class="QHBoxLayout" name="horizontalLayout_31">
                        <item>
-                        <widget class="QLabel" name="label_9">
+                        <widget class="QLabel" name="teamName">
+                         <property name="styleSheet">
+                          <string notr="true">#teamName {
+	color: #AAAAAA;
+}</string>
+                         </property>
                          <property name="text">
                           <string>Team Name:</string>
                          </property>
@@ -903,7 +1122,12 @@
                       </property>
                       <layout class="QHBoxLayout" name="horizontalLayout_30">
                        <item>
-                        <widget class="QLabel" name="label_10">
+                        <widget class="QLabel" name="teamNameText">
+                         <property name="styleSheet">
+                          <string notr="true">#teamNameText {
+	color: #AAAAAA;
+}</string>
+                         </property>
                          <property name="text">
                           <string>NA</string>
                          </property>
@@ -944,7 +1168,12 @@
                       </property>
                       <layout class="QHBoxLayout" name="horizontalLayout_33">
                        <item>
-                        <widget class="QLabel" name="label_11">
+                        <widget class="QLabel" name="currentTime">
+                         <property name="styleSheet">
+                          <string notr="true">#currentTime {
+	color: #AAAAAA;
+}</string>
+                         </property>
                          <property name="text">
                           <string>Current Time:</string>
                          </property>
@@ -968,7 +1197,12 @@
                       </property>
                       <layout class="QHBoxLayout" name="horizontalLayout_34">
                        <item>
-                        <widget class="QLabel" name="label_12">
+                        <widget class="QLabel" name="currentTimeText">
+                         <property name="styleSheet">
+                          <string notr="true">#currentTimeText {
+	color: #AAAAAA;
+}</string>
+                         </property>
                          <property name="text">
                           <string>NA</string>
                          </property>
@@ -1009,7 +1243,12 @@
                       </property>
                       <layout class="QHBoxLayout" name="horizontalLayout_36">
                        <item>
-                        <widget class="QLabel" name="label_13">
+                        <widget class="QLabel" name="reportsLeft">
+                         <property name="styleSheet">
+                          <string notr="true">#reportsLeft {
+	color: #AAAAAA;
+}</string>
+                         </property>
                          <property name="text">
                           <string>Reports Left:</string>
                          </property>
@@ -1033,7 +1272,12 @@
                       </property>
                       <layout class="QHBoxLayout" name="horizontalLayout_37">
                        <item>
-                        <widget class="QLabel" name="label_14">
+                        <widget class="QLabel" name="reportsLeftText">
+                         <property name="styleSheet">
+                          <string notr="true">#reportsLeftText {
+	color: #AAAAAA;
+}</string>
+                         </property>
                          <property name="text">
                           <string>NA</string>
                          </property>
@@ -1074,7 +1318,12 @@
                       </property>
                       <layout class="QHBoxLayout" name="horizontalLayout_39">
                        <item>
-                        <widget class="QLabel" name="label_15">
+                        <widget class="QLabel" name="score">
+                         <property name="styleSheet">
+                          <string notr="true">#score {
+	color: #AAAAAA;
+}</string>
+                         </property>
                          <property name="text">
                           <string>Score:</string>
                          </property>
@@ -1098,7 +1347,12 @@
                       </property>
                       <layout class="QHBoxLayout" name="horizontalLayout_40">
                        <item>
-                        <widget class="QLabel" name="label_16">
+                        <widget class="QLabel" name="scoreText">
+                         <property name="styleSheet">
+                          <string notr="true">#scoreText {
+	color: #AAAAAA;
+}</string>
+                         </property>
                          <property name="text">
                           <string>NA</string>
                          </property>
@@ -1138,6 +1392,19 @@
                         <height>40</height>
                        </size>
                       </property>
+                      <property name="styleSheet">
+                       <string notr="true">#startAllBtnClicked {
+	background-color: #52C41A;
+	border-radius: 5px;
+	color: #FFFFFF;
+}
+
+#startAllBtnClicked:hover {
+	background-color: #FFFFFF;
+	color: #52C41A;
+	border: 1px solid #52C41A;
+}</string>
+                      </property>
                       <property name="text">
                        <string>Start All</string>
                       </property>
@@ -1156,6 +1423,19 @@
                         <width>100</width>
                         <height>40</height>
                        </size>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">#stopAllBtnClicked {
+	background-color: #F5222D;
+	border-radius: 5px;
+	color: #FFFFFF;
+}
+
+#stopAllBtnClicked:hover {
+	background-color: #FFFFFF;
+	color: #F5222D;
+	border: 1px solid #F5222D;
+}</string>
                       </property>
                       <property name="text">
                        <string>Stop All</string>
@@ -1183,40 +1463,18 @@
                 </property>
                 <layout class="QHBoxLayout" name="horizontalLayout_43">
                  <item>
-                  <widget class="QScrollArea" name="LogsScrollArea">
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
+                  <widget class="QTextEdit" name="logs">
+                   <property name="enabled">
+                    <bool>false</bool>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">#LogsScrollArea {
-	border: 0px;
+                    <string notr="true">#logs {
+	background-color: #300A24;
+	color: #FFFFFF;
+   border-radius: 5px;
+	padding: 10px;
 }</string>
                    </property>
-                   <property name="widgetResizable">
-                    <bool>true</bool>
-                   </property>
-                   <widget class="QWidget" name="scrollAreaWidgetContents">
-                    <property name="geometry">
-                     <rect>
-                      <x>0</x>
-                      <y>0</y>
-                      <width>611</width>
-                      <height>258</height>
-                     </rect>
-                    </property>
-                    <layout class="QVBoxLayout" name="verticalLayout_7">
-                     <item>
-                      <widget class="QTextEdit" name="textEdit">
-                       <property name="enabled">
-                        <bool>false</bool>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
                   </widget>
                  </item>
                 </layout>
@@ -1237,34 +1495,18 @@
                 </property>
                 <layout class="QHBoxLayout" name="horizontalLayout_45">
                  <item>
-                  <widget class="QScrollArea" name="ArtifactsScrollArea">
+                  <widget class="QPlainTextEdit" name="artifactLogs">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="styleSheet">
-                    <string notr="true">#ArtifactsScrollArea {
-	border: 0px;
+                    <string notr="true">#artifactLogs {
+	background-color: #300A24;
+	color: #FFFFFF;
+   border-radius: 5px;
+	padding: 10px;
 }</string>
                    </property>
-                   <property name="widgetResizable">
-                    <bool>true</bool>
-                   </property>
-                   <widget class="QWidget" name="scrollAreaWidgetContents_2">
-                    <property name="geometry">
-                     <rect>
-                      <x>0</x>
-                      <y>0</y>
-                      <width>611</width>
-                      <height>257</height>
-                     </rect>
-                    </property>
-                    <layout class="QHBoxLayout" name="horizontalLayout_44">
-                     <item>
-                      <widget class="QPlainTextEdit" name="plainTextEdit">
-                       <property name="enabled">
-                        <bool>false</bool>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
                   </widget>
                  </item>
                 </layout>

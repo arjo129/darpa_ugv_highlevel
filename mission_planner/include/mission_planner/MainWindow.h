@@ -16,7 +16,7 @@
 #include <QDebug>
 #include <QVector3D>
 #include <QLineEdit>
-#include <QFileSystemWatcher>
+#include <QPlainTextEdit>
 #include <stack>
 #include "ui_MainWindow.h"
 
@@ -61,9 +61,6 @@ class MainWindow : public QMainWindow {
 
         // Robots
         int activeRobotId;
-
-        // Console
-        QFileSystemWatcher* watcher;
 
         CustomGraphicsScene** scenes;
         LaserScanView** currentScanScene;
@@ -136,6 +133,7 @@ class MainWindow : public QMainWindow {
         void darpaStatusRecieved(std::string teamName, double currentTime, 
                                  int32_t numReportsLeft, int32_t currentScore);
         void artifactStatusReceived(std::string result);
+        void rosOutReceived(std::string, std::string, std::string, int);
         void mapUpdateReceived(bool success, std::string errorStr);
         void startBtnClicked();
         void stopBtnClicked();

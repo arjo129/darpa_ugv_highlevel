@@ -9,18 +9,12 @@ MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), darpaServerThread(_nh) {
 
     ui = new Ui::MainWindow();
     ui->setupUi(this);
-    QFileSystemWatcher *watcher = new QFileSystemWatcher;
-    watcher->addPath("/home/nwjbrandon/.ros/log/latest/rosout.log");
-    connect(watcher, SIGNAL(fileChanged(QString)), this, SLOT(handleFileChanged(QString)));
-
 
     initRobots();
     // initMapUI();
     initDarpaInterfaceUI();
     initEStopUI();
     initGoalUI();
-
-    // ui->horizontalSplitPanel->setStretchFactor(0,2);
 
     ROS_INFO("Starting UI");
 }
@@ -93,6 +87,7 @@ void MainWindow::initRobots() {
         robots[robotId-1] = new Robot(nh, robotId);
     //     connect(&(robots[idx-1]->rosthread), &ROSThread::scanRecieved, this, &MainWindow::addPixmap);
     //     connect(&(robots[idx-1]->rosthread), &ROSThread::artifactReceived, this, &MainWindow::addArtifactData);
+        connect(&(robots[robotId-1]->rosthread), &ROSThread::rosOutReceived, this, &MainWindow::rosOutReceived);
     }
     connect(ui->selectRobot1BtnClicked, &QPushButton::clicked, this, &MainWindow::selectRobot1BtnClicked);
     connect(ui->selectRobot2BtnClicked, &QPushButton::clicked, this, &MainWindow::selectRobot2BtnClicked);
@@ -349,6 +344,14 @@ void MainWindow::loraDropBtnClicked() {
 void MainWindow::darpaStatusRecieved(std::string teamName, double currentTime, 
                                  int32_t numReportsLeft, int32_t currentScore) {
 
+}
+
+void MainWindow::rosOutReceived(std::string msg, std::string name, std::string func, int robotNum) {
+    if (robotNum == activeRobotId) {
+        std::string logMessage = "Robot" + std::to_string(robotNum) + ": " + func + " " + name + " " + msg;
+        QString qstr = QString::fromStdString(logMessage);
+        ui->logs->append(qstr);
+    }
 }
 
 void MainWindow::artifactStatusReceived(std::string result) {

@@ -5,6 +5,8 @@ ROSThread::ROSThread(ros::NodeHandle parentNh, int robotNum): nh(parentNh, ROBOT
     scanStampedSub = nh.subscribe(ROBOT_SCAN_TOPIC(robotNum), 10, &ROSThread::onLaserScanStampedCb, this);
     co2Sub = nh.subscribe(ROBOT_CO2_TOPIC(robotNum), 10, &ROSThread::onCo2Cb, this);
     wifiSignalSub = nh.subscribe(ROBOT_WIFI_TOPIC(robotNum), 10, &ROSThread::onWifiSignalCb, this);
+    rosout = nh.subscribe("/rosout", 10, &ROSThread::onRosOut, this);
+
     this->robotStartPub = nh.advertise<std_msgs::String>(ROBOT_START_TOPIC(robotNum), 1);
     this->robotEStopPub = nh.advertise<std_msgs::String>(ROBOT_ESTOP_TOPIC(robotNum), 1);
     this->robotGoalPub = nh.advertise<geometry_msgs::Pose>(ROBOT_GOAL_TOPIC(robotNum), 1);
@@ -20,6 +22,8 @@ ROSThread::ROSThread(const ROSThread& other): nh(other.nh, ROBOT_NAME(robotNum))
     scanStampedSub = nh.subscribe(ROBOT_SCAN_TOPIC(robotNum), 10, &ROSThread::onLaserScanStampedCb, this);
     co2Sub = nh.subscribe(ROBOT_CO2_TOPIC(robotNum), 10, &ROSThread::onCo2Cb, this);
     wifiSignalSub = nh.subscribe(ROBOT_WIFI_TOPIC(robotNum), 10, &ROSThread::onWifiSignalCb, this);
+    rosout = nh.subscribe("/rosout", 10, &ROSThread::onRosOut, this);
+
     this->robotStartPub = nh.advertise<std_msgs::String>(ROBOT_START_TOPIC(robotNum), 1);
     this->robotEStopPub = nh.advertise<std_msgs::String>(ROBOT_ESTOP_TOPIC(robotNum), 1);
     this->robotGoalPub = nh.advertise<geometry_msgs::Pose>(ROBOT_GOAL_TOPIC(robotNum), 1);
@@ -102,6 +106,12 @@ void ROSThread::onLaserScan(sensor_msgs::LaserScan lscan)
     m.getRPY(roll, pitch, yaw);
     QPixmap pixmap = QBitmap::fromImage(*image);
     emit scanRecieved(robotNum, pixmap, x, y, yaw);
+}
+
+
+void ROSThread::onRosOut(rosgraph_msgs::Log log)
+{
+    emit rosOutReceived(log.msg, log.name, log.function, robotNum);
 }
 
 void ROSThread::onNavMsg(nav_msgs::Odometry odom) 
