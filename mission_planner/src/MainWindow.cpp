@@ -332,9 +332,11 @@ void MainWindow::loraDropBtnClicked() {
     ROS_INFO("Dropped LORA on Robot %d", activeRobotId);
 }
 
-void MainWindow::darpaStatusRecieved(std::string teamName, double currentTime, 
-                                 int32_t numReportsLeft, int32_t currentScore) {
-
+void MainWindow::darpaStatusRecieved(std::string teamName, double currentTime, int32_t numReportsLeft, int32_t currentScore) {
+    ui->teamNameText->setText(QString::fromStdString(teamName));
+    ui->currentTimeText->setText(QString::fromStdString(std::to_string(currentTime)));
+    ui->reportsLeftText->setText(QString::fromStdString(std::to_string(numReportsLeft)));
+    ui->scoreText->setText(QString::fromStdString(std::to_string(currentScore)));
 }
 
 void MainWindow::rosOutReceived(std::string msg, std::string name, std::string func, int robotNum) {
