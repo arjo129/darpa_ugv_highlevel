@@ -16,6 +16,7 @@
 #include <QVector3D>
 #include <QLineEdit>
 #include <QPlainTextEdit>
+#include <QCompleter>
 #include <stack>
 #include "ui_MainWindow.h"
 
@@ -57,7 +58,8 @@ class MainWindow : public QMainWindow {
         QLineEdit* artifactXInput;
         QLineEdit* artifactYInput;
         QLineEdit* artifactTypeInput;
-
+        QCompleter *completer;
+        
         // Robots
         int activeRobotId;
 

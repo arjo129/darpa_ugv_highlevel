@@ -119,6 +119,12 @@ void MainWindow::initGoalUI() {
     artifactTypeInput = ui->artifactTypeInput;
     ROS_INFO("Initializing LORA and GOAL Functionality");
 
+    QStringList wordList;
+    wordList << "Survivor" << "Cell Phone" << "Backpack" << "Drill" << "Fire Extinguisher" << "Gas" << "Vent";
+    completer = new QCompleter(wordList, this);
+    completer->setCaseSensitivity(Qt::CaseInsensitive);
+    ui->artifactTypeInput->setCompleter(completer);
+
     connect(ui->sendGoalBtnClicked, &QPushButton::clicked, this, &MainWindow::sendGoalBtnClicked);
     connect(ui->loraDropBtnClicked, &QPushButton::clicked, this, &MainWindow::loraDropBtnClicked);
 }
