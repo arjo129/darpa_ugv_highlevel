@@ -219,19 +219,6 @@ void MainWindow::addPixmap(int robotNum, const QPixmap& map, float x, float y, f
     // robots[robotNum-1]->laserscans.push_back(item);
 }
 
-void MainWindow::artifactReceived(float x, float y, float z, std::string details) {
-    // QLabel *label = new QLabel;
-    // QString displayText = "Pos: " + QString::number(x, 'f', 2) + ", " + QString::number(y, 'f', 2) + \
-    //                                 ", " +QString::number(z, 'f', 2) + ", " + QString::fromUtf8(details.c_str()) + "\n";
-    // label->setAlignment(Qt::AlignTop);
-    // label->setText(displayText);
-    // ui->artifactVLayout->setWidget(label);
-    // ui->artifactScrollArea->setWidgetResizable(false);
-    // ui->artifactScrollArea->setWidget(ui->artifactLabel);
-    // ui->artifactLabel->setWordWrap(true);
-    // ui->artifactLabel->setText(ui->artifactLabel->text() + displayText);
-    // ui->artifactTextEdit->insertPlainText(displayText);
-}
 
 void MainWindow::sliderMoved(int value) {
     // ROS_INFO("Map Editing Mode");
@@ -302,6 +289,17 @@ void MainWindow::rotatePixMap(RotateState rotateState) {
     
 }
 
+void MainWindow::mapUpdateReceived(bool success, std::string errorStr) {
+
+}
+
+void MainWindow::artifactReceived(float x, float y, float z, std::string details) {
+    std:: string artifactLogsMessage = "Received " + details + " at (" + std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + ")";
+    QString qstr = QString::fromStdString(artifactLogsMessage);
+    ui->artifactLogs->append(qstr);
+}
+
+
 void MainWindow::reportArtifactBtnClicked() {
     ROS_INFO("Reporting artifact on Robot %d.", activeRobotId);
     QVector3D pos3d = getArtifactPos();
@@ -349,10 +347,6 @@ void MainWindow::rosOutReceived(std::string msg, std::string name, std::string f
 void MainWindow::artifactStatusReceived(std::string result) {
     QString qstr = QString::fromStdString(result);
     ui->artifactLogs->append(qstr);
-}
-
-void MainWindow::mapUpdateReceived(bool success, std::string errorStr) {
-
 }
 
 void MainWindow::stopBtnClicked() {
