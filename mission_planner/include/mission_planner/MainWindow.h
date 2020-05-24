@@ -83,10 +83,9 @@ class MainWindow : public QMainWindow {
         void initEStopUI();
         void initGoalUI();
 
-
-        QTransform getTransform(QPointF translation, double rotationAngle);
-        void applyTransformList(std::vector<QGraphicsPixmapItem*> laserscans, int startIdx, int endIdx, QTransform transform, double rotationAngleTransform);
-        void applyTransform(QGraphicsPixmapItem* item, QTransform transform, double rotationAngleTransform);
+        QTransform getTransform(QPointF, double);
+        void applyTransformList(std::vector<QGraphicsPixmapItem*>, int, int, QTransform, double);
+        void applyTransform(QGraphicsPixmapItem*, QTransform, double);
         QVector3D getArtifactPos();
         QVector3D getRobotGoalPos();
         std::string getArtifactType();
@@ -102,22 +101,22 @@ class MainWindow : public QMainWindow {
         ~MainWindow();
     
     signals:
-        void reportArtifact(const double x, const double y, const double z, const std::string artifactTypeStr);
+        void reportArtifact(const double, const double, const double, const std::string);
 
     public slots:
         void reportArtifactBtnClicked();
 
         void addPixmap(int robotNum, const QPixmap& map, float x, float y, float theta);
-        void artifactReceived(float x, float y, float z, std::string details);
-        void sliderMoved(int value);
+        void artifactReceived(float, float, float, std::string);
+        void sliderMoved(int);
         void sendGoalBtnClicked();
         void loraDropBtnClicked();
         void propagateChanges();
-        void rotatePixMap(RotateState rotateState);
-        void darpaStatusRecieved(std::string teamName, double currentTime, int32_t numReportsLeft, int32_t currentScore);
-        void artifactStatusReceived(std::string result);
+        void rotatePixMap(RotateState);
+        void darpaStatusRecieved(std::string, double, int32_t, int32_t);
+        void artifactStatusReceived(std::string);
         void rosOutReceived(std::string, std::string, std::string, int);
-        void mapUpdateReceived(bool success, std::string errorStr);
+        void mapUpdateReceived(bool, std::string);
         void startBtnClicked();
         void stopBtnClicked();
         void startAllBtnClicked();

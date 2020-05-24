@@ -9,6 +9,7 @@ MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), darpaServerThread(_nh) {
 
     ui = new Ui::MainWindow();
     ui->setupUi(this);
+    MainWindow::showMaximized();
 
     initRobots();
     // initMapUI();
@@ -157,9 +158,7 @@ QTransform MainWindow::getTransform(QPointF translation, double rotationAngle) {
 }
 
 // Applies transform to laserscan list from start and end indexes (inclusive)
-void MainWindow::applyTransformList(std::vector<QGraphicsPixmapItem*> laserscans, 
-                                    int startIdx, int endIdx, QTransform transform, 
-                                                    double rotationAngleTransform) {
+void MainWindow::applyTransformList(std::vector<QGraphicsPixmapItem*> laserscans, int startIdx, int endIdx, QTransform transform, double rotationAngleTransform) {
 
     // if (startIdx < 0 || endIdx >= laserscans.size()) {
     //     ROS_WARN("applyTransform(): Out of bounds, not applying transform");
