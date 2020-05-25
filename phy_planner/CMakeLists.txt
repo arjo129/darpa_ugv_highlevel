@@ -18,6 +18,12 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+find_package(Qt5 COMPONENTS Core Gui Widgets PrintSupport)
+set(CMAKE_AUTOMOC ON)
+include($ENV{ROS_ROOT}/core/rosbuild/FindPkgConfig.cmake)
+pkg_check_modules(OGRE OGRE)
+include_directories( ${OGRE_INCLUDE_DIRS} )
+link_directories( ${OGRE_LIBRARY_DIRS} )
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -120,12 +126,20 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+   ${Qt5Core_INCLUDE_DIRS}
+ ${Qt5Gui_INCLUDE_DIRS}
+ ${Qt5Widgets_INCLUDE_DIRS}
+ ${Qt5PrintSupport_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/phy_planner.cpp
 # )
+add_library(rviz_phy_planner
+  src/rviz/pose_estimate_tool.h 
+  src/rviz/pose_estimate_tool.cpp  
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -149,6 +163,10 @@ add_executable(${PROJECT_NAME}_node src/phy_planner_node.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(rviz_phy_planner
   ${catkin_LIBRARIES}
 )
 

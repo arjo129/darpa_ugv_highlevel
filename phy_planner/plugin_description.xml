@@ -1,0 +1,9 @@
+<library path="lib/librviz_phy_planner">
+   <class name="phy_planner/PoseEstimateTool"
+         type="phy_planner::PoseEstimateTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Tool for determining final pose
+    </description>
+  </class>
+</library>

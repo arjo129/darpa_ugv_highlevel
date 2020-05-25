@@ -97,7 +97,7 @@ ContactArea combineContactArea(std::vector<ContactArea> contactAreas) {
 /**
  * Extracts relevant amapper elevation points. Transforms the amapper point to local coordinates.
  */ 
-std::vector<tf::Vector3> transformElevGridToLocalFrame(ContactArea ca, AMapper::ElevationGrid grid, geometry_msgs::Pose pose) {
+std::vector<tf::Vector3> transformElevGridToLocalFrame(ContactArea ca, AMapper::ElevationGrid& grid, geometry_msgs::Pose pose) {
      //Transform the points to target position first
     auto pos = pose.position;
     auto _orientation = pose.orientation;
@@ -138,7 +138,6 @@ void testTransformElevGridToLocalFrame() {
     p.orientation.z = 0;
     p.orientation.w = 1;
     ContactArea a= transformElevGridToLocalFrame(ca, g, p);
-    tf_vec_debug("transformed", a[0]);
 }
 /**
  * Transforms the system to a cylindrical coordinate frame
@@ -331,6 +330,7 @@ void testTransformCoplanar() {
  */ 
 tf::Vector3 getFirstContact(ContactArea ca, AMapper::ElevationGrid grid, geometry_msgs::Pose pose) {
     auto contactArea = transformElevGridToLocalFrame(ca, grid, pose);
+
     AMapper::ElevationGrid localFrame;
     for(auto pt: contactArea){
         amapper::ElevationPoint e;
@@ -441,7 +441,7 @@ public:
             auto vec = getFirstContact(area.second, grid, pose);
             if(vec.z() == -INFINITY) continue;
             auto world_frame  = vec - tf::Vector3(0,0, this->elevation[area.first]); //HERE BE BUGS
-            if(world_frame.z() == first_contact.z()) {
+            if(abs(world_frame.z() - first_contact.z()) < 1e-2) {
                 tf::Vector3 contactPoint = vec;
                 this->alreadyMadeContact[area.first] = contactPoint;
             }
@@ -479,7 +479,7 @@ public:
         }
     }
 
-    TumbleResult secondContactPoint(AMapper::ElevationGrid grid, TumblePoint firstTumble, geometry_msgs::Pose pose) {
+    TumbleResult secondContactPoint(AMapper::ElevationGrid& grid, TumblePoint firstTumble, geometry_msgs::Pose pose) {
         std::unordered_map<std::string, ContactArea> transformedPoints;
         auto height = firstTumble.axis.origin.z();
         tf::Transform transformHeight;
@@ -494,7 +494,7 @@ public:
         return tumbleAlong(grid, firstTumble, pose, transformedPoints);
     }
 
-    TumbleResult thirdContactPoint(AMapper::ElevationGrid grid, TumblePoint firstTumble, TumbleResult amount, TumblePoint finalTumble, geometry_msgs::Pose pose) {
+    TumbleResult thirdContactPoint(AMapper::ElevationGrid& grid, TumblePoint firstTumble, TumbleResult amount, TumblePoint finalTumble, geometry_msgs::Pose pose) {
         std::unordered_map<std::string, ContactArea> transformedPoints;
         auto height = firstTumble.axis.origin.z();
         tf::Transform transformHeight;
@@ -511,9 +511,8 @@ public:
         return tumbleAlong(grid, firstTumble, pose, transformedPoints);
     }
 
-    TumbleResult tumbleAlong(AMapper::ElevationGrid grid, TumblePoint firstTumble, geometry_msgs::Pose pose, std::unordered_map<std::string, ContactArea>& transformedPoints) {
+    TumbleResult tumbleAlong(AMapper::ElevationGrid& grid, TumblePoint firstTumble, geometry_msgs::Pose pose, std::unordered_map<std::string, ContactArea>& transformedPoints) {
         ContactArea elevation = transformElevGridToLocalFrame(rectangularSample(2,2,0.05), grid, pose);
-        
         TumbleResult minTumble;
         minTumble.angle = INFINITY;
         minTumble.ok = false;
@@ -567,45 +566,60 @@ public:
 
         auto rotation = normal.cross(zaxis);
         auto w = zaxis.dot(normal) + sqrt(zaxis.length2()*normal.length2());
-
-        return tf::Quaternion(rotation.x(), rotation.y(), rotation.z(), w); 
+        tf_vec_debug("rotation", rotation);
+        std::cout <<w <<std::endl;
+        return tf::Quaternion(rotation.x(), rotation.y(), rotation.z(), w).normalize(); 
     }
 
-    FinalPose tumble(AMapper::ElevationGrid elevationMap, geometry_msgs::Pose pose) {
+
+    FinalPose tumble(AMapper::ElevationGrid& elevationMap, geometry_msgs::Pose pose) {
         
+
         this->determineFirstContactPoint(elevationMap, pose);
+
         tf::Vector3 firstContact;
-            
         if(this->alreadyMadeContact.size() >= 3){
             FinalPose finalPose;
-            finalPose.ok = true;)
-            finalPose.z = this->alreadyMadeContact[0].z();
+            finalPose.ok = true;
+            finalPose.z = this->alreadyMadeContact.begin()->second.z();
             finalPose.quaternion = tf::Quaternion(0,0,0,1);
             return finalPose;
         }
+
+        if(this->alreadyMadeContact.size() == 0){
+            FinalPose finalPose;
+            finalPose.ok = false;
+            ROS_ERROR("No contact point. Is the point cloud empty?");
+            return finalPose;
+        }
+        std::cout << "first drop" << std::endl;
         
         auto tumble1 = this->determineAxisOfTumble();
         auto resultantTumble = this->secondContactPoint(elevationMap, tumble1, pose);
-       
+
         for(auto pt: this->alreadyMadeContact){
              tf_vec_debug(pt.first, pt.second);
         }
+        std::cout << "second drop" << std::endl;
         
         if(!resultantTumble.ok) {
+            std::cout << "fell off" << std::endl;
             FinalPose finalPose;
             finalPose.ok = false;
             return finalPose;
         }
 
         if(this->alreadyMadeContact.size() >= 3){
+            std::cout << "landed" << std::endl;
             FinalPose finalPose;
-            finalPose.ok = false;
+            finalPose.ok = true;
             double sum = 0;
             for(auto contactPoint: this->alreadyMadeContact) {
                 sum += contactPoint.second.z();
             }
             finalPose.z = sum/this->alreadyMadeContact.size();
             finalPose.quaternion = determineRotation();
+            std::cout << "returning" << std::endl;
             return finalPose;  
         }
         
@@ -617,7 +631,7 @@ public:
         tf::Transform tr(qt);
         auto tumble2 = this->determineAxisOfTumble(tr*tf::Vector3(0,0,1), transformedCom);
         TumbleResult res =  this->thirdContactPoint(elevationMap, tumble1, resultantTumble, tumble2, pose);
-        
+         std::cout << "final drop" << std::endl;
         if (!res.ok) {
             FinalPose finalPose;
             finalPose.ok = false;
@@ -626,7 +640,7 @@ public:
 
         if(this->alreadyMadeContact.size() >= 3){
             FinalPose finalPose;
-            finalPose.ok = false;
+            finalPose.ok = true;
             double sum = 0;
             for(auto contactPoint: this->alreadyMadeContact) {
                 sum += contactPoint.second.z();
@@ -668,15 +682,17 @@ void testElevation() {
     pose.orientation.y = 0;
     pose.orientation.z = 0;
     pose.orientation.w = 1;
+
+    robot.tumble(g, pose);
     
     //std::cout << "got second contact at " << second.first << ". Contact point is " << second.second.x() << ", " <<second.second.y() << ", " << second.second.z() << std::endl;
 }
-/*
+
 AMapper::ElevationGrid grid;
 
 void onElevMsg(amapper::ElevationGridMsg elevation_grid) {
     grid = AMapper::ElevationGrid(elevation_grid);
-}*/
+}
 
 
 /**
@@ -690,24 +706,34 @@ void onElevMsg(amapper::ElevationGridMsg elevation_grid) {
 bool phy_pose_estimate(phy_planner::final_pose_estimate::Request &req,
                        phy_planner::final_pose_estimate::Response &res) {
     
-    res.final_pose.position = res.final_pose.position;
+    res.final_pose.position = req.target_pose.position;
     RobotModel robot;
-
+    auto pose = robot.tumble(grid, req.target_pose);
+    tf::Quaternion qt(req.target_pose.orientation.x, req.target_pose.orientation.y, req.target_pose.orientation.z, req.target_pose.orientation.w);
+    auto final_rotation = pose.quaternion*qt;
+    res.final_pose.orientation.x = final_rotation.x();
+    res.final_pose.orientation.y = final_rotation.y();
+    res.final_pose.orientation.z = final_rotation.z();
+    res.final_pose.orientation.w = final_rotation.w(); 
+    res.final_pose.position.z = pose.z;
+    res.ok = pose.ok;
+    return true;
 }
 
 
 
 int main(int argc, char**argv) {
-    /*ros::init(argc, argv, "final_pose_estimation");
+    
+    ros::init(argc, argv, "final_pose_estimation");
     ros::NodeHandle n;
 
     ros::ServiceServer service = n.advertiseService("pose_estimate", phy_pose_estimate);
     ros::Subscriber sub = n.subscribe("/plane_segmentation/grid_map", 10, onElevMsg);
-    ros::spin();*/
+    ros::spin();
     //testTransformCylinder();
 
     //testRotateTumble();
-    testElevation();
+    //testElevation();
     //testExecuteTumble();
     //testTransformElevGridToLocalFrame();
 }
