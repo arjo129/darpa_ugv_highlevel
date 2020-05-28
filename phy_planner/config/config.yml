@@ -1,0 +1,9 @@
+local_costmap:
+    plugins: 
+        - {name: gradient_layer, type: "phy_planner::RoughnessLayer"}
+    
+    publish_frequency: 1.0
+    robot_radius: 0.25
+    gradient_layer: 
+        observation_sources: elevation_map
+        elevation_map: {data_type: Pointcloud, topic: /X1/points, marking: true, clearing: true}

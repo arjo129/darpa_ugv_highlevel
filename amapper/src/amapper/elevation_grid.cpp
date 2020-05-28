@@ -18,6 +18,8 @@ ElevationGrid::ElevationGrid(const ElevationGrid& other) : data(other.data){
 ElevationGrid::ElevationGrid(amapper::ElevationGridMsg elevationGrid) {
     this->setFrameId(elevationGrid.header.frame_id);
     this->resolution = elevationGrid.resolution;
+    //Attempt to solve performance issues
+    this->data.reserve(elevationGrid.data.size());
     for(auto point: elevationGrid.data) {
         this->add(point);
     }

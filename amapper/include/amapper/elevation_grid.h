@@ -93,6 +93,10 @@ namespace AMapper {
             return -INFINITY;
         }
 
+        double getResolution() {
+            return resolution;
+        }
+
         void clear();
 
         bool operator ==(const ElevationGrid &b) const;

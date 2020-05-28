@@ -124,7 +124,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
    ${Qt5Core_INCLUDE_DIRS}
  ${Qt5Gui_INCLUDE_DIRS}
@@ -140,6 +140,8 @@ add_library(rviz_phy_planner
   src/rviz/pose_estimate_tool.h 
   src/rviz/pose_estimate_tool.cpp  
 )
+
+add_library(roughness_layer src/roughness_layer.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -170,6 +172,9 @@ target_link_libraries(rviz_phy_planner
   ${catkin_LIBRARIES}
 )
 
+target_link_libraries(roughness_layer
+  ${catkin_LIBRARIES}
+)
 #############
 ## Install ##
 #############

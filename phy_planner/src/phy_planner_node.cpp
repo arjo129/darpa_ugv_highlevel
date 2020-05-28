@@ -417,7 +417,7 @@ public:
         makeWheel("right_front_wheel", 0.25, 0.25);
     }
     
-    int determineFirstContactPoint(AMapper::ElevationGrid grid, geometry_msgs::Pose pose){
+    int determineFirstContactPoint(AMapper::ElevationGrid& grid, geometry_msgs::Pose pose){
         double elevation = -INFINITY;
         this->alreadyMadeContact.clear();
         std::string body_part;
@@ -689,9 +689,11 @@ void testElevation() {
 }
 
 AMapper::ElevationGrid grid;
+int count =0;
 
 void onElevMsg(amapper::ElevationGridMsg elevation_grid) {
-    grid = AMapper::ElevationGrid(elevation_grid);
+    count ++;
+    if(count%16 == 0)grid = AMapper::ElevationGrid(elevation_grid);
 }
 
 

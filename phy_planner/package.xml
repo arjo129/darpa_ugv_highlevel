@@ -58,9 +58,11 @@
   <exec_depend>roscpp</exec_depend>
   <build_depend>rviz</build_depend>
   <exec_depend>rviz</exec_depend>
+  <depend>costmap_2d</depend>
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->
     <rviz plugin="${prefix}/plugin_description.xml"/>
+    <costmap_2d plugin="${prefix}/roughness_layer.xml" />
   </export>
 </package>

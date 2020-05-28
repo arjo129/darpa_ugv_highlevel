@@ -1,0 +1,8 @@
+<launch>
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+        <rosparam file="$(find phy_planner)/config/config.yml" command="load" />
+    </node>
+    <node pkg="tf" type="static_transform_publisher" name="world2map" args="0 0 0 0 0 0 1 map world 10" />
+    <node pkg="tf" type="static_transform_publisher" name="dumdum" args="0 0 0 0 0 0 1 X1/base_link base_link 10" /> 
+    <node pkg="realsense_normal_estimate" type="realsense_normal_estimate_node" name="elevation_grid"/>
+</launch> 
