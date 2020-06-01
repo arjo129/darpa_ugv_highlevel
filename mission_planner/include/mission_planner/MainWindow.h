@@ -17,6 +17,8 @@
 #include <QLineEdit>
 #include <QPlainTextEdit>
 #include <QCompleter>
+#include <QPen>
+#include <QMouseEvent>
 #include <stack>
 #include "ui_MainWindow.h"
 
@@ -48,6 +50,9 @@ class MainWindow : public QMainWindow {
     private:
         // Default
         Ui::MainWindow* ui;
+
+        // Map
+        CustomGraphicsScene* scene;
 
         // Widgets
         // Goal Inputs
@@ -97,7 +102,6 @@ class MainWindow : public QMainWindow {
         void selectRobot4BtnClicked();
         void selectRobot5BtnClicked();
         void handleSelectRobotBtnClicked(int);
-
     public:
         MainWindow(ros::NodeHandle nh);
         ~MainWindow();
@@ -106,8 +110,8 @@ class MainWindow : public QMainWindow {
         void reportArtifact(const double, const double, const double, const std::string);
 
     public slots:
+        void clickedPos(int, int);
         void reportArtifactBtnClicked();
-
         void addPixmap(int robotNum, const QPixmap& map, float x, float y, float theta);
         void artifactReceived(float, float, float, std::string);
         void sliderMoved(int);

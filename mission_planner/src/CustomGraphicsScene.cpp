@@ -3,6 +3,12 @@
 void CustomGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     prevPixelPos = event->scenePos().y(); // reset pixel movement count for rotation on mouse click
     QGraphicsScene::mousePressEvent(event);
+    std::cout << "x:" << event->scenePos().x() << std::endl;
+    std::cout << "y:" << event->scenePos().y() << std::endl;
+    int x = event->scenePos().x();
+    int y = event->scenePos().y();
+    emit clickedPos(x, y);
+
 }
 
 void CustomGraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {

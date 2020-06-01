@@ -28,6 +28,7 @@ public slots:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
 signals:
     void onRotate(RotateState rotateState);
+    void clickedPos(int, int);
 };
 
 class LaserScanView : public QGraphicsScene {

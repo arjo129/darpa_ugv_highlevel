@@ -18,6 +18,28 @@ MainWindow::MainWindow(ros::NodeHandle _nh): nh(_nh), darpaServerThread(_nh) {
     initGoalUI();
 
     ROS_INFO("Starting UI");
+
+    // // create a scene and add it your view
+    scene = new CustomGraphicsScene;
+    ui->map->setScene(scene);
+
+
+    // Add the vertical lines first, paint them red
+    for (int x=0; x<=1000; x+=50)
+        scene->addLine(x,0,x,1000, QPen(Qt::red));
+
+    // Now add the horizontal lines, paint them green
+    for (int y=0; y<=1000; y+=50)
+        scene->addLine(0,y,1000,y, QPen(Qt::green));
+
+    connect(scene, &CustomGraphicsScene::clickedPos, this, &MainWindow::clickedPos);
+    // // Fit the view in the scene's bounding rect
+    // ui->map->fitInView(scene->itemsBoundingRect());
+
+}
+
+void MainWindow::clickedPos(int x, int y) {
+    std::cout << x << y <<std::endl;
 }
 
 MainWindow::~MainWindow() {
