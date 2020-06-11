@@ -1,4 +1,5 @@
 #include <amapper/grid.h>
+#include <ros/ros.h>
 
 using namespace AMapper;
 
@@ -65,7 +66,10 @@ std::string Grid::getFrameId(){
 nav_msgs::OccupancyGrid Grid::toOccupancyGrid() {
     nav_msgs::OccupancyGrid occupancygrid;
     occupancygrid.header.frame_id = frameId;
-    occupancygrid.header.stamp = ros::Time::now();
+    if(!ros::isInitialized())
+        occupancygrid.header.stamp = ros::Time();
+    else
+        occupancygrid.header.stamp = ros::Time::now();
     occupancygrid.info.resolution = resolution;
     occupancygrid.info.width = this->gridWidth;
     occupancygrid.info.height = this->gridHeight;

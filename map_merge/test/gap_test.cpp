@@ -58,6 +58,7 @@ TEST(CENTROID_CORRECTNESS, handlesInfinityCorrectly) {
     ASSERT_EQ(other.ranges[i], INFINITY) ;
   }
 }
+
 int main(int argc, char **argv){
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
