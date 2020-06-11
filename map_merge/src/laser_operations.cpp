@@ -146,13 +146,19 @@ void plotFreeSpace(AMapper::Grid& grid, Eigen::Vector2i centroid, int x, int y) 
     } 
 }
 public:
+LoggingBressenham(): lastGoodPoint(INFINITY, INFINITY) {}
+
+bool isPointAvailable() {
+    return lastGoodPointAvailable;
+}
+
 Eigen::Vector2f getLastGoodPoint() {
     lastGoodPointAvailable = false;
     return lastGoodPoint;
 }
 };
 
-void centroidNormalization(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& recalculate, float resolution) {
+void centroidNormalization(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& recalculate, float resolution, int default_interpolation) {
     
     AMapper::Grid grid(0, 0, (scan.range_max*2)/resolution, (scan.range_max*2)/resolution, resolution);
     
@@ -161,6 +167,7 @@ void centroidNormalization(const sensor_msgs::LaserScan& scan, sensor_msgs::Lase
     for(int i = 0; i < scan.ranges.size(); i++) {
         auto y = grid.toYIndex(scan.ranges.at(i)*sin(curr_angle));
         auto x = grid.toXIndex(scan.ranges.at(i)*cos(curr_angle));
+        if(!grid.isWithinGridCellMap(x, y)) continue;
         grid.data[y][x] = 1;
         curr_angle += scan.angle_increment;
     }
@@ -176,8 +183,9 @@ void centroidNormalization(const sensor_msgs::LaserScan& scan, sensor_msgs::Lase
            }
         }
     }
-    centroid /= num_points;
-    //std::cout << centroid <<std::endl;
+    
+    if (num_points != 0) centroid /= num_points;
+    //std::cout << "Centroid: " << centroid <<std::endl;
 
     recalculate.angle_max = scan.angle_max;
     recalculate.header = scan.header;
@@ -192,13 +200,15 @@ void centroidNormalization(const sensor_msgs::LaserScan& scan, sensor_msgs::Lase
     curr_angle = scan.angle_min;
     for(int i = 0 ;i < scan.ranges.size(); i++) {
         raytracer.rayTrace(grid, centroid, Eigen::Vector2f(scan.range_max*cos(curr_angle), scan.range_max*sin(curr_angle)));
-        auto point = raytracer.getLastGoodPoint();
+        Eigen::Vector2f point(INFINITY, INFINITY); 
+        if(raytracer.isPointAvailable())
+           point = raytracer.getLastGoodPoint();
         recalculate.ranges.push_back(point.norm());
         recalculate.intensities.push_back(47);
         curr_angle += scan.angle_increment;
     }
 
-    fillGaps(recalculate);
+    fillGaps(recalculate, default_interpolation);
 }
 
 void FFT1D(const sensor_msgs::LaserScan& scan, std::vector<float>& spectra){

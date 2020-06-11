@@ -22,5 +22,5 @@ void naiveCornerDetector(sensor_msgs::LaserScan& scan, pcl::PointCloud<pcl::Poin
 /**
  * Normalize centroid of laserscan
  */
-void centroidNormalization(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& recalculate, float resolution); 
+void centroidNormalization(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& recalculate, float resolution, int interpolation=8); 
 #endif

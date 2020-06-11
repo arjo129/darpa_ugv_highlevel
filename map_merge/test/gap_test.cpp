@@ -33,6 +33,7 @@ TEST(CENTROID_CORRECTNESS, isCorrect) {
   ASSERT_EQ(other.ranges.size(), scan.ranges.size());
   for(int i = 1; i < other.ranges.size(); i++) {
     ASSERT_LT(abs(other.ranges[i] - other.ranges[i-1]), 0.1) ;
+    //std::cout << other.ranges[i] << std::endl;
   }
 }
 
