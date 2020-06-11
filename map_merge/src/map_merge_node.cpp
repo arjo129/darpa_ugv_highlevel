@@ -5,7 +5,6 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <map_merge/laser_operations.h>
-#include <map_merge/FALCOExtractor.h>
 
 
 ros::Publisher pub, pub2;
@@ -28,7 +27,6 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
         planar_scans[plane_hash].header = pcl_msg->header;
     }
 
-    FALKOExtractor falko;
     pcl::PointCloud<pcl::PointXYZ> cloud;
    /* for(auto plane: planar_scans) {
        std::vector<FALKO> corners;
@@ -43,7 +41,8 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
 
     cloud.header = pcl_msg->header;
     auto scan = toLaserScan(planar_scans.begin()->second);
-    naiveCornerDetector(scan, cloud, 10);
+    std::vector<int> index;
+    naiveCornerDetector(scan, cloud, index, 10);
     pub.publish(cloud);
     pub2.publish(scan);
 }

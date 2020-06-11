@@ -55,6 +55,7 @@
   <build_export_depend>roscpp</build_export_depend>
   <exec_depend>pcl_ros</exec_depend>
   <exec_depend>roscpp</exec_depend>
+  <depend>amapper</depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

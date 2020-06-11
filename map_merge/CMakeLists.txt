@@ -10,6 +10,7 @@ project(map_merge)
 find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   roscpp
+  amapper
 )
 
 ## System dependencies are found with CMake's conventions
@@ -133,14 +134,13 @@ add_library(${PROJECT_NAME}
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node 
-                src/map_merge_node.cpp
-                src/falco_extractor.cpp)
+                src/map_merge_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -150,20 +150,38 @@ add_executable(${PROJECT_NAME}_node
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}
   Eigen3::Eigen
+  fftw3
 )
 
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
   Eigen3::Eigen
+  fftw3
 )
 
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_AUTOMOC ON)
+#SET(CMAKE_AUTOUIC ON)
+
+find_package(Qt5 COMPONENTS Core Gui Widgets PrintSupport Charts)
+
+add_executable(${PROJECT_NAME}_viz
+                src/visualization_node.cpp
+                src/visualization/chartview.h)
+target_link_libraries(${PROJECT_NAME}_viz
+    PUBLIC
+    Qt5::Core
+    Qt5::Gui
+    Qt5::Widgets
+    Qt5::Charts)
 #############
 ## Install ##
 #############
