@@ -1,6 +1,7 @@
 #ifndef _AMAPPER_GRID_
 #define _AMAPPER_GRID_
 
+#include <ros/ros.h>
 #include <math.h>
 #include <nav_msgs/OccupancyGrid.h>
 

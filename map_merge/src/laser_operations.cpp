@@ -1,8 +1,7 @@
-#include <ros/ros.h>
 #include <map_merge/laser_operations.h>
 #include <amapper/grid.h>
 #include <amapper/RayTracer.h>
-#include <fftw3.h>
+#include <unordered_map>
 
 struct point_sorter {
     inline bool operator() (const pcl::PointXYZ& p1, const pcl::PointXYZ& p2){
@@ -211,25 +210,109 @@ void centroidNormalization(const sensor_msgs::LaserScan& scan, sensor_msgs::Lase
     fillGaps(recalculate, default_interpolation);
 }
 
-void FFT1D(const sensor_msgs::LaserScan& scan, std::vector<float>& spectra){
+void FFT1D(const sensor_msgs::LaserScan& scan, std::vector<std::complex<double>>& spectra){
     
     fftw_complex* signal = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * scan.ranges.size());
     fftw_complex* result = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * scan.ranges.size());
     fftw_plan plan = fftw_plan_dft_1d(scan.ranges.size(), signal, result, FFTW_FORWARD, FFTW_ESTIMATE);
 
     for(int i =0; i < scan.ranges.size(); i++) {
-        signal[i][0] = scan.ranges.at(i);
+        auto range = scan.ranges.at(i);
+        signal[i][0] = range == INFINITY ? 0 :range;
         signal[i][1] = 0;
     }
 
     fftw_execute(plan);
 
     for(int i =0; i < scan.ranges.size(); i++) {
-       float magnitude = result[i][0]*result[i][0] + result[i][1]*result[i][1];
-       spectra.push_back(magnitude);
+       std::complex<double> c(result[i][0], result[i][1]);
+       spectra.push_back(c);
     }
 
     fftw_destroy_plan(plan);
     fftw_free(signal);
     fftw_free(result);
+}
+
+
+void multiply(fftw_complex& complex1, fftw_complex& complex2, fftw_complex& out) {
+    out[0] = complex1[0] * complex1[0] - complex2[1] * complex2[1]; 
+    out[1] = complex1[0] * complex2[1] + complex2[0] * complex2[1];  
+}
+
+float magnitude(fftw_complex& input) {
+    return input[0] * input[0] + input[1] * input[1];
+}
+
+float magnitude(std::vector<std::complex<double>>& complex) {
+    
+    float total = 0;
+    
+    for(int i = 0; i < complex.size(); i++) {
+        auto mag = std::norm(complex[i]);
+        total += mag*mag;
+    }
+
+    return total;
+}
+
+float compareScansEuclid(std::vector<std::complex<double>>& s1, std::vector<std::complex<double>>& s2){
+
+    assert(s1.size() == s2.size());
+
+    float sum = 0;
+    for(int i = 0 ; i < s1.size(); i++){
+        auto magnitude_s1 = std::norm(s1[i]);
+        auto magnitude_s2 = std::norm(s2[i]);
+        auto diff = magnitude_s1 - magnitude_s2;
+        sum += diff*diff;
+    }
+
+    return sum;
+}
+
+float compareScansCosine(std::vector<fftw_complex>& s1, std::vector<fftw_complex>& s2) {
+
+    assert(s1.size() == s2.size());
+
+    float sum = 0;
+    for(int i = 0 ; i < s1.size(); i++){
+        auto magnitude_s1 = s1[i][0]*s1[i][0] + s1[i][1]*s1[i][1];
+        auto magnitude_s2 = s2[i][0]*s2[i][0] + s2[i][1]*s2[i][1];
+        auto diff = magnitude_s1 * magnitude_s2;
+        sum += diff*diff;
+    }
+
+    for(int i = 0 ; i < s1.size(); i++){
+        
+    }
+    return sum;
+}
+
+void decomposeLidarScanIntoPlanes(pcl::PointCloud<pcl::PointXYZ>& points, std::vector<sensor_msgs::LaserScan>& scan_stack) {
+    std::unordered_map<long, pcl::PointCloud<pcl::PointXYZ> > planar_scans;
+    /**
+     * Decompose into scan planes
+     */ 
+    for(auto pt: points){
+        if(!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z)) {
+            continue;
+        }
+        float r = sqrt(pt.x*pt.x + pt.y*pt.y);
+        float angle = atan2(r,pt.z);
+        float res  = angle/(2*M_PI)*360;
+        long plane_hash = res;
+        planar_scans[plane_hash].push_back(pt);
+        planar_scans[plane_hash].header = points.header;
+    }
+
+    std::vector<long> scan_angles;
+    for(auto scan: planar_scans){
+        scan_angles.push_back(scan.first); 
+    }
+    std::sort(scan_angles.begin(), scan_angles.end());
+
+    for(auto angle: scan_angles) {
+        scan_stack.push_back(toLaserScan(planar_scans[angle]));
+    }
 }
