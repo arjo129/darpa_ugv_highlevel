@@ -175,7 +175,9 @@ find_package(Qt5 COMPONENTS Core Gui Widgets PrintSupport Charts)
 
 add_executable(${PROJECT_NAME}_viz
                 src/visualization_node.cpp
-                src/visualization/chartview.h)
+                src/visualization/chartview.h
+                src/visualization/canvas.h
+                src/visualization/canvas.cpp)
 target_link_libraries(${PROJECT_NAME}_viz
     PUBLIC
     Qt5::Core
