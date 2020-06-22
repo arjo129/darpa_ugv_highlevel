@@ -6,11 +6,16 @@
 #include <QtGui/QPainter>
 #include <QtCore/QtMath>
 #include <QtCore/QDir>
+#include <QtCore/QTimer>
 #include <map_merge/laser_operations.h>
+#include <map_merge/centroids.h>
 #include <sensor_msgs/LaserScan.h>
 #include <nlohmann_json/json.h>
 #include <fstream>
+#include <pcl_ros/point_cloud.h>
+#include <pcl_ros/transforms.h>
 #include "visualization/chartview.h"
+#include "visualization/canvas.h"
 
 ChartView::ChartView(QWidget *parent) :
     QChartView(new QChart(), parent)
@@ -79,74 +84,128 @@ void randomYaw(pcl::PointCloud<pcl::PointXYZ>& cloud, pcl::PointCloud<pcl::Point
     }
 
 }
-void getFeatureVector(nlohmann::json& j, std::vector<std::complex<double>>& d) {
+void getFeatureWithRandomRotationVector(nlohmann::json& j, std::vector<std::complex<double>>& d) {
     pcl::PointCloud<pcl::PointXYZ> cloud, rotated_cloud;
     retrievePointCloud(j, cloud);
     randomYaw(cloud, rotated_cloud);
     getFeatureVector(rotated_cloud, d);
 } 
 
-int main(int argc, char *argv[])
-{
-    srand(1000);
+void getFeatureVector(nlohmann::json& j, std::vector<std::complex<double>>& d) {
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+    retrievePointCloud(j, cloud);
+    getFeatureVector(cloud, d);
+}
+
+void evaluate_test() {
     QDir directory("/media/arjo/ba3893af-3249-49c4-8441-fb741cff5e26/triples");
     QStringList images = directory.entryList(QStringList() << "*.json",QDir::Files);
     foreach(QString filename, images) {
         std::ifstream i(directory.filePath(filename).toStdString());
         nlohmann::json j;
         i >> j;
+        int index = 0; 
         for(auto k: j){
             std::vector<std::complex<double>> anchor_vector; 
-            getFeatureVector(k["anchor"], anchor_vector);
+            getFeatureWithRandomRotationVector(k["anchor"], anchor_vector);
+            
 
             std::vector<std::complex<double>> neg_vector; 
-            getFeatureVector(k["neg"], neg_vector);
+            getFeatureWithRandomRotationVector(k["neg"], neg_vector);
 
             std::vector<std::complex<double>> pos_vector; 
-            getFeatureVector(k["pos"], pos_vector);
+            getFeatureWithRandomRotationVector(k["pos"], pos_vector);
 
             float pos = compareScansEuclid(pos_vector, anchor_vector);
             float neg = compareScansEuclid(neg_vector, anchor_vector);
-            std::cout << pos << "\t| " << neg << std::endl; 
+            std::cout << pos << "\t" << neg;
+            if(pos > neg) std::cout << "\t" << filename.toStdString() << "\t" << index; 
+            std::cout << std::endl; 
+            index++;
         }
     }
+}
 
-    //std::ifstream i("/media/arjo/ba3893af-3249-49c4-8441-fb741cff5e26/out.json");
-    /*std::string str;
+
+void index(std::vector<Centroid> centroids) {
+    std::ifstream i("/media/arjo/ba3893af-3249-49c4-8441-fb741cff5e26/out.json");
+    std::string str;
     while(std::getline(i, str)) {
         nlohmann::json j = nlohmann::json::parse(str);
-        std::cout << j["pose"]["pos"] << std::endl;
-
-        pcl::PointCloud<pcl::PointXYZ> pointCloud;
-        for(auto point: j["points"]) {
-            pcl::PointXYZ pt;          
-            pt.x = point[0];
-            pt.y = point[1];
-            pt.z = point[2];
-        
-            pointCloud.push_back(pt);
+        std::vector<std::complex<double>> vec; 
+        getFeatureVector(j, vec);
+        if(centroids.size() == 0) {
+            Centroid cen;
+            cen.centroid_vector = vec;
+            cen.x = j["pose"]["pos"][0];
+            cen.y = j["pose"]["pos"][1];
+            cen.count = 1;
+            centroids.push_back(cen);
+            continue;
         }
-        std::vector<sensor_msgs::LaserScan> msgs;
-        decomposeLidarScanIntoPlanes(pointCloud, msgs);
-        std::vector<std::complex<double> > d;
-        std::vector<sensor_msgs::LaserScan> normalized_scans;
-        for(auto& scan: msgs) {
-            sensor_msgs::LaserScan normalized_scan, downsampled_scan;
-            centroidNormalization(scan, normalized_scan, 0.1);
-            downsample(normalized_scan, downsampled_scan, 50);
-            FFT1D(downsampled_scan, d);
-            std::cout << d.size() <<std::endl;
-            
+        auto last_index = centroids.size()-1;
+        auto dist = compareScansEuclid(centroids[last_index].centroid_vector, vec);
+        //std::cout <<dist <<std::endl;
+        if(dist < 90000) {
+            centroids[last_index].count++;
+            centroids[last_index].x += (float)j["pose"]["pos"][0];
+            centroids[last_index].y += (float)j["pose"]["pos"][1];
+            continue;
         }
+        centroids[last_index].x /= centroids[last_index].count;
+        centroids[last_index].y /= centroids[last_index].count;
+        std::cout << centroids[last_index].seriallize().dump() <<std::endl;
+        Centroid new_centroid;
+        new_centroid.x = j["pose"]["pos"][0];
+        new_centroid.y = j["pose"]["pos"][1];
+        new_centroid.count += 1;
+        new_centroid.centroid_vector = vec;
+        centroids.push_back(new_centroid);   
+    }
+}
 
-    }*/
-    /*
+void loadIndices(std::string filepath, std::vector<Centroid>& centroids) {
+    std::ifstream i(filepath);
+    std::string str;
+    while(std::getline(i, str)) {
+        nlohmann::json j = nlohmann::json::parse(str);
+        centroids.push_back(Centroid::deserialize(j));
+    }
+}
 
+void lookupCentroid(std::vector<Centroid>& centroids, std::vector<float>& score, std::vector<std::complex<double> >& d) {
+   for(int i = 0; i < centroids.size(); i++) {
+       score.push_back(compareScansEuclid(centroids[i].centroid_vector, d));
+   } 
+}
+
+void onRecievePointcloud(pcl::PointCloud<pcl::PointXYZ> points) {
+    std::vector<double> vec, score;
+    
+}
+
+int main(int argc, char *argv[])
+{
+    srand(1000);
+    ros::init(argc, argv, "talker");
+    ros::NodeHandle n;
+    ros::Subscriber sub = n.subscribe("/X1/points/", 10, &onRecievePointcloud);
+    //evaluate_test();
+    std::vector<Centroid> centroids;
+    //index(centroids);
+    loadIndices("/home/arjo/Desktop/catkin_ws/index2.json", centroids);
     QApplication a(argc, argv);
-    ChartView *chartView = new ChartView();
     QMainWindow window;
-    window.setCentralWidget(chartView);
+    Helper *helper = new Helper(centroids);
+    Canvas *canvas = new Canvas(helper, nullptr);
+    window.setCentralWidget(canvas);
     window.resize(400, 300);
     window.show();
-    return a.exec();*/
+
+    QTimer *timer = new QTimer();
+    QObject::connect(timer, &QTimer::timeout, canvas, &Canvas::animate);
+    timer->start(50);
+
+
+    return a.exec();
 }

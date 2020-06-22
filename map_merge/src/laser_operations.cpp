@@ -225,7 +225,7 @@ void FFT1D(const sensor_msgs::LaserScan& scan, std::vector<std::complex<double>>
     fftw_execute(plan);
 
     for(int i =0; i < scan.ranges.size(); i++) {
-       std::complex<double> c(result[i][0], result[i][1]);
+       std::complex<double> c(result[i][0]/scan.ranges.size(), result[i][1]/scan.ranges.size());
        spectra.push_back(c);
     }
 
@@ -253,7 +253,7 @@ float magnitude(std::vector<std::complex<double>>& complex) {
         total += mag*mag;
     }
 
-    return total;
+    return sqrt(total);
 }
 
 float compareScansEuclid(std::vector<std::complex<double>>& s1, std::vector<std::complex<double>>& s2){
