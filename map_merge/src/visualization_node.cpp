@@ -7,11 +7,13 @@
 #include <QtCore/QtMath>
 #include <QtCore/QDir>
 #include <QtCore/QTimer>
+#include <geometry_msgs/TransformStamped.h>
 #include <map_merge/laser_operations.h>
 #include <map_merge/centroids.h>
 #include <sensor_msgs/LaserScan.h>
 #include <nlohmann_json/json.h>
 #include <fstream>
+#include <thread>
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
 #include "visualization/chartview.h"
@@ -82,8 +84,8 @@ void randomYaw(pcl::PointCloud<pcl::PointXYZ>& cloud, pcl::PointCloud<pcl::Point
         new_pt.y = radius*sin(yaw + offset);
         out.push_back(new_pt);
     }
-
 }
+
 void getFeatureWithRandomRotationVector(nlohmann::json& j, std::vector<std::complex<double>>& d) {
     pcl::PointCloud<pcl::PointXYZ> cloud, rotated_cloud;
     retrievePointCloud(j, cloud);
@@ -173,15 +175,38 @@ void loadIndices(std::string filepath, std::vector<Centroid>& centroids) {
     }
 }
 
-void lookupCentroid(std::vector<Centroid>& centroids, std::vector<float>& score, std::vector<std::complex<double> >& d) {
+void lookupCentroid(std::vector<Centroid>& centroids, std::vector<double>& score, std::vector<std::complex<double> >& d) {
    for(int i = 0; i < centroids.size(); i++) {
        score.push_back(compareScansEuclid(centroids[i].centroid_vector, d));
    } 
 }
 
+
+std::vector<Centroid> centroids;
+Helper *helper;
+Canvas *canvas;
+
 void onRecievePointcloud(pcl::PointCloud<pcl::PointXYZ> points) {
-    std::vector<double> vec, score;
+    std::vector<double> score;
+    std::vector<std::complex<double>> featureVector;
+
+    getFeatureVector(points, featureVector);
+    lookupCentroid(centroids, score, featureVector);
+    helper->setScores(score);
+    canvas->update();
+}
+
+void onGroundTruth(geometry_msgs::TransformStamped stamp) {
+
+    if(stamp.header.frame_id != "simple_cave_01") return;
     
+    auto x = stamp.transform.translation.x;
+    auto y = stamp.transform.translation.z;
+    helper->setLocation(x,y);
+}
+
+void applicationThread() {
+    while(ros::ok()) ros::spinOnce();
 }
 
 int main(int argc, char *argv[])
@@ -190,22 +215,20 @@ int main(int argc, char *argv[])
     ros::init(argc, argv, "talker");
     ros::NodeHandle n;
     ros::Subscriber sub = n.subscribe("/X1/points/", 10, &onRecievePointcloud);
+    ros::Subscriber positionSub = n.subscribe("/X1/pose", 10, &onGroundTruth);
     //evaluate_test();
-    std::vector<Centroid> centroids;
+    
     //index(centroids);
     loadIndices("/home/arjo/Desktop/catkin_ws/index2.json", centroids);
     QApplication a(argc, argv);
     QMainWindow window;
-    Helper *helper = new Helper(centroids);
-    Canvas *canvas = new Canvas(helper, nullptr);
+    helper = new Helper(centroids);
+    canvas = new Canvas(helper, nullptr);
+
+    std::thread app(applicationThread);
+
     window.setCentralWidget(canvas);
     window.resize(400, 300);
     window.show();
-
-    QTimer *timer = new QTimer();
-    QObject::connect(timer, &QTimer::timeout, canvas, &Canvas::animate);
-    timer->start(50);
-
-
     return a.exec();
 }

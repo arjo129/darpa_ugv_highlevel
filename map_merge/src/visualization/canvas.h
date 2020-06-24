@@ -14,6 +14,8 @@ class Helper
 public:
     Helper(std::vector<Centroid> centroids);
     void paint(QPainter *painter, QPaintEvent *event, int elapsed);
+    void setScores(std::vector<double>& score);
+    void setLocation(double x, double y);
 
 private:
     QBrush background;
@@ -21,6 +23,8 @@ private:
     QFont textFont;
     QPen circlePen;
     QPen textPen;
+    double robot_x, robot_y;
+    std::vector<double> _score;
     std::vector<Centroid> _centroids;
 };
 

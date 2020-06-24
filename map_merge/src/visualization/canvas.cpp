@@ -40,7 +40,12 @@ Helper::Helper(std::vector<Centroid> centroids)
     
     this->_centroids = centroids;
 }
-//! [0]
+
+void Helper::setScores(std::vector<double>& score) {
+    this->_score.clear();
+    for(int i = 0; i < score.size(); i++)
+        this->_score.push_back(score[i]);
+}
 
 //! [1]
 void Helper::paint(QPainter *painter, QPaintEvent *event, int elapsed)
@@ -57,6 +62,12 @@ void Helper::paint(QPainter *painter, QPaintEvent *event, int elapsed)
         min_y = std::min(centroid.y, min_y);
     }
 
+    double min_score = INFINITY, max_score = -INFINITY;
+    for(auto score: _score) {
+        min_score = std::min(score, min_score);
+        max_score = std::max(score, max_score);
+    }
+    auto width = max_score - min_score;
 
     auto map_width  = max_x - min_x;
     auto map_height = max_y - min_y;
@@ -73,11 +84,21 @@ void Helper::paint(QPainter *painter, QPaintEvent *event, int elapsed)
         scale = screen_height/map_height;
     }
 
-    for(auto centroid: _centroids) {
-        auto x_coord = scale*(centroid.x - min_x);
-        auto y_coord = scale*(centroid.y - min_y);
-        auto brush = QBrush(QColor::fromHsvF(0.7, 1, 1));
+    for(int i = 0; i < _centroids.size(); i++) {
+        auto x_coord = scale * (_centroids[i].x - min_x);
+        auto y_coord = scale * (_centroids[i].y - min_y);
+        if(i >= _score.size()) continue;
+        auto brush = QBrush(QColor::fromHsvF(-0.7*(_score[i] - min_score)/width + 1, 1, 1, 0.7));
         painter->setBrush(brush);
         painter->drawEllipse(QPointF(x_coord, y_coord), 10, 10);
     }
+
+    auto brush = QBrush(QColor(255,255,255));
+    painter->setBrush(brush);
+    painter->drawEllipse(QPointF(scale*(this->robot_x - min_x), scale*(this->robot_y - min_y)), 10, 10);
+}
+
+void Helper::setLocation(double x, double y) {
+    this->robot_x = x;
+    this->robot_y = y;
 }

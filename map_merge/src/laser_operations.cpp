@@ -2,6 +2,10 @@
 #include <amapper/grid.h>
 #include <amapper/RayTracer.h>
 #include <unordered_map>
+#include <unordered_set>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <pcl/registration/icp.h>
 
 struct point_sorter {
     inline bool operator() (const pcl::PointXYZ& p1, const pcl::PointXYZ& p2){
@@ -53,6 +57,10 @@ sensor_msgs::LaserScan toLaserScan(pcl::PointCloud<pcl::PointXYZ>& pc) {
     return scan;
 }
 
+pcl::PointXYZ scanPointToPointCloud(pcl::PointXYZ point, double azimuth) {
+    return pcl::PointXYZ(point.x, point.y, Eigen::Vector2f(point.x, point.y).norm()*tan(azimuth));
+}
+
 float* lookup(sensor_msgs::LaserScan& scan, int index) {
     auto length = scan.ranges.size();
     if(index < 0) {
@@ -61,6 +69,10 @@ float* lookup(sensor_msgs::LaserScan& scan, int index) {
     else {
         return &scan.ranges[index%length];
     }
+}
+
+int lookupAngle(sensor_msgs::LaserScan& scan, float angle) {
+    return (int)((angle-scan.angle_min)/scan.angle_increment);
 }
 
 void fillGaps(sensor_msgs::LaserScan& scan, size_t max_gap) {
@@ -300,6 +312,36 @@ void decomposeLidarScanIntoPlanes(pcl::PointCloud<pcl::PointXYZ>& points, std::v
         }
         float r = sqrt(pt.x*pt.x + pt.y*pt.y);
         float angle = atan2(r,pt.z);
+        float res  = angle/M_PI*180;
+        long plane_hash = res;
+        planar_scans[plane_hash].push_back(pt);
+        planar_scans[plane_hash].header = points.header;
+    }
+
+    std::vector<double> scan_angles;
+    for(auto scan: planar_scans){
+        scan_angles.push_back((double)scan.first/180.f*M_PI); 
+    }
+    std::sort(scan_angles.begin(), scan_angles.end());
+
+    for(auto angle: scan_angles) {
+        scan_stack.push_back(toLaserScan(planar_scans[angle]));
+    }
+}
+
+
+
+void decomposeLidarScanIntoPlanes(pcl::PointCloud<pcl::PointXYZ>& points, LidarScan& scan_stack) {
+    std::unordered_map<long, pcl::PointCloud<pcl::PointXYZ> > planar_scans;
+    /**
+     * Decompose into scan planes
+     */ 
+    for(auto pt: points){
+        if(!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z)) {
+            continue;
+        }
+        float r = sqrt(pt.x*pt.x + pt.y*pt.y);
+        float angle = atan2(r,pt.z);
         float res  = angle/(2*M_PI)*360;
         long plane_hash = res;
         planar_scans[plane_hash].push_back(pt);
@@ -313,6 +355,87 @@ void decomposeLidarScanIntoPlanes(pcl::PointCloud<pcl::PointXYZ>& points, std::v
     std::sort(scan_angles.begin(), scan_angles.end());
 
     for(auto angle: scan_angles) {
-        scan_stack.push_back(toLaserScan(planar_scans[angle]));
+        LidarRing ring;
+        ring.azimulth = angle;
+        ring.scan = toLaserScan(planar_scans[angle]);
+        scan_stack.push_back(ring);
     }
+}
+
+void extractCorners(pcl::PointCloud<pcl::PointXYZ>& cloud, pcl::PointCloud<pcl::PointXYZ>& corners) {
+    LidarScan scan;
+    decomposeLidarScanIntoPlanes(cloud, scan);
+    for(auto plane: scan) {
+        pcl::PointCloud<pcl::PointXYZ> cloud;
+        std::vector<int> index;
+        naiveCornerDetector(plane.scan, cloud, index);
+        for(auto point: cloud) {
+            auto res = scanPointToPointCloud(point, plane.azimulth);
+            corners.push_back(res);
+        }
+    }
+}
+
+Eigen::Vector2f getCentroid(sensor_msgs::LaserScan& scan, double angle, double resolution) {
+    AMapper::Grid grid(0, 0, (scan.range_max*2)/resolution, (scan.range_max*2)/resolution, resolution);
+    std::unordered_set<long> z_axis;
+    //Convert to cartesian
+    float curr_angle = scan.angle_min;
+    for(int i = 0; i < scan.ranges.size(); i++) {
+        auto y = grid.toYIndex(scan.ranges.at(i)*sin(curr_angle));
+        auto x = grid.toXIndex(scan.ranges.at(i)*cos(curr_angle));
+        if(!grid.isWithinGridCellMap(x, y)) continue;
+        grid.data[y][x] = 1;
+        curr_angle += scan.angle_increment;
+    }
+
+    //Get centroid 
+    Eigen::Vector2f centroid(0,0);
+    int num_points = 0;
+    for(int i = 0; i < grid.gridWidth; i++) {
+        for(int j = 0; j < grid.gridWidth; j++) {
+           if(grid.data[i][j] == 1){
+               centroid += Eigen::Vector2f(grid.fromXIndex(j), grid.fromYIndex(i));
+               num_points++;
+           }
+        }
+    }
+
+    return centroid;
+}
+
+void getCentroid(LidarScan& scan, double resolution){
+    Eigen::Vector3f centroid(0,0,0);
+    for(auto& ring: scan) {
+        
+    }
+}
+
+
+/**
+ * Fast lidar normal 
+ */ 
+void fastLidarNormal(LidarScan& stack, pcl::PointCloud<pcl::PointXYZINormal> normals) {
+    for(auto& ring: stack) {
+        for(int i = 0 ; i < ring.scan.ranges.size() ; i++) {
+            //normals.push_back();
+        }
+    }
+}
+
+/**
+ * Used for educated initial guess. Used with *very* sparse point clouds.
+ */ 
+Eigen::Matrix4f ICPMatchPointToPoint(const pcl::PointCloud<pcl::PointXYZ>& pt1,const pcl::PointCloud<pcl::PointXYZ>& pt2, int max_iter, double max_error) {
+    
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>(pt1));
+    pcl::PointCloud<pcl::PointXYZ>::Ptr reference(new pcl::PointCloud<pcl::PointXYZ>(pt2));
+    pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
+
+    icp.setInputSource(cloud);
+    icp.setInputTarget(reference);
+    pcl::PointCloud<pcl::PointXYZ> Final;
+    icp.align(Final);
+    
+    return icp.getFinalTransformation();
 }

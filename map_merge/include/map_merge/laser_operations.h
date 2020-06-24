@@ -40,4 +40,13 @@ void  decomposeLidarScanIntoPlanes(pcl::PointCloud<pcl::PointXYZ>& points, std::
 void downsample(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& out, int skip);
 
 float compareScansEuclid(std::vector<std::complex<double>>& s1, std::vector<std::complex<double>>& s2);
+
+struct LidarRing {
+    double azimulth;
+    sensor_msgs::LaserScan scan;
+};
+
+typedef std::vector<LidarRing> LidarScan;
+
+Eigen::Matrix4f ICPMatchPointToPoint(const pcl::PointCloud<pcl::PointXYZ>& pt1, const pcl::PointCloud<pcl::PointXYZ>& pt2, int max_iter=200, double max_error=0);
 #endif
