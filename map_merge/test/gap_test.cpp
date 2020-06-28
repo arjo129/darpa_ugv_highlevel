@@ -59,6 +59,31 @@ TEST(CENTROID_CORRECTNESS, handlesInfinityCorrectly) {
   }
 }
 
+TEST(DECOMPOSES_CORRECTLY, decomposeAndRecomposeCorrectly) {
+  pcl::PointCloud<pcl::PointXYZ> pointCloud;
+  auto TEST_SIZE = 360;
+  for(int i = 0; i < TEST_SIZE; i++){
+    auto yaw = i*2*M_PI/TEST_SIZE;
+    pointCloud.push_back(pcl::PointXYZ(cos(yaw), sin(yaw), 2));
+  }
+  LidarScan scan;
+  decomposeLidarScanIntoPlanes(pointCloud, scan);
+  for(auto layer: scan) {
+    for(int i = 0 ; i < layer.scan.ranges.size(); i++) {
+      auto azimuth = layer.azimuth;
+      auto yaw = layer.scan.angle_min + layer.scan.angle_increment*i;
+      //std::cout << yaw <<std::endl;
+      auto x = layer.scan.ranges[i] * cos(yaw);
+      auto y = layer.scan.ranges[i] * sin(yaw); 
+      if(!std::isfinite(x) || !std::isfinite(y)) continue;
+      auto res = scanPointToPointCloud(pcl::PointXYZ(x,y,0), azimuth);
+      /*ASSERT_NEAR(res.x, 1, 0.001);
+      ASSERT_NEAR(res.y, 1, 0.001);*/
+      //std::cout << x << ", " << y <<std::endl;
+      ASSERT_NEAR(res.z, 2, 0.1);
+    }
+  }
+}
 int main(int argc, char **argv){
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

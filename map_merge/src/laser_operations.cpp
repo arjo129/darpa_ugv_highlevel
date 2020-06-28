@@ -6,6 +6,8 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/registration/icp.h>
+#include <pcl/sample_consensus/ransac.h>
+#include <pcl/sample_consensus/sac_model_plane.h>
 
 struct point_sorter {
     inline bool operator() (const pcl::PointXYZ& p1, const pcl::PointXYZ& p2){
@@ -39,26 +41,26 @@ sensor_msgs::LaserScan toLaserScan(pcl::PointCloud<pcl::PointXYZ>& pc) {
     scan.angle_increment = min_diff;
     scan.angle_min = -M_PI;
     scan.angle_max = M_PI-min_diff;
-    scan.range_max = max_range +1;
+    scan.range_max = max_range + 1;
     auto num_entries = ceil(2*M_PI/min_diff);
     scan.ranges = std::vector<float>((size_t)num_entries, INFINITY);
     scan.intensities = std::vector<float>((size_t)num_entries, 47);
     for(int i = 0; i < pc.size(); i++) {
         Eigen::Vector3f v1(pc[i].x , pc[i].y, 0);
-        Eigen::Vector3f x_axis(1,0,0);
+        //Eigen::Vector3f x_axis(1,0,0);
         auto angle = atan2(pc[i].y, pc[i].x);
         auto index = round((angle - scan.angle_min)/scan.angle_increment);
         //std::cout << __LINE__<< " "<<index <<std::endl;
         if(index >= scan.ranges.size() || index < 0){
             continue;
         }
-        scan.ranges[(size_t)index] = Eigen::Vector3f(pc[i].x, pc[i].y, 0).norm();
+        scan.ranges[(size_t)index] = v1.norm();
     }
     return scan;
 }
 
 pcl::PointXYZ scanPointToPointCloud(pcl::PointXYZ point, double azimuth) {
-    return pcl::PointXYZ(point.x, point.y, Eigen::Vector2f(point.x, point.y).norm()*tan(azimuth));
+    return pcl::PointXYZ(point.x, point.y, Eigen::Vector2f(point.x, point.y).norm()/tan(azimuth));
 }
 
 float* lookup(sensor_msgs::LaserScan& scan, int index) {
@@ -331,7 +333,7 @@ void decomposeLidarScanIntoPlanes(pcl::PointCloud<pcl::PointXYZ>& points, std::v
 
 
 
-void decomposeLidarScanIntoPlanes(pcl::PointCloud<pcl::PointXYZ>& points, LidarScan& scan_stack) {
+void decomposeLidarScanIntoPlanes(const pcl::PointCloud<pcl::PointXYZ>& points, LidarScan& scan_stack) {
     std::unordered_map<long, pcl::PointCloud<pcl::PointXYZ> > planar_scans;
     /**
      * Decompose into scan planes
@@ -341,7 +343,7 @@ void decomposeLidarScanIntoPlanes(pcl::PointCloud<pcl::PointXYZ>& points, LidarS
             continue;
         }
         float r = sqrt(pt.x*pt.x + pt.y*pt.y);
-        float angle = atan2(r,pt.z);
+        float angle = atan2(r, pt.z);
         float res  = angle/(2*M_PI)*360;
         long plane_hash = res;
         planar_scans[plane_hash].push_back(pt);
@@ -356,21 +358,21 @@ void decomposeLidarScanIntoPlanes(pcl::PointCloud<pcl::PointXYZ>& points, LidarS
 
     for(auto angle: scan_angles) {
         LidarRing ring;
-        ring.azimulth = angle;
+        ring.azimuth = angle*M_PI/180;
         ring.scan = toLaserScan(planar_scans[angle]);
         scan_stack.push_back(ring);
     }
 }
 
-void extractCorners(pcl::PointCloud<pcl::PointXYZ>& cloud, pcl::PointCloud<pcl::PointXYZ>& corners) {
+void extractCorners(const pcl::PointCloud<pcl::PointXYZ>& cloud, pcl::PointCloud<pcl::PointXYZ>& corners) {
     LidarScan scan;
     decomposeLidarScanIntoPlanes(cloud, scan);
     for(auto plane: scan) {
         pcl::PointCloud<pcl::PointXYZ> cloud;
         std::vector<int> index;
-        naiveCornerDetector(plane.scan, cloud, index);
+        naiveCornerDetector(plane.scan, cloud, index, 100);
         for(auto point: cloud) {
-            auto res = scanPointToPointCloud(point, plane.azimulth);
+            auto res = scanPointToPointCloud(point, plane.azimuth);
             corners.push_back(res);
         }
     }
@@ -411,14 +413,58 @@ void getCentroid(LidarScan& scan, double resolution){
     }
 }
 
+pcl::PointXYZ convertToCartesian(double r, double azimuth, double yaw) {
+    auto x = r * cos(yaw);
+    auto y = r * sin(yaw);
+    return scanPointToPointCloud(pcl::PointXYZ(x,y,0), azimuth);
+}
+
+pcl::PointXYZ convertToCartesian(sensor_msgs::LaserScan& scan, int index, double azimuth) {
+    auto r = *lookup(scan, index);
+    auto yaw = scan.angle_min + index*scan.angle_increment;
+    return convertToCartesian(r, azimuth, yaw);
+}
+
+
+pcl::Normal estimateNormalRANSAC(pcl::PointCloud<pcl::PointXYZ>::Ptr points) {
+    Eigen::VectorXf coefficients;
+    pcl::SampleConsensusModelPlane<pcl::PointXYZ>::Ptr
+    model_p (new pcl::SampleConsensusModelPlane<pcl::PointXYZ>(points));
+    pcl::RandomSampleConsensus<pcl::PointXYZ> ransac (model_p);
+    ransac.setDistanceThreshold (.05);
+    ransac.setMaxIterations(10);
+    ransac.computeModel();
+    ransac.getModelCoefficients(coefficients);
+    return pcl::Normal(coefficients[0], coefficients[1], coefficients[2]);
+}
 
 /**
- * Fast lidar normal 
+ * Get nearest lidar neighbors on the surface
  */ 
-void fastLidarNormal(LidarScan& stack, pcl::PointCloud<pcl::PointXYZINormal> normals) {
-    for(auto& ring: stack) {
-        for(int i = 0 ; i < ring.scan.ranges.size() ; i++) {
-            //normals.push_back();
+void getSurfaceNeighbors(LidarScan& layers, int stack, int pointIndex, int radius_x, int radius_y, pcl::PointCloud<pcl::PointXYZ>::Ptr output) {
+    for(int y = -radius_y; y <= radius_y; y++) {
+        for(int x = -radius_x; x <= radius_x; x++) {
+            auto index_z= stack+y;
+            if(index_z < 0) continue;
+            if(index_z >= layers.size()) continue;
+            if(*lookup(layers[index_z].scan, pointIndex+x) > layers[index_z].scan.range_max) continue;
+            auto res = convertToCartesian(layers[index_z].scan, pointIndex+x, layers[index_z].azimuth);
+            output->push_back(res);
+        }    
+    }
+} 
+/**
+ * Fast lidar normal 
+ * This function utilizes the symetries in a Lidar to make fast normal estimation
+ */ 
+void fastLidarNormal(LidarScan& stack, pcl::PointCloud<pcl::PointNormal>::Ptr normals) {
+    for(int i = 1 ; i < stack.size() - 1; i++) {
+        for(int j = 0; j < stack[i].scan.ranges.size(); j++) {
+            pcl::PointCloud<pcl::PointXYZ>::Ptr output(new pcl::PointCloud<pcl::PointXYZ>);
+            getSurfaceNeighbors(stack, i, j, 10, 1, output);
+            pcl::Normal normal = estimateNormalRANSAC(output);
+            pcl::PointXYZ pt = convertToCartesian(stack[i].scan, j, stack[i].azimuth);
+           // normals->push_back(pcl::PointNormal(pt.x, pt.y, pt.z, normal.normal_x, normal.normal_x, normal.normal_z));
         }
     }
 }

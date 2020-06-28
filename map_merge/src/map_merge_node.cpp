@@ -42,12 +42,8 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
     }*/
 
     cloud.header = pcl_msg->header;
-    auto scan = toLaserScan(planar_scans.begin()->second);
-    std::vector<int> index;
-    naiveCornerDetector(scan, cloud, index, 10);
-    final_cloud1.clear();
-    final_cloud1.insert(final_cloud1.end(), cloud.begin(), cloud.end());
-    //pub.publish(cloud);
+    extractCorners(*pcl_msg, cloud);
+    pub.publish(cloud);
     //pub2.publish(scan);
 }
 
@@ -81,7 +77,7 @@ void onPointCloudRecieved2(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_m
        }
     }*/
 
-    cloud.header = pcl_msg->header;
+    /*cloud.header = pcl_msg->header;
     auto scan = toLaserScan(planar_scans.begin()->second);
     std::vector<int> index;
     naiveCornerDetector(scan, cloud, index, 10);
@@ -89,7 +85,7 @@ void onPointCloudRecieved2(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_m
         auto mat = ICPMatchPointToPoint(final_cloud1, cloud);
         std::cout << "Estimate" <<std::endl;
         std::cout << mat <<std::endl;
-    }
+    }*/
 }
 
 int main(int argc, char** argv) {

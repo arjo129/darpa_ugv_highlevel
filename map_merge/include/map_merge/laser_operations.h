@@ -8,8 +8,17 @@
 #include <vector>
 #include <fftw3.h>
 
-sensor_msgs::LaserScan toLaserScan(pcl::PointCloud<pcl::PointXYZ>& pc);
 
+struct LidarRing {
+    double azimuth;
+    sensor_msgs::LaserScan scan;
+};
+
+typedef std::vector<LidarRing> LidarScan;
+
+void decomposeLidarScanIntoPlanes(const pcl::PointCloud<pcl::PointXYZ>& points, LidarScan& scan_stack);
+sensor_msgs::LaserScan toLaserScan(pcl::PointCloud<pcl::PointXYZ>& pc);
+pcl::PointXYZ scanPointToPointCloud(pcl::PointXYZ point, double azimuth);
 float* lookup(sensor_msgs::LaserScan& scan, int index); 
 
 /**
@@ -18,9 +27,14 @@ float* lookup(sensor_msgs::LaserScan& scan, int index);
 void fillGaps(sensor_msgs::LaserScan& scan, size_t max_gap=2);
 
 /**
- * Naive corner detector
+ * Naive corner detector for a single plane laserscan
  */
 void naiveCornerDetector(sensor_msgs::LaserScan& scan, pcl::PointCloud<pcl::PointXYZ>& corners, std::vector<int>& indices, int skip=1);
+
+/**
+ * Extract Corners from a 3D lidar scan
+ */ 
+void extractCorners(const pcl::PointCloud<pcl::PointXYZ>& cloud, pcl::PointCloud<pcl::PointXYZ>& corners); 
 
 /**
  * Normalize centroid of laserscan
@@ -41,12 +55,7 @@ void downsample(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& out,
 
 float compareScansEuclid(std::vector<std::complex<double>>& s1, std::vector<std::complex<double>>& s2);
 
-struct LidarRing {
-    double azimulth;
-    sensor_msgs::LaserScan scan;
-};
 
-typedef std::vector<LidarRing> LidarScan;
 
 Eigen::Matrix4f ICPMatchPointToPoint(const pcl::PointCloud<pcl::PointXYZ>& pt1, const pcl::PointCloud<pcl::PointXYZ>& pt2, int max_iter=200, double max_error=0);
 #endif
