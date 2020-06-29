@@ -72,14 +72,10 @@ TEST(DECOMPOSES_CORRECTLY, decomposeAndRecomposeCorrectly) {
     for(int i = 0 ; i < layer.scan.ranges.size(); i++) {
       auto azimuth = layer.azimuth;
       auto yaw = layer.scan.angle_min + layer.scan.angle_increment*i;
-      //std::cout << yaw <<std::endl;
       auto x = layer.scan.ranges[i] * cos(yaw);
       auto y = layer.scan.ranges[i] * sin(yaw); 
       if(!std::isfinite(x) || !std::isfinite(y)) continue;
       auto res = scanPointToPointCloud(pcl::PointXYZ(x,y,0), azimuth);
-      /*ASSERT_NEAR(res.x, 1, 0.001);
-      ASSERT_NEAR(res.y, 1, 0.001);*/
-      //std::cout << x << ", " << y <<std::endl;
       ASSERT_NEAR(res.z, 2, 0.1);
     }
   }
