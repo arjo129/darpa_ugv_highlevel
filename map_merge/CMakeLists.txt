@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(map_merge)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+# add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -17,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package (Eigen3 REQUIRED)
-
+find_package (PCL REQUIRED COMPONENTS io common visualization) 
 #find_path(EIGEN3_INCLUDE_DIRS "Eigen" paths "/usr/include" "/usr/local/include" path_suffixes "eigen3")
 #message(${EIGEN3_INCLUDE_DIRS})
 #if ( NOT EIGEN3_INCLUDE_DIRS )
@@ -157,6 +157,7 @@ add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}
+  ${PCL_LIBRARIES}
   Eigen3::Eigen
   fftw3
 )
