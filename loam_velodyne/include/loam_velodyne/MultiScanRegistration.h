@@ -133,6 +133,7 @@ private:
   int _systemDelay = 20;             ///< system startup delay counter
   MultiScanMapper _scanMapper;  ///< mapper for mapping vertical point angles to scan ring IDs
   std::vector<pcl::PointCloud<pcl::PointXYZI> > _laserCloudScans;
+  //pcl::PointCloud<pcl::PointXYZI> _laserCloudGroundScansDeep;
   ros::Subscriber _subLaserCloud;   ///< input cloud message subscriber
 
 };

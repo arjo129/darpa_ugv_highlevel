@@ -25,6 +25,8 @@ namespace loam
     auto& surfPointsLessFlat()    { return _surfPointsLessFlat; }
     auto& laserCloud() { return _laserCloud; }
 
+    // auto& laserCloudGroundScansDeep()     { return _laserCloudGroundScansDeep; }
+
     auto const& transformSum() { return _transformSum; }
     auto const& transform()    { return _transform;    }
     auto const& lastCornerCloud () { return _lastCornerCloud ; }
@@ -88,6 +90,8 @@ namespace loam
     pcl::PointCloud<pcl::PointXYZI>::Ptr _surfPointsFlat;         ///< flat surface points cloud
     pcl::PointCloud<pcl::PointXYZI>::Ptr _surfPointsLessFlat;     ///< less flat surface points cloud
     pcl::PointCloud<pcl::PointXYZI>::Ptr _laserCloud;             ///< full resolution cloud
+
+    // pcl::PointCloud<pcl::PointXYZI>::Ptr _laserCloudGroundScansDeep
 
     std::vector<int> _pointSearchCornerInd1;    ///< first corner point search index buffer
     std::vector<int> _pointSearchCornerInd2;    ///< second corner point search index buffer

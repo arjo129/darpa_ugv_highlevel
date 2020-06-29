@@ -75,6 +75,10 @@ void BasicScanRegistration::reset(const Time& scanTime)
 
     // clear scan indices vector
     _scanIndices.clear();
+
+
+
+    // _laserCloudGroundScansDeep.clear();
   }
 }
 
@@ -207,6 +211,7 @@ void BasicScanRegistration::extractFeatures(const uint16_t& beginIdx)
           if (largestPickedNum <= _config.maxCornerSharp) {
             _regionLabel[regionIdx] = CORNER_SHARP;
             _cornerPointsSharp.push_back(_laserCloud[idx]);
+            // _laserCloudGroundScansDeep.push_back(_laserCloud[idx]);
           } else {
             _regionLabel[regionIdx] = CORNER_LESS_SHARP;
           }

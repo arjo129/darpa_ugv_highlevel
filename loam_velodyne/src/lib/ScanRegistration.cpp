@@ -156,6 +156,8 @@ bool ScanRegistration::setupROS(ros::NodeHandle& node, ros::NodeHandle& privateN
   _pubSurfPointsLessFlat    = node.advertise<sensor_msgs::PointCloud2>("/laser_cloud_less_flat", 2);
   _pubImuTrans              = node.advertise<sensor_msgs::PointCloud2>("/imu_trans", 5);
 
+  // _pubGroundDeep            = node.advertise<sensor_msgs::PointCloud2>("/ground_data_Deep", 2);
+
   return true;
 }
 
@@ -196,6 +198,9 @@ void ScanRegistration::publishResult()
 
   // publish corresponding IMU transformation information
   publishCloudMsg(_pubImuTrans, imuTransform(), sweepStartTime, "/X1");
+
+
+  // publishCloudMsg(_pubGroundDeep, laserCloudGroundScansDeep(), sweepStartTime, "/X1");
 }
 
 } // end namespace loam

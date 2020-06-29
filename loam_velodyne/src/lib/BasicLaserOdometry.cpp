@@ -33,6 +33,9 @@ BasicLaserOdometry::BasicLaserOdometry(float scanPeriod, size_t maxIterations) :
    _lastSurfaceCloud(new pcl::PointCloud<pcl::PointXYZI>()),
    _laserCloudOri(new pcl::PointCloud<pcl::PointXYZI>()),
    _coeffSel(new pcl::PointCloud<pcl::PointXYZI>())
+
+
+   // _laserCloudGroundScansDeep(new pcl::PointCloud<pcl::PointXYZI>())
 {}
 
 

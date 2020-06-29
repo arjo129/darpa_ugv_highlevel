@@ -90,6 +90,7 @@ namespace loam
     ros::Publisher _pubSurfPointsFlat;          ///< flat surface cloud message publisher
     ros::Publisher _pubSurfPointsLessFlat;      ///< less flat surface cloud message publisher
     ros::Publisher _pubImuTrans;                ///< IMU transformation message publisher
+    ros::Publisher _pubGroundDeep;                ///< ground points
   };
 
 } // end namespace loam

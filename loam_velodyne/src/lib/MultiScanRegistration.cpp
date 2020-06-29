@@ -237,6 +237,11 @@ void MultiScanRegistration::process(const pcl::PointCloud<pcl::PointXYZ>& laserC
     projectPointToStartOfSweep(point, relTime);
 
     _laserCloudScans[scanID].push_back(point);
+
+    // if(point.z < 1.0){
+    //   // _laserCloudGroundScansDeep.push_back(point);
+    // }
+
   }
 
   processScanlines(scanTime, _laserCloudScans);

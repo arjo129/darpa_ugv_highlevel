@@ -162,6 +162,8 @@ namespace loam
     auto const& surfacePointsLessFlat () { return _surfacePointsLessFlat; }
     auto const& config                () { return _config               ; }
 
+    // auto const& laserCloudGroundScansDeep            () { return _laserCloudGroundScansDeep           ; }
+
   private:
 
     /** \brief Check is IMU data is available. */
@@ -238,6 +240,9 @@ namespace loam
     pcl::PointCloud<pcl::PointXYZI> _cornerPointsLessSharp;  ///< less sharp corner points cloud
     pcl::PointCloud<pcl::PointXYZI> _surfacePointsFlat;      ///< flat surface points cloud
     pcl::PointCloud<pcl::PointXYZI> _surfacePointsLessFlat;  ///< less flat surface points cloud
+
+
+    // pcl::PointCloud<pcl::PointXYZI> _laserCloudGroundScansDeep; ///Ground scan data points
 
     Time _sweepStart;            ///< time stamp of beginning of current sweep
     Time _scanTime;              ///< time stamp of most recent scan

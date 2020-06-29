@@ -156,6 +156,8 @@ bool LaserMapping::setup(ros::NodeHandle& node, ros::NodeHandle& privateNode)
    _pubLaserCloudFullRes  = node.advertise<sensor_msgs::PointCloud2>("/velodyne_cloud_registered", 2);
    _pubOdomAftMapped      = node.advertise<nav_msgs::Odometry>("/aft_mapped_to_init", 5);
 
+   //_pubGroundDeep         = node.advertise<sensor_msgs::PointCloud2>("/grond_points", 1);
+
    // subscribe to laser odometry topics
    _subLaserCloudCornerLast = node.subscribe<sensor_msgs::PointCloud2>
       ("/laser_cloud_corner_last", 2, &LaserMapping::laserCloudCornerLastHandler, this);
