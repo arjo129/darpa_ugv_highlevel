@@ -39,7 +39,7 @@ void extractCorners(const pcl::PointCloud<pcl::PointXYZ>& cloud, pcl::PointCloud
 /**
  * Normalize centroid of laserscan
  */
-void centroidNormalization(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& recalculate, float resolution, int interpolation=8); 
+Eigen::Vector2f centroidNormalization(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& recalculate, float resolution, int interpolation=8); 
 
 /**
  * FFT of laserscan
@@ -55,6 +55,8 @@ void downsample(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& out,
 
 float compareScansEuclid(std::vector<std::complex<double>>& s1, std::vector<std::complex<double>>& s2);
 
+
+float EstimateYawCorrection(sensor_msgs::LaserScan scan1, sensor_msgs::LaserScan scan2, std::vector<double>& accumulator);
 
 
 Eigen::Matrix4f ICPMatchPointToPoint(const pcl::PointCloud<pcl::PointXYZ>& pt1, const pcl::PointCloud<pcl::PointXYZ>& pt2, int max_iter=200, double max_error=0);

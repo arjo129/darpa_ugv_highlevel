@@ -171,7 +171,7 @@ Eigen::Vector2f getLastGoodPoint() {
 }
 };
 
-void centroidNormalization(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& recalculate, float resolution, int default_interpolation) {
+Eigen::Vector2f centroidNormalization(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& recalculate, float resolution, int default_interpolation) {
     
     AMapper::Grid grid(0, 0, (scan.range_max*2)/resolution, (scan.range_max*2)/resolution, resolution);
     
@@ -222,6 +222,7 @@ void centroidNormalization(const sensor_msgs::LaserScan& scan, sensor_msgs::Lase
     }
 
     fillGaps(recalculate, default_interpolation);
+    return centroid;
 }
 
 void FFT1D(const sensor_msgs::LaserScan& scan, std::vector<std::complex<double>>& spectra){
@@ -248,6 +249,29 @@ void FFT1D(const sensor_msgs::LaserScan& scan, std::vector<std::complex<double>>
     fftw_free(result);
 }
 
+void IFFT1D(std::vector<std::complex<double>>& spectra, std::vector<std::complex<double>>& out){
+    
+    fftw_complex* signal = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * spectra.size());
+    fftw_complex* result = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * spectra.size());
+    fftw_plan plan = fftw_plan_dft_1d(spectra.size(), signal, result, FFTW_BACKWARD, FFTW_ESTIMATE);
+
+    for(int i =0; i < spectra.size(); i++) {
+        signal[i][0] = spectra[i].real();
+        signal[i][1] = spectra[i].imag();
+    }
+    fftw_execute(plan);
+
+    for(int i =0; i < spectra.size(); i++) {
+       std::complex<double> c(result[i][0]/spectra.size(), result[i][1]/spectra.size());
+       out.push_back(c);
+    }
+
+    fftw_destroy_plan(plan);
+    fftw_free(signal);
+    fftw_free(result);
+}
+
+
 
 void multiply(fftw_complex& complex1, fftw_complex& complex2, fftw_complex& out) {
     out[0] = complex1[0] * complex1[0] - complex2[1] * complex2[1]; 
@@ -269,6 +293,7 @@ float magnitude(std::vector<std::complex<double>>& complex) {
 
     return sqrt(total);
 }
+
 
 float compareScansEuclid(std::vector<std::complex<double>>& s1, std::vector<std::complex<double>>& s2){
 
@@ -364,6 +389,45 @@ void decomposeLidarScanIntoPlanes(const pcl::PointCloud<pcl::PointXYZ>& points, 
     }
 }
 
+float EstimateYawCorrection(sensor_msgs::LaserScan scan1, sensor_msgs::LaserScan scan2, std::vector<double>& accumulator){
+    sensor_msgs::LaserScan normalized1, normalized2;
+    centroidNormalization(scan1, normalized1, 0.05);
+    centroidNormalization(scan2, normalized2, 0.05);
+    
+    sensor_msgs::LaserScan downsampled1,  downsampled2; 
+    downsample(normalized1, downsampled1, 100);
+    downsample(normalized2, downsampled2, 100);
+
+    std::vector<std::complex<double>> fft1, fft2;
+    FFT1D(downsampled1, fft1);
+    FFT1D(downsampled2, fft2);
+
+    assert(fft1.size() == fft2.size());
+
+    std::vector<std::complex<double>> res;
+    
+    if(accumulator.size() == 0) for(int i = 0 ; i < fft1.size(); i ++)  { 
+        accumulator.push_back(0);
+    }
+
+    assert(accumulator.size() == fft1.size());
+
+    for(int i = 0; i < fft1.size(); i++) {
+        auto r = fft1[i] * fft2[i];
+        res.push_back(r);
+       
+    }
+  
+    std::vector<std::complex<double>> dec;
+    IFFT1D(res, dec);
+
+    for(int i = 0; i < accumulator.size(); i++) {
+        auto mag  = std::norm(dec[i]);
+        accumulator[i] += mag;
+    }
+    return 0;
+}
+
 void extractCorners(const pcl::PointCloud<pcl::PointXYZ>& cloud, pcl::PointCloud<pcl::PointXYZ>& corners) {
     LidarScan scan;
     decomposeLidarScanIntoPlanes(cloud, scan);
@@ -457,17 +521,19 @@ void getSurfaceNeighbors(LidarScan& layers, int stack, int pointIndex, int radiu
  * Fast lidar normal 
  * This function utilizes the symetries in a Lidar to make fast normal estimation
  */ 
-void fastLidarNormal(LidarScan& stack, pcl::PointCloud<pcl::PointNormal>::Ptr normals) {
+void fastLidarNormal(LidarScan& stack, pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud, pcl::PointCloud<pcl::Normal>::Ptr normals) {
     for(int i = 1 ; i < stack.size() - 1; i++) {
         for(int j = 0; j < stack[i].scan.ranges.size(); j++) {
             pcl::PointCloud<pcl::PointXYZ>::Ptr output(new pcl::PointCloud<pcl::PointXYZ>);
             getSurfaceNeighbors(stack, i, j, 10, 1, output);
             pcl::Normal normal = estimateNormalRANSAC(output);
             pcl::PointXYZ pt = convertToCartesian(stack[i].scan, j, stack[i].azimuth);
-           // normals->push_back(pcl::PointNormal(pt.x, pt.y, pt.z, normal.normal_x, normal.normal_x, normal.normal_z));
+            normals->push_back(normal);
+            point_cloud->push_back(pt);
         }
     }
 }
+
 
 /**
  * Used for educated initial guess. Used with *very* sparse point clouds.
@@ -480,6 +546,7 @@ Eigen::Matrix4f ICPMatchPointToPoint(const pcl::PointCloud<pcl::PointXYZ>& pt1,c
 
     icp.setInputSource(cloud);
     icp.setInputTarget(reference);
+    icp.setMaximumIterations(max_iter);
     pcl::PointCloud<pcl::PointXYZ> Final;
     icp.align(Final);
     
