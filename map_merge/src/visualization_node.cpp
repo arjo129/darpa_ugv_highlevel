@@ -61,13 +61,21 @@ void retrievePointCloud(nlohmann::json& j, pcl::PointCloud<pcl::PointXYZ>& point
 
 void getFeatureVector(pcl::PointCloud<pcl::PointXYZ>& pointCloud, std::vector<std::complex<double>>& d) {
     std::vector<sensor_msgs::LaserScan> msgs;
+    std::cout << __LINE__ <<std::endl;
     decomposeLidarScanIntoPlanes(pointCloud, msgs);
+    std::cout << __LINE__ <<std::endl;
     std::vector<sensor_msgs::LaserScan> normalized_scans;
+    std::cout << __LINE__ <<std::endl;
     for(auto& scan: msgs) {
+        std::cout << __LINE__ <<std::endl;
         sensor_msgs::LaserScan normalized_scan, downsampled_scan;
+        std::cout << __LINE__ <<std::endl;
         centroidNormalization(scan, normalized_scan, 0.1);
+        std::cout << __LINE__ <<std::endl;
         downsample(normalized_scan, downsampled_scan, 50);
+        std::cout << __LINE__ <<std::endl;
         FFT1D(downsampled_scan, d);
+        std::cout << __LINE__ <<std::endl;
     }
 }
 
@@ -189,11 +197,20 @@ Canvas *canvas;
 void onRecievePointcloud(pcl::PointCloud<pcl::PointXYZ> points) {
     std::vector<double> score;
     std::vector<std::complex<double>> featureVector;
+    std::cout << __LINE__ <<std::endl;
 
     getFeatureVector(points, featureVector);
+        std::cout << __LINE__ <<std::endl;
+
     lookupCentroid(centroids, score, featureVector);
+    std::cout << __LINE__ <<std::endl;
+
     helper->setScores(score);
+    std::cout << __LINE__ <<std::endl;
+
     canvas->update();
+
+    std::cout << __LINE__ <<std::endl;
 }
 
 void onGroundTruth(geometry_msgs::TransformStamped stamp) {
@@ -220,10 +237,15 @@ int main(int argc, char *argv[])
     
     //index(centroids);
     loadIndices("/home/arjo/Desktop/catkin_ws/index2.json", centroids);
+     std::cout << centroids.size() <<std::endl; 
+        std::cout << __LINE__ <<std::endl;
+
     QApplication a(argc, argv);
     QMainWindow window;
     helper = new Helper(centroids);
     canvas = new Canvas(helper, nullptr);
+
+    std::cout << __LINE__ <<std::endl;
 
     std::thread app(applicationThread);
 

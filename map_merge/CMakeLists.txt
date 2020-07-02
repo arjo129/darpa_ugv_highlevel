@@ -143,6 +143,8 @@ add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 add_executable(${PROJECT_NAME}_node 
                 src/map_merge_node.cpp)
 
+add_executable(frontier 
+                src/frontiers.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -168,7 +170,13 @@ target_link_libraries(${PROJECT_NAME}
   fftw3
 )
 
-
+target_link_libraries(frontier
+  ${catkin_LIBRARIES}
+  ${PROJECT_NAME}
+  ${PCL_LIBRARIES}
+  Eigen3::Eigen
+  fftw3
+)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 #SET(CMAKE_AUTOUIC ON)
