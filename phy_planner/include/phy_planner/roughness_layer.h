@@ -7,6 +7,7 @@
 #include <costmap_2d/layered_costmap.h>
 #include <costmap_2d/GenericPluginConfig.h>
 #include <dynamic_reconfigure/server.h>
+#include "elevation_profiler.h"
 
 namespace phy_planner {
     class RoughnessLayer: public costmap_2d::CostmapLayer {
@@ -23,6 +24,7 @@ namespace phy_planner {
         dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig> *dsrv_;
         ros::Subscriber sub;
         amapper::ElevationGridMsg grid;
+        boost::shared_ptr<ElevationProfiler> terrain_profile;
     };
 }
 #endif

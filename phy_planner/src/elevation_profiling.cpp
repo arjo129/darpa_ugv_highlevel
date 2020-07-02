@@ -1,27 +1,5 @@
-#include <ros/ros.h>
-#include <image_transport/image_transport.h>
-#include <image_geometry/pinhole_camera_model.h>
-#include <std_msgs/String.h>
-#include <cv_bridge/cv_bridge.h>
-#include <Eigen/Eigen>
-#include <opencv2/opencv.hpp>
-#include <amapper/elevation_grid.h>
-
-#include <ros/ros.h>
-#include <pcl_ros/point_cloud.h>
-#include <pcl_ros/transforms.h>
-#include <pcl/point_types.h>
-#include <pcl_conversions/pcl_conversions.h>
-
-#include <sensor_msgs/PointCloud2.h>
-#include <unordered_map>
-#include <tf/tf.h>
-#include <tf/transform_listener.h>
-
-#define WORLD_FRAME "world"
-#define ROBOT_FRAME "X1/base_link"
-#define ROBOT_HEIGHT 0.3
-
+#include <phy_planner/elevation_profiler.h>
+using namespace phy_planner;
 
 std::vector<AMapper::Coordinate> getNeighbours(AMapper::Coordinate coordinate, int radius = 3) {
     std::vector<AMapper::Coordinate> neighbours;
@@ -72,30 +50,20 @@ double getLowestGroundPoint(std::vector<double> point){
     return 0;
 }
 
+ElevationProfiler::ElevationProfiler(ElevationProfiler* profiler) {
 
-class NormalEstimator {
-public:
-    NormalEstimator();
-private:
-    ros::NodeHandle nh_;
-    ros::Subscriber pcl_sub_;
-    ros::Publisher grid_pub;
-    tf::TransformListener listener;
-    boost::shared_ptr<AMapper::ElevationGrid> final_map;
-    void onPCLReceived(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr pcl_msg);
+}
+ElevationProfiler::ElevationProfiler(std::string topicname, std::string world_frame, std::string robot_frame, float robot_height): 
+listener(nh_, ros::Duration(30)), world_frame(world_frame), robot_frame(robot_frame), robot_height(robot_height) {
+    pcl_sub_ = nh_.subscribe(topicname, 1, &ElevationProfiler::onPCLReceived, this);
+    final_map = boost::make_shared<AMapper::ElevationGrid>();
+    final_map->setFrameId(world_frame);
 };
 
-NormalEstimator::NormalEstimator(): listener(nh_, ros::Duration(30)) {
-    pcl_sub_ = nh_.subscribe("/X1/rgbd_camera/depth/points", 1, &NormalEstimator::onPCLReceived, this);
-    grid_pub = nh_.advertise<amapper::ElevationGridMsg>("/plane_segmentation/grid_map", 1);
-    final_map = boost::make_shared<AMapper::ElevationGrid>();
-    final_map->setFrameId(WORLD_FRAME);
-}
-
-void NormalEstimator::onPCLReceived(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_msg) {
+void ElevationProfiler::onPCLReceived(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_msg) {
 
     pcl::PointCloud<pcl::PointXYZ> transformed_point_cloud;
-    bool res = pcl_ros::transformPointCloud(WORLD_FRAME, *pcl_msg, transformed_point_cloud, listener);
+    bool res = pcl_ros::transformPointCloud(this->world_frame, *pcl_msg, transformed_point_cloud, listener);
     if(!res)
         return;
 
@@ -116,13 +84,4 @@ void NormalEstimator::onPCLReceived(const pcl::PointCloud<pcl::PointXYZ>::ConstP
         elevPt.elevation = pt;
         final_map->add(elevPt);
     }
-
-    grid_pub.publish(final_map->toRosMsg());
-}
-
-
-int main(int argc,char** argv) {
-    ros::init(argc, argv, "realsense_normal_estimates");
-    NormalEstimator ne;
-    ros::spin();
 }

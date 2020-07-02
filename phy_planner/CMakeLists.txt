@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_runtime
   std_msgs
   geometry_msgs
+  pcl_ros
 )
 
 ## System dependencies are found with CMake's conventions
@@ -141,7 +142,7 @@ add_library(rviz_phy_planner
   src/rviz/pose_estimate_tool.cpp  
 )
 
-add_library(roughness_layer src/roughness_layer.cpp)
+add_library(roughness_layer src/roughness_layer.cpp src/elevation_profiling.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
