@@ -387,10 +387,10 @@ void callback(const PointCloud::ConstPtr& msg){
     }
   }
   */
-/*  geometry_msgs::Twist t;
+  geometry_msgs::Twist t;
 
   
-  
+  /*
   
   std::sort(frontiers.begin() , frontiers.end());
 
