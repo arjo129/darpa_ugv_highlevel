@@ -16,7 +16,7 @@ struct Frontier2D {
         start = _start;
         end = _end;
     }
-    void render(pcl::PointCloud<pcl::PointXYZ>& points) {
+    void toPointCloud(pcl::PointCloud<pcl::PointXYZ>& points) {
         auto diff = end-start;
         auto length = diff.norm();
         if(!std::isfinite(diff.x()) || !std::isfinite(diff.y()) || !std::isfinite(diff.z()))
@@ -29,6 +29,10 @@ struct Frontier2D {
         }
     }
 };
+
+void clusterFrontiers() {
+
+}
 void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_msg) {
     
     LidarScan lidar_scan;
@@ -55,7 +59,7 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
             Eigen::Vector3f p1(prev_pt.x, prev_pt.y, prev_pt.z);
             Eigen::Vector3f p2(pt.x, pt.y, pt.z);
             auto length = (p2 -p1).norm();
-            if(length > 0.5) {
+            if(length > 1) {
                 frontiers.push_back(Frontier2D(p1, p2));
             }
             prev_pt = pt;
@@ -65,7 +69,7 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
     pcl::PointCloud<pcl::PointXYZ> viz;
     viz.header = pcl_msg->header;
     for(auto frontier: frontiers) {
-        frontier.render(viz);
+        frontier.toPointCloud(viz);
     }
     pub.publish(viz);
 }
