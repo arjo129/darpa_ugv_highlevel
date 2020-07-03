@@ -1,0 +1,8 @@
+<library path="lib/libroughness_layer">
+  <class type="phy_planner::RoughnessLayer"
+         base_class_type="costmap_2d::Layer">
+    <description>
+      A costmap that uses an elevation map to get the traversibility of a certain surface.
+    </description>
+  </class>
+</library>

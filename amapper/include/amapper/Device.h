@@ -2,6 +2,7 @@
 #define _AMAPPER_DEVICE_
 
 #include "grid.h"
+#include "elevation_grid.h"
 #include <tf/tf.h>
 
 namespace AMapper {
@@ -10,5 +11,12 @@ namespace AMapper {
     public:
         virtual void plotgrid(tf::Transform tf, Grid& grid, T input) {};
     };
+
+    template<typename T>
+    class ElevationDevice {
+    public:
+        virtual void plotgrid(tf::Transform tf, ElevationGrid& grid, T input) {};
+    };
+
 }
 #endif

@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <gtest/gtest.h>
 #include <amapper/grid.h>
+#include <amapper/elevation_grid.h>
 
 TEST(AmapperGrid, equalityOperatorTest)
 {
@@ -46,10 +47,12 @@ TEST(AmapperGrid, setsFrameIdCorrectly)
 
 }
 
+TEST(AmapperElevationGrid, recallsAllFrames) {
+
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char **argv){
   testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "tester");
-  ros::NodeHandle nh;
   return RUN_ALL_TESTS();
 }

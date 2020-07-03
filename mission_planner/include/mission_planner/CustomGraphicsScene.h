@@ -38,7 +38,11 @@ public:
     QGraphicsPixmapItem * currentScan;
     LaserScanView(Robot* robot) : QGraphicsScene() { 
         robot = robot;
-        currentScan = this->addPixmap(QPixmap());
+        currentScan = this->addPixmap(QPixmap()); 
+        currentScan->setRotation(90);
+        QPolygonF polygon;
+        polygon << QPointF(-5,0) << QPointF(0,5) << QPointF(5,0);
+        this->addPolygon(polygon);
     }
 public slots:
     void mousePressEvent(QGraphicsSceneMouseEvent *event) {

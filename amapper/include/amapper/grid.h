@@ -1,6 +1,7 @@
 #ifndef _AMAPPER_GRID_
 #define _AMAPPER_GRID_
 
+#include <ros/ros.h>
 #include <math.h>
 #include <nav_msgs/OccupancyGrid.h>
 
@@ -39,6 +40,7 @@ namespace AMapper {
         Grid(float xAnchor, float yAnchor, int16_t gridWidth, int16_t gridHeight, float resolution);
         Grid(const Grid& grid);
         Grid(nav_msgs::OccupancyGrid occupancyGrid);
+        ~Grid();
 
         /**
          * Set the tf frame in which grid is in
@@ -97,6 +99,8 @@ namespace AMapper {
      * Inflates an occupancy grid
      */ 
     Grid* inflate(Grid& grid, int radius);
+
+    
 };
 
 #endif

@@ -6,4 +6,5 @@
 *.swp
 *.pyc
 
+CATKIN_IGNORE
 realsense-ros/realsense-ros
