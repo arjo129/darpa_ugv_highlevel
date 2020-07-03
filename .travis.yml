@@ -33,7 +33,7 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install dpkg
   - sudo apt-get install -y python-catkin-pkg python-rosdep python-wstool ros-$ROS_DISTRO-desktop-full ros-$ROS_DISTRO-rosserial ros-$ROS_DISTRO-rosserial-arduino ros-$ROS_DISTRO-apriltag-ros 
-  - sudo apt-get install -y ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-move-base
+  - sudo apt-get install -y ros-$ROS_DISTRO-teleop-twist-keyboard ros-$ROS_DISTRO-move-base libfftw3-dev
   - source /opt/ros/$ROS_DISTRO/setup.bash
 
 # Create a catkin workspace with the package under integration.
