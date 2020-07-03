@@ -120,7 +120,7 @@ link_directories(${system_lib_LIBRARY_DIRS})
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
+  #INCLUDE_DIRS include
   LIBRARIES point_cloud_preprocess
   CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs pcl_ros pcl tf2 tf2_ros pcl_conversions
   DEPENDS system_lib
