@@ -69,10 +69,10 @@ before_script:
 # non-zero when a test fails (which notifies Travis the build failed).
 script:
   - source /opt/ros/$ROS_DISTRO/setup.bash
-  - roscore && SERVER_PID=$! &
+  #- roscore && SERVER_PID=$! &
   - cd ~/catkin_ws
   - catkin_make $( [ -f $CATKIN_OPTIONS ] && cat $CATKIN_OPTIONS )
   # Run the tests, ensuring the path is set correctly.
   - source devel/setup.bash
   - catkin_make run_tests_amapper run_tests_data_compresor run_tests_teensy_bridge && catkin_test_results
-  - kill -9 $SERVER_PID
+  #- kill -9 $SERVER_PID
