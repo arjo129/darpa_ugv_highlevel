@@ -1,10 +1,13 @@
 # UGV + Base Station software
-
+[![Build Status](https://travis-ci.com/arjo129/darpa_ugv_highlevel.svg?token=kEQyTbP2NRSN6ymJo7RV&branch=master)](https://travis-ci.com/arjo129/darpa_ugv_highlevel)
 This is the software that runs on the UDOOs and on our computers. For firmware that runs on the teensies/arduinos see [here](https://github.com/lekoook/darpasubt/tree/custom_proto).
 
 # Requirements
-You need `apriltags_ros` apart from a standard `ros-melodic-full-desktop` install to build this repository.
-
+You need to have ROS Melodic Morena installed on Ubuntu 18.04. For building this run the following:
+```
+  sudo apt-get install -y python-catkin-pkg python-rosdep python-wstool ros-melodic-desktop-full ros-melodic-rosserial ros-melodic-rosserial-arduino ros-melodic-apriltag-ros 
+  sudo apt-get install -y ros-melodic-teleop-twist-keyboard ros-melodic-move-base libfftw3-dev libqt5charts5-dev
+```
 # Developer Guide
 This is a rough overview of which folder does what. Some packages may contain readmes to make things clearer.
 - `amapper` - This package contains a utility library useful for handling navigation stuff.
