@@ -16,6 +16,7 @@ enum class MessageType: uint8_t {
     AUTONOMOUS_NOW = 0xF4,
     AUTONOMOUS_ACK = 0xF3,
     TELEOP_NOW = 0xF2,
-    TELEOP_ACK = 0xF1
+    TELEOP_ACK = 0xF1,
+    DROP_NODE_ACK = 0xF0
 };
 #endif
