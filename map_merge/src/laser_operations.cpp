@@ -59,9 +59,6 @@ sensor_msgs::LaserScan toLaserScan(pcl::PointCloud<pcl::PointXYZ>& pc) {
     return scan;
 }
 
-pcl::PointXYZ scanPointToPointCloud(pcl::PointXYZ point, double azimuth) {
-    return pcl::PointXYZ(point.x, point.y, Eigen::Vector2f(point.x, point.y).norm()/tan(azimuth));
-}
 
 float* lookup(sensor_msgs::LaserScan& scan, int index) {
     auto length = scan.ranges.size();
@@ -75,6 +72,81 @@ float* lookup(sensor_msgs::LaserScan& scan, int index) {
 
 int lookupAngle(sensor_msgs::LaserScan& scan, float angle) {
     return (int)((angle-scan.angle_min)/scan.angle_increment);
+}
+
+pcl::PointXYZ scanPointToPointCloud(pcl::PointXYZ point, double azimuth) {
+    return pcl::PointXYZ(point.x, point.y, Eigen::Vector2f(point.x, point.y).norm()/tan(azimuth));
+}
+
+pcl::PointXYZ scanPointToPointCloud(sensor_msgs::LaserScan& scan, int index, double azimuth) {
+    auto r = *lookup(scan, index);
+    auto yaw = index*scan.angle_increment + scan.angle_min;
+    
+    if(!std::isfinite(r)) return pcl::PointXYZ(0,0,0);
+
+    pcl::PointXYZ pt(r*cos(yaw), r*sin(yaw), 0);
+    return scanPointToPointCloud(pt, azimuth);
+}
+
+pcl::PointXYZ scanPointToPointCloudWInf(sensor_msgs::LaserScan& scan, int index, double azimuth) {
+    
+    assert(std::isfinite(scan.range_max));
+
+    auto r = *lookup(scan, index);
+    auto yaw = index*scan.angle_increment + scan.angle_min;
+    
+    if(!std::isfinite(r)) r = scan.range_max;
+
+    pcl::PointXYZ pt(r*cos(yaw), r*sin(yaw), 0);
+    return scanPointToPointCloud(pt, azimuth);
+}
+ 
+bool isPointInside(LidarScan& scan, pcl::PointXYZ pt){
+    
+    auto r = Eigen::Vector3d(pt.x, pt.y, pt.z).norm();
+    auto yaw = atan2(pt.y, pt.x);
+    float azimuth = atan2(r, pt.z);
+    
+    int lt_index = -1;
+    int geq_index = -1;
+    for(int i = 0; i < scan.size(); i++) {
+        if(scan[i].azimuth >= azimuth) {
+            geq_index = i;
+            break;
+        }
+        lt_index = i;
+    }
+
+    if(geq_index < 0) return false;
+
+    if(scan[geq_index].azimuth == azimuth) {
+        int index = lookupAngle(scan[geq_index].scan, yaw);
+        return scan[geq_index].scan.ranges[index] <= r;
+    }
+
+    if(scan[lt_index].azimuth < 0) return false;
+
+
+    auto i1 = lookupAngle(scan[lt_index].scan, yaw);
+    auto i2 = i1+1;
+    auto i3 = lookupAngle(scan[geq_index].scan, yaw);
+
+    //TODO: *CORRECT* implementation should estimate planes;
+    auto pt1 = scanPointToPointCloudWInf(scan[lt_index].scan, i1, scan[lt_index].azimuth);
+    auto pt2 = scanPointToPointCloudWInf(scan[lt_index].scan, i2, scan[lt_index].azimuth);
+    auto pt3 = scanPointToPointCloudWInf(scan[geq_index].scan, i3, scan[geq_index].azimuth);
+    auto v1 = Eigen::Vector3d(pt1.x, pt1.y, pt1.z) - Eigen::Vector3d(pt2.x, pt2.y, pt2.z);
+    auto v2 = Eigen::Vector3d(pt3.x, pt3.y, pt3.z) - Eigen::Vector3d(pt2.x, pt2.y, pt2.z);
+    auto norm = v1.cross(v2);
+    auto k = norm.dot(Eigen::Vector3d(pt1.x, pt1.y, pt1.z));
+    
+    //Calculate unit ray in the direction of the original point
+    auto ray = Eigen::Vector3d(pt.x, pt.y, pt.z)/r;
+
+    //Get intersection 
+    // N.r(t)  = k =>  t= 1/k * N.r
+    auto t = norm.dot(ray)/k;
+    return r<=t;
 }
 
 void fillGaps(sensor_msgs::LaserScan& scan, size_t max_gap) {
@@ -94,6 +166,8 @@ void fillGaps(sensor_msgs::LaserScan& scan, size_t max_gap) {
         
     }
 }
+
+
 
 void naiveCornerDetector(sensor_msgs::LaserScan& scan, pcl::PointCloud<pcl::PointXYZ>& corners, std::vector<int>& indices, int skip) {
     fillGaps(scan, 2);

@@ -80,6 +80,13 @@ TEST(DECOMPOSES_CORRECTLY, decomposeAndRecomposeCorrectly) {
     }
   }
 }
+
+TEST(IS_INSIDE, isCorrectlyDetectingInside) {
+    pcl::PointCloud<pcl::PointXYZ> cloud;
+    for(int i = 0; i < 360; i++) {
+      cloud.push_back(pcl::PointXYZ());
+    }
+}
 int main(int argc, char **argv){
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
