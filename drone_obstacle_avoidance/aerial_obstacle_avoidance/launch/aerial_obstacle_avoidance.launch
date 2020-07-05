@@ -1,0 +1,18 @@
+<launch>
+	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server" output="screen">
+		<param name="resolution" value="0.05" />
+		<!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
+		<param name="frame_id" type="string" value="/MARBLE_QAV500/base_link" />
+		<!-- maximum range to integrate (speedup!) -->
+		<param name="sensor_model/max_range" value="5.0" />
+		<!-- data source to integrate (PointCloud2) -->
+		<remap from="cloud_in" to="/MARBLE_QAV500/points" />
+	</node>
+	<node pkg="aerial_obstacle_avoidance" type="apf_planner" name="apf_planner" output="screen">
+		<param name="cmd_vel_topic_" value="/MARBLE_QAV500/cmd_vel" />
+		<param name="base_link_" value="/MARBLE_QAV500/base_link" />
+		<param name="goal_sub_topic_" value="/clicked_point" />
+		<param name="obs_sub_topic_" value="/octomap_full" />
+		<param name="rate" value="10" />
+	</node>
+</launch>
