@@ -60,4 +60,6 @@ float EstimateYawCorrection(sensor_msgs::LaserScan scan1, sensor_msgs::LaserScan
 
 
 Eigen::Matrix4f ICPMatchPointToPoint(const pcl::PointCloud<pcl::PointXYZ>& pt1, const pcl::PointCloud<pcl::PointXYZ>& pt2, int max_iter=200, double max_error=0);
+
+bool isPointInside(LidarScan& scan, pcl::PointXYZ pt);
 #endif

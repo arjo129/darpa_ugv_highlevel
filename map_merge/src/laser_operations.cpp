@@ -105,8 +105,9 @@ bool isPointInside(LidarScan& scan, pcl::PointXYZ pt){
     
     auto r = Eigen::Vector3d(pt.x, pt.y, pt.z).norm();
     auto yaw = atan2(pt.y, pt.x);
-    float azimuth = atan2(r, pt.z);
-    
+    float azimuth = atan2(r, pt.z);    
+
+    //TODO: Implement binary search
     int lt_index = -1;
     int geq_index = -1;
     for(int i = 0; i < scan.size(); i++) {
@@ -135,17 +136,21 @@ bool isPointInside(LidarScan& scan, pcl::PointXYZ pt){
     auto pt1 = scanPointToPointCloudWInf(scan[lt_index].scan, i1, scan[lt_index].azimuth);
     auto pt2 = scanPointToPointCloudWInf(scan[lt_index].scan, i2, scan[lt_index].azimuth);
     auto pt3 = scanPointToPointCloudWInf(scan[geq_index].scan, i3, scan[geq_index].azimuth);
-    auto v1 = Eigen::Vector3d(pt1.x, pt1.y, pt1.z) - Eigen::Vector3d(pt2.x, pt2.y, pt2.z);
-    auto v2 = Eigen::Vector3d(pt3.x, pt3.y, pt3.z) - Eigen::Vector3d(pt2.x, pt2.y, pt2.z);
+
+    auto p1 = Eigen::Vector3d(pt1.x, pt1.y, pt1.z);
+    auto p2 = Eigen::Vector3d(pt2.x, pt2.y, pt2.z); 
+    auto p3 = Eigen::Vector3d(pt3.x, pt3.y, pt3.z);
+
+    auto v1 = p1 - p2;
+    auto v2 = p3 - p2;
     auto norm = v1.cross(v2);
     auto k = norm.dot(Eigen::Vector3d(pt1.x, pt1.y, pt1.z));
-    
     //Calculate unit ray in the direction of the original point
     auto ray = Eigen::Vector3d(pt.x, pt.y, pt.z)/r;
 
     //Get intersection 
-    // N.r(t)  = k =>  t= 1/k * N.r
-    auto t = norm.dot(ray)/k;
+    // N.r(t)  = k =>  t= k/N.r
+    auto t = k/norm.dot(ray);
     return r<=t;
 }
 
