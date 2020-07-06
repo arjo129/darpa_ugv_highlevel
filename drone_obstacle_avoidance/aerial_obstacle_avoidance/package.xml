@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package>
+  <name>aerial_obstacle_avoidance</name>
+  <version>0.0.0</version>
+  <description>Aerial Obstacle Avoidance</description>
+  <maintainer email="nwjbrandon@gmail.com">nwjbrandon</maintainer>
+
+  <license>TODO</license>
+  <build_depend>tf</build_depend>
+  
+  <run_depend>roscpp</run_depend>
+  <run_depend>tf</run_depend>
+  <buildtool_depend>catkin</buildtool_depend>
+  
+  <export>
+  </export>
+</package>
