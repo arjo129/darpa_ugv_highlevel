@@ -5,9 +5,12 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/visualization/cloud_viewer.h>
 #include <map_merge/laser_operations.h>
+#include <nanoflann/nanoflann.hpp>
+#include <tf/tf.h>
 
 ros::Publisher pub;
 pcl::PointXYZ scanPointToPointCloud(pcl::PointXYZ point, double azimuth); //Access private API
+tf::TransformListener listener;
 
 struct Frontier2D {
     Eigen::Vector3f start,end;
@@ -30,66 +33,134 @@ struct Frontier2D {
     }
 };
 
-
-struct Plane {
-    Eigen::Vector3f normal, v1, v2, v3, v4;
-    Plane(Eigen::Vector3f _v1, Eigen::Vector3f _v2, Eigen::Vector3f _v3, Eigen::Vector3f _v4){
-        
-        normal = (_v1-_v2).cross(_v3-_v2);
-        v1 = _v1;
-        v2 = _v2;
-        v3 = _v3;
-        v4 = _v4;
+struct PositionStampedScan {
+    LidarScan scan;
+    Eigen::Matrix4f world_to_scan;
+    
+    bool isPointInsideScan(pcl::PointXYZ pt){
+        Eigen::Vector4f point(pt.x, pt.y, pt.z, 1);
+        Eigen::Vector4f tf = world_to_scan*point;
+        pcl::PointXYZ res(tf[0], tf[1], tf[2]);
+        return isPointInside(scan, res);
     }
 
-    bool checkIfIntersects(Frontier2D& frontier, Eigen::Vector3f& v){
-        auto slope = frontier.start - frontier.end;
-        auto k = normal.dot(v4);
-        auto x = k - normal.dot(frontier.end);
-        auto m = slope.dot(normal);
-        if(m == 0) return false;
-        auto t = x/m;
-        
-        v = slope*t + frontier.end;
-        return checkIfPointIsInside(v) && slope.dot(v-frontier.end) >= 0;
-    }
-
-    bool checkIfPointIsInside(Eigen::Vector3f v){
-        auto x1 = (v-v1).dot(v2-v1);
-        auto x2 = (v-v2).dot(v3-v2);
-        auto x3 = (v-v3).dot(v4-v3);
-        auto x4 = (v-v4).dot(v1-v4);
-        return ((x1 > 0) && (x2 > 0) && (x3 > 0) && (x4 > 0)) || ((x1 < 0) && (x2 < 0) && (x3 < 0) && (x4 < 0));
+    float getMaxRadius(){
+        float max = 0;
+        for(auto& ring: scan) {
+            max = std::max(ring.scan.range_max, max);
+        }
+        return max;
     }
 };
 
-struct Frustum {
-    Eigen::Vector3f left_bottom_back, left_bottom_front, left_top_back, left_top_front;
-    Eigen::Vector3f right_bottom_back, right_bottom_front, right_top_back, right_top_front;
 
-    bool checkIntersection(Frontier2D& frontier){
-        
-        Plane left(left_bottom_back, left_bottom_front, left_top_front, left_top_back);
-        Plane right(right_bottom_back, right_bottom_front, right_top_front, right_top_back);
-        Plane front(left_bottom_front, left_top_front, right_top_front, right_bottom_front);
-        Plane back(left_bottom_back, left_top_back, right_top_back, right_bottom_back);
-        Plane bottom(left_bottom_front, left_bottom_back, right_bottom_back, right_bottom_front);
-        Plane top(left_top_front, left_top_back, right_top_back, right_top_front);
+struct FrontierCloud_ {
+    std::vector<pcl::PointXYZ> pts;
+    
+    inline float kdtree_get_pt(const size_t idx, const size_t dim) const
+	{
+		if (dim == 0) return pts[idx].x;
+		else if (dim == 1) return pts[idx].y;
+		else return pts[idx].z;
+	}
 
-        Eigen::Vector3f rubbish;
-        if(left.checkIfIntersects(frontier, rubbish)) return true;
-        if(right.checkIfIntersects(frontier, rubbish)) return true;
-        if(top.checkIfIntersects(frontier, rubbish)) return true;
-        if(bottom.checkIfIntersects(frontier, rubbish)) return true;
-        if(front.checkIfIntersects(frontier, rubbish)) return true;
-        if(back.checkIfIntersects(frontier, rubbish)) return true;
+    inline size_t kdtree_get_point_count() const { return pts.size(); }
 
-        return false;
+    template <class BBOX>
+	bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
+};
+
+struct FrontierCloud {
+    FrontierCloud_ frontiers;
+    nanoflann::KDTreeSingleIndexDynamicAdaptor_<nanoflann::L2_Simple_Adaptor<float, FrontierCloud_>, FrontierCloud_, 3>* frontierAdaptor;
+
+    FrontierCloud() {
+        frontierAdaptor = new nanoflann::KDTreeSingleIndexDynamicAdaptor_<nanoflann::L2_Simple_Adaptor<float, FrontierCloud_>, FrontierCloud_, 3>(3, frontiers, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+    }
+
+    void add(pcl::PointXYZ pt){
+        //TODO: PErform better memory management
+        auto index = frontiers.pts.size();
+        frontiers.pts.push_back(pt);
+        frontierAdaptor->addPoints(index, index);
+    }
+
+    void getNeighboursWithinRadius(pcl::PointXYZ pt, float radius, std::vector<int>& neighbours){
+        float _pt[3];
+        _pt[0] = pt.x;
+        _pt[1] = pt.y;
+        _pt[2] = pt.z;
+
+        std::vector< std::pair<size_t, float>> indices;
+        indices.reserve(1000);
+        nanoflann::SearchParams params;
+        frontierAdaptor->radiusSearch(_pt, radius, indices, params);
+
+        for(auto r: indices) {
+            neighbours.push_back(r);
+        }
+    }
+
+    void removeIndex(int index) {
+        frontierAdaptor->removePoint(index);
+    }
+
+    ~FrontierCloud(){
+        delete frontierAdaptor;
+    }
+};
+
+Eigen::Matrix4f tfTransToEigen(tf::Transform position){
+    tf::Vector3 v= position.getOrigin();
+    tf::Matrix3x3 m = position.getBasis();
+    Eigen::Matrix4f trans;
+    for(int i = 0; i < 3; i++){
+        for(int j = 0; j <3; j++) {
+            trans(i,j) = m[i][j];
+        }  
+    }
+    trans(3,0) = 0;
+    trans(3,1) = 0;
+    trans(3,2) = 0;
+    trans(3,3) = 1;
+    for(int i = 0; i < 3; i++){
+        trans(i,3) = v[i];
+    }
+    return trans;
+}
+
+struct FrontierStorage {
+    
+    std::vector<PositionStampedScan> scans;
+    FrontierCloud frontiers; //TODO: Create some quadtree or smth... Currently this is a hack that will not hold up
+
+    void addLidarScan(LidarScan& scan, tf::Transform position) {
+        PositionStampedScan sc;
+        sc.scan = scan;
+        sc.world_to_scan = tfTransToEigen(position); 
+    }
+
+    void addFrontiers(pcl::PointCloud<pcl::PointXYZ> points, Eigen::Matrix4f world_transform){
+        pcl::PointCloud<pcl::PointXYZ> global_frame; 
+        pcl::transformPointCloud(points, global_frame, world_transform);
+        for(auto pt: global_frame) {
+            //TODO check if we should add or not
+
+        }
     }
 };
 
 void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_msg) {
     
+    tf::StampedTransform stamp;
+    try{
+            
+        listener.lookupTransform(pcl_msg->header.frame_id, "world", ros::Time(pcl_msg->header.stamp), stamp);
+    } catch (tf::TransformException tf) {
+        ROS_WARN("Failed to transform tf");
+        return;
+    }
+
     LidarScan lidar_scan;
     decomposeLidarScanIntoPlanes(*pcl_msg, lidar_scan);
 
@@ -135,9 +206,11 @@ int main(int argc, char** argv) {
     ros::Subscriber sub = nh.subscribe("/X1/points/", 1, onPointCloudRecieved);
    
     pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontiers", 10);
+   
 
     while(ros::ok()) {
         ros::spinOnce();
+
     }
     return 0;
 }
