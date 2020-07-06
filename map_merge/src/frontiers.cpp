@@ -110,6 +110,56 @@ struct FrontierCloud {
     }
 };
 
+struct LidarCloud_ {
+    std::vector<PositionStampedScan> pts;
+    
+    inline float kdtree_get_pt(const size_t idx, const size_t dim) const
+	{
+		return pts[ids].world_to_scan(3, dim);
+	}
+
+    inline size_t kdtree_get_point_count() const { return pts.size(); }
+
+    template <class BBOX>
+	bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
+};
+
+struct LidarHistory {
+    LidarCloud_ scans;
+    nanoflann::KDTreeSingleIndexDynamicAdaptor_<nanoflann::L2_Simple_Adaptor<float, FrontierCloud_>, FrontierCloud_, 3>* frontierAdaptor;
+
+    FrontierCloud() {
+        frontierAdaptor = new nanoflann::KDTreeSingleIndexDynamicAdaptor_<nanoflann::L2_Simple_Adaptor<float, FrontierCloud_>, FrontierCloud_, 3>(3, scans, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+    }
+
+    void add(PositionStampedScan scan){
+        //TODO: PErform better memory management
+        auto index = scans.pts.size();
+        scans.pts.push_back(scan);
+        frontierAdaptor->addPoints(index, index);
+    }
+
+    void getNeighboursWithinRadius(pcl::PointXYZ pt, std::vector<int>& neighbours){
+        float _pt[3];
+        _pt[0] = pt.x;
+        _pt[1] = pt.y;
+        _pt[2] = pt.z;
+
+        std::vector< std::pair<size_t, float>> indices;
+        indices.reserve(1000);
+        nanoflann::SearchParams params;
+        frontierAdaptor->radiusSearch(_pt, 100, indices, params);
+
+        for(auto r: indices) {
+            neighbours.push_back(r);
+        }
+    }
+    ~FrontierCloud(){
+        delete frontierAdaptor;
+    }
+};
+
+
 Eigen::Matrix4f tfTransToEigen(tf::Transform position){
     tf::Vector3 v= position.getOrigin();
     tf::Matrix3x3 m = position.getBasis();
@@ -131,13 +181,31 @@ Eigen::Matrix4f tfTransToEigen(tf::Transform position){
 
 struct FrontierStorage {
     
-    std::vector<PositionStampedScan> scans;
+    LidarHistory scans;
     FrontierCloud frontiers; //TODO: Create some quadtree or smth... Currently this is a hack that will not hold up
 
     void addLidarScan(LidarScan& scan, tf::Transform position) {
         PositionStampedScan sc;
         sc.scan = scan;
-        sc.world_to_scan = tfTransToEigen(position); 
+        sc.world_to_scan = tfTransToEigen(position);
+        auto v = position.getOrigin();
+        pcl::PointXYZ pos;
+        pos.x = v.x();
+        pos.y = v.y();
+        pos.z = v.z();
+        std::vector<int> indices; 
+        frontiers.getNeighboursWithinRadius(pos, sc.getMaxRadius(), indices);
+        std::vector<int> to_be_removed;
+        for(int index: indices) {
+            if(isPointInside(scan, frontiers.frontiers.pts[index])) {
+                //If the point is seen remove it;
+                to_be_removed.push_back(index)
+            }
+        }
+        for(auto r: to_be_removed) {
+            frontiers.removeIndex(r);
+        }
+        scans.add(sc);
     }
 
     void addFrontiers(pcl::PointCloud<pcl::PointXYZ> points, Eigen::Matrix4f world_transform){
@@ -145,7 +213,15 @@ struct FrontierStorage {
         pcl::transformPointCloud(points, global_frame, world_transform);
         for(auto pt: global_frame) {
             //TODO check if we should add or not
-
+            std::vector<int> lin;
+            scans.getNeighbourWithRadius(pt, lin);
+            bool isInside = false;
+            for(auto l: lin){
+                isInside |= isPointInside(scans.scans[l], pt);
+            }
+            if(!isInside) {
+                frontiers.add(pt);
+            }
         }
     }
 };
@@ -153,8 +229,7 @@ struct FrontierStorage {
 void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_msg) {
     
     tf::StampedTransform stamp;
-    try{
-            
+    try{ 
         listener.lookupTransform(pcl_msg->header.frame_id, "world", ros::Time(pcl_msg->header.stamp), stamp);
     } catch (tf::TransformException tf) {
         ROS_WARN("Failed to transform tf");
