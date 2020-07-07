@@ -31,6 +31,26 @@ TEST(FrontierStore, radiusSearch) {
     ASSERT_EQ(neighbours2.size(), 100);
 }
 
+TEST(FrontierStore, deletionWorks) {
+    FrontierStore store;
+    for(int i = 0; i < 100; i++){
+        store.add(pcl::PointXYZ(i,0,0));
+    }
+
+    std::vector<size_t> neighbours;
+    store.getNeighboursWithinRadius(pcl::PointXYZ(20,0,0), neighbours, 10);
+
+    ASSERT_EQ(neighbours.size(), 19);
+
+    for(auto i: neighbours){
+        store.removeIndex(i);
+    }
+    neighbours.clear();
+    store.getNeighboursWithinRadius(pcl::PointXYZ(20,0,0), neighbours, 10);
+
+    ASSERT_EQ(neighbours.size(), 0);
+}
+
 TEST(LidarHistory, basicOperations) {
     LidarHistory history;
     for(int i = 0; i < 10; i++){
