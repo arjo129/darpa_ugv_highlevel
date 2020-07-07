@@ -443,9 +443,9 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "sub_pcl");
   ros::NodeHandle nh;
   std::printf("subscriebrs ");
-  ros::Subscriber sub = nh.subscribe<PointCloud>("X1/points", 1, callback);
-  ros::Subscriber sub3 = nh.subscribe("integrated_to_init", 1, positionCallBack);
-  ros::Subscriber sub2 = nh.subscribe("clicked_point", 1, goalCallBack);
+  ros::Subscriber sub = nh.subscribe<PointCloud>("lidar_input", 1, callback);
+  ros::Subscriber sub3 = nh.subscribe("robot_position_pose", 1, positionCallBack);
+  ros::Subscriber sub2 = nh.subscribe("goal_to_explore", 1, goalCallBack);
   std::printf("subscriebrs ");
   pub = nh.advertise<PointCloud> ("X1/points2", 1);
   pub_vel = nh.advertise<geometry_msgs::Twist> ("X1/cmd_vel", 1);
