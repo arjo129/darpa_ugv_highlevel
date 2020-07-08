@@ -1,0 +1,10 @@
+<launch>
+
+  
+  <node pkg="ugv_obstacle_avoidance" name="ugv_obstacle_avoidance_node" type="ugv_obstacle_avoidance_node">
+    <remap from="lidar_input" to="X1/points"/>
+    <remap from="robot_position_pose" to="integrated_to_init"/>
+    <remap from="goal_to_explore" to="clicked_point"/>
+  </node>
+
+</launch>
