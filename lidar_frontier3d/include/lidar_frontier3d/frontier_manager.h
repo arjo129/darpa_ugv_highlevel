@@ -43,7 +43,7 @@ struct FrontierManager {
         std::vector<int> to_be_removed;
         for(size_t index: indices) {
 
-            if(isPointInside(scan, frontiers.frontiers.pts[index])) {
+            if(sc.isPointInsideScan(frontiers.frontiers.pts[index])) {
                 //If the point is seen remove it;
                 to_be_removed.push_back(index);
             }
@@ -54,6 +54,9 @@ struct FrontierManager {
         scans.add(sc);
     }
 
+    /**
+     * Pass in global coordinates
+     */ 
     void addFrontiers(pcl::PointCloud<pcl::PointXYZ>& points){
         
         for(auto pt: points) {
@@ -62,7 +65,7 @@ struct FrontierManager {
             scans.getNeighboursWithinRadius(pt, neighbours);
             bool isInside = false;
             for(auto l: neighbours){
-                isInside |= isPointInside(scans.scans.pts[l].scan, pt);
+                isInside |= scans.scans.pts[l].isPointInsideScan(pt);
             }
             if(!isInside) {
                 frontiers.add(pt);

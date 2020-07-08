@@ -12,7 +12,7 @@ struct PositionStampedScan {
     
     bool isPointInsideScan(pcl::PointXYZ pt){
         Eigen::Vector4f point(pt.x, pt.y, pt.z, 1);
-        Eigen::Vector4f tf = world_to_scan*point;
+        Eigen::Vector4f tf = world_to_scan.inverse()*point;
         pcl::PointXYZ res(tf[0], tf[1], tf[2]);
         return isPointInside(scan, res);
     }

@@ -92,7 +92,7 @@ TEST(IS_INSIDE, isCorrectlyDetectingInsideNoGaps) {
   LidarScan scan;
   decomposeLidarScanIntoPlanes(cloud, scan);
 
-  pcl::PointXYZ squarelyInside(2, 2, 0.07);
+  pcl::PointXYZ squarelyInside(2, -2, 0.07);
   ASSERT_EQ(isPointInside(scan, squarelyInside), true);
 
   pcl::PointXYZ onlineInside(2, 2, 0);
@@ -126,6 +126,8 @@ TEST(IS_INSIDE, gotGaps) {
 
   pcl::PointXYZ squarelyOutside(100, 100, 0.07);
   ASSERT_EQ(isPointInside(scan, squarelyOutside), false);
+
+  ASSERT_TRUE(isPointInside(scan, pcl::PointXYZ(0,0,0)));
 }
 int main(int argc, char **argv){
   testing::InitGoogleTest(&argc, argv);

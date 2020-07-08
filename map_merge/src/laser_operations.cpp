@@ -104,7 +104,6 @@ pcl::PointXYZ scanPointToPointCloudWInf(sensor_msgs::LaserScan& scan, int index,
 bool isPointInside(LidarScan& scan, pcl::PointXYZ pt){
     
     auto r = Eigen::Vector3d(pt.x, pt.y, pt.z).norm();
-
     if(r == 0) return true;
     
     auto yaw = atan2(pt.y, pt.x);
@@ -125,7 +124,7 @@ bool isPointInside(LidarScan& scan, pcl::PointXYZ pt){
 
     if(scan[geq_index].azimuth == azimuth) {
         int index = lookupAngle(scan[geq_index].scan, yaw);
-        return scan[geq_index].scan.ranges[index] <= r;
+        return r <= scan[geq_index].scan.ranges[index];
     }
 
     if(scan[lt_index].azimuth < 0) return false;
@@ -150,7 +149,6 @@ bool isPointInside(LidarScan& scan, pcl::PointXYZ pt){
     auto k = norm.dot(Eigen::Vector3d(pt1.x, pt1.y, pt1.z));
     //Calculate unit ray in the direction of the original point
     auto ray = Eigen::Vector3d(pt.x, pt.y, pt.z)/r;
-
     //Get intersection 
     // N.r(t)  = k =>  t= k/N.r
     auto t = k/norm.dot(ray);

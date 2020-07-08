@@ -16,7 +16,7 @@ Eigen::Matrix4f getPositionMatrix(float x, float y, float z) {
     return mat;
 }
 
-void getLidar(LidarScan& scan, float radius) {
+void getLidarWithRadius(LidarScan& scan, float radius) {
     pcl::PointCloud<pcl::PointXYZ> cloud;
     auto r = radius;
     for(float i = 0; i < 360; i++) {
@@ -26,6 +26,7 @@ void getLidar(LidarScan& scan, float radius) {
         cloud.push_back(pcl::PointXYZ(r*cos(i/180*M_PI), r*sin(i/180*M_PI), -1));
         }
     }
+    decomposeLidarScanIntoPlanes(cloud,scan);
 }
 
 tf::Transform getTransform(float x, float y, float z){
@@ -87,13 +88,18 @@ TEST(LidarHistory, basicOperations) {
     }
 }
 
-TEST(FrontierManager, transformsCorrectly) {
+/**
+ * This test is designed to test if the datastructures correctly hold and remove frontiers 
+ * - Insert a frontier point.
+ * - Insert a lidar scan. Lidar scan should clear frontier point.
+ * - Try to insert a frontier back that the Lidar has already seen. Point will not be added.
+ * - Insert another point outside the scan
+ */ 
+TEST(FrontierManager, addsFrontiersCorrectly) {
     FrontierManager manager;
     
     LidarScan scan;
-    getLidar(scan, 10);
-
-    ASSERT_TRUE(isPointInside(scan, pcl::PointXYZ(0,0,0)));
+    getLidarWithRadius(scan, 10);
 
     pcl::PointCloud<pcl::PointXYZ> cloud;
     cloud.push_back(pcl::PointXYZ(0,0,0));
@@ -108,12 +114,38 @@ TEST(FrontierManager, transformsCorrectly) {
     manager.getFrontiers(cloud);
     ASSERT_EQ(cloud.size(), 0);
 
-    cloud.push_back(pcl::PointXYZ(0,0,0));
+    cloud.push_back(pcl::PointXYZ(0,1,0));
     manager.addFrontiers(cloud);
     cloud.clear();
     manager.getFrontiers(cloud);
     ASSERT_EQ(cloud.size(), 0);
 
+    cloud.push_back(pcl::PointXYZ(100,100,0));
+    manager.addFrontiers(cloud);
+    cloud.clear();
+    manager.getFrontiers(cloud);
+    ASSERT_EQ(cloud.size(), 1);
+
+    cloud.clear();
+    manager.addLidarScan(scan, getTransform(50,50,0));
+    manager.getFrontiers(cloud);
+    ASSERT_EQ(cloud.size(), 1);
+
+}
+
+/**
+ * Test if the transform works correctly
+ * - Create a scan at (20,20)
+ * - Test a point that lies inside
+ * - Test a point that lies outside 
+ */ 
+TEST(PositionStampedScan, transformsCorrectly) {
+    PositionStampedScan sc;
+    getLidarWithRadius(sc.scan, 10);
+    sc.world_to_scan = tfTransToEigen(getTransform(20,20,0));
+
+    ASSERT_FALSE(sc.isPointInsideScan(pcl::PointXYZ(0,0,0)));
+    ASSERT_TRUE(sc.isPointInsideScan(pcl::PointXYZ(19,20,0)));
 }
 
 int main(int argc, char **argv){

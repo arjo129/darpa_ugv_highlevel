@@ -57,19 +57,28 @@ struct FrontierStore {
         frontierAdaptor = new nanoflann::KDTreeSingleIndexDynamicAdaptor<nanoflann::L2_Simple_Adaptor<float, FrontierCloud_>, FrontierCloud_, 3>(3, frontiers, nanoflann::KDTreeSingleIndexAdaptorParams(10));
     }
 
+    /**
+     * Add a frontier: it must be in global frame
+     */ 
     void add(pcl::PointXYZ pt){
-        //TODO: PErform better memory management
+        
+        assert(std::isfinite(pt.x));
+
         if(!erased.empty()) {
             auto index = *erased.begin();
             frontiers.pts[index] = pt;
             frontierAdaptor->addPoints(index, index);
             erased.erase(index);
+            return;
         }
         auto index = frontiers.pts.size();
         frontiers.pts.push_back(pt);
         frontierAdaptor->addPoints(index, index);
     }
 
+    /**
+     * Get neighbours within radius 
+     */ 
     void getNeighboursWithinRadius(pcl::PointXYZ pt, std::vector<size_t>& neighbours, float max_dist=100, int initial_reserve=100){
         float _pt[3];
         _pt[0] = pt.x;
@@ -108,15 +117,18 @@ cleanup:
     }
 
     void toPCLPoints(pcl::PointCloud<pcl::PointXYZ>& pointcloud){
+        
         for(size_t i = 0; i < frontiers.pts.size(); i++) {
-            if(erased.count(i) == 0)
+            if(std::isfinite(frontiers.pts[i].x)) {
                 pointcloud.push_back(frontiers.pts[i]);
+            }
         }
     }
 
     void removeIndex(size_t index) {
         frontierAdaptor->removePoint(index);
         erased.insert(index);
+        frontiers.pts[index].x = INFINITY;
     }
 
     ~FrontierStore(){
