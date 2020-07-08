@@ -3,6 +3,8 @@
 
 #include <nanoflann/nanoflann.hpp>
 #include <vector>
+#include <queue>
+#include <unordered_set>
 #include <pcl/point_types.h>
 #include <pcl_ros/point_cloud.h>
 
@@ -49,6 +51,7 @@ struct FrontierCloud_ {
 struct FrontierStore {
     FrontierCloud_ frontiers;
     nanoflann::KDTreeSingleIndexDynamicAdaptor<nanoflann::L2_Simple_Adaptor<float, FrontierCloud_>, FrontierCloud_, 3>* frontierAdaptor;
+    std::unordered_set<size_t> erased;
 
     FrontierStore() {
         frontierAdaptor = new nanoflann::KDTreeSingleIndexDynamicAdaptor<nanoflann::L2_Simple_Adaptor<float, FrontierCloud_>, FrontierCloud_, 3>(3, frontiers, nanoflann::KDTreeSingleIndexAdaptorParams(10));
@@ -56,13 +59,18 @@ struct FrontierStore {
 
     void add(pcl::PointXYZ pt){
         //TODO: PErform better memory management
+        if(!erased.empty()) {
+            auto index = *erased.begin();
+            frontiers.pts[index] = pt;
+            frontierAdaptor->addPoints(index, index);
+            erased.erase(index);
+        }
         auto index = frontiers.pts.size();
         frontiers.pts.push_back(pt);
         frontierAdaptor->addPoints(index, index);
     }
 
-    void getNeighboursWithinRadius(pcl::PointXYZ pt, std::vector<size_t>& neighbours, float max_dist=100){
-        int initial_reserve = 100;
+    void getNeighboursWithinRadius(pcl::PointXYZ pt, std::vector<size_t>& neighbours, float max_dist=100, int initial_reserve=100){
         float _pt[3];
         _pt[0] = pt.x;
         _pt[1] = pt.y;
@@ -85,11 +93,8 @@ struct FrontierStore {
             if(count >= frontiers.kdtree_get_point_count()) {
                 goto cleanup;
             }
-            initial_reserve *=2;
+            initial_reserve *= 2;
             out_dist_sqr = (float*)realloc(out_dist_sqr, initial_reserve*sizeof(float));
-            if(out_dist_sqr == NULL) {
-                return;
-            }
             indices = (size_t*)realloc(indices, initial_reserve*sizeof(size_t));
         }
 cleanup:
@@ -102,8 +107,16 @@ cleanup:
         free(indices);
     }
 
-    void removeIndex(int index) {
+    void toPCLPoints(pcl::PointCloud<pcl::PointXYZ>& pointcloud){
+        for(size_t i = 0; i < frontiers.pts.size(); i++) {
+            if(erased.count(i) == 0)
+                pointcloud.push_back(frontiers.pts[i]);
+        }
+    }
+
+    void removeIndex(size_t index) {
         frontierAdaptor->removePoint(index);
+        erased.insert(index);
     }
 
     ~FrontierStore(){

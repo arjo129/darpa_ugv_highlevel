@@ -104,6 +104,9 @@ pcl::PointXYZ scanPointToPointCloudWInf(sensor_msgs::LaserScan& scan, int index,
 bool isPointInside(LidarScan& scan, pcl::PointXYZ pt){
     
     auto r = Eigen::Vector3d(pt.x, pt.y, pt.z).norm();
+
+    if(r == 0) return true;
+    
     auto yaw = atan2(pt.y, pt.x);
     float azimuth = atan2(r, pt.z);    
 
