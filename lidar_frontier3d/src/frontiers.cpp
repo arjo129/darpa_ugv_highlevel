@@ -6,27 +6,39 @@
 #include <pcl/visualization/cloud_viewer.h>
 #include <map_merge/laser_operations.h>
 #include <nanoflann/nanoflann.hpp>
-#include <lidar_frontier3d/lidar_history.h>
-#include <lidar_frontier3d/frontier_store.h>
+#include <lidar_frontier3d/frontier_manager.h>
 #include <tf/tf.h>
 
 ros::Publisher pub;
 pcl::PointXYZ scanPointToPointCloud(pcl::PointXYZ point, double azimuth); //Access private API
-tf::TransformListener listener;
+tf::TransformListener* listener;
+FrontierManager manager;
 
+void downsampleScan(const LidarScan& scan, LidarScan& out, int num) {
+    for(auto ring: scan) {
+        LidarRing new_ring;
+        new_ring.azimuth = ring.azimuth;
+        downsample(ring.scan, new_ring.scan, num);
+        if(new_ring.scan.ranges.size() == 0) continue;
+        out.push_back(new_ring);
+    }
+}
 
 void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_msg) {
     
-    tf::StampedTransform stamp;
-    try{ 
-        listener.lookupTransform(pcl_msg->header.frame_id, "world", ros::Time(pcl_msg->header.stamp), stamp);
-    } catch (tf::TransformException tf) {
-        ROS_WARN("Failed to transform tf");
+    tf::StampedTransform current_pose;
+    try{
+        listener->waitForTransform(pcl_msg->header.frame_id, "world", ros::Time::now(), ros::Duration(1.0));
+        listener->lookupTransform(pcl_msg->header.frame_id, "world", ros::Time::now()/*pcl_conversions::fromPCL(pcl_msg->header.stamp)*/, current_pose);
+    } catch (tf::TransformException error) {
+        //ROS_WARN("Failed to transform tf %s", error.what());
         return;
     }
 
-    LidarScan lidar_scan;
+    LidarScan _lidar_scan, lidar_scan;
     decomposeLidarScanIntoPlanes(*pcl_msg, lidar_scan);
+
+    //downsampleScan(_lidar_scan, lidar_scan, 50);
 
     std::vector<Frontier2D> frontiers;
     for(auto& ring: lidar_scan) {
@@ -49,19 +61,29 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
             Eigen::Vector3f p1(prev_pt.x, prev_pt.y, prev_pt.z);
             Eigen::Vector3f p2(pt.x, pt.y, pt.z);
             auto length = (p2 -p1).norm();
-            if(length > 1) {
+            if(length > 1.5) {
                 frontiers.push_back(Frontier2D(p1, p2));
             }
             prev_pt = pt;
         }
     }
 
-    pcl::PointCloud<pcl::PointXYZ> viz;
-    viz.header = pcl_msg->header;
+    pcl::PointCloud<pcl::PointXYZ> local_frontiers;
+        local_frontiers.header = pcl_msg->header;
     for(auto frontier: frontiers) {
-        frontier.toPointCloud(viz);
+        frontier.toPointCloud(local_frontiers);
     }
-    pub.publish(viz);
+
+    pcl::PointCloud<pcl::PointXYZ> global_frame;
+    pcl_ros::transformPointCloud(local_frontiers, global_frame, current_pose.inverse());
+    global_frame.header.frame_id  = "world";
+    //pub.publish(global_frame);
+    static int count =0;
+   // if(count%20 == 0)
+    manager.addFrontiers(global_frame);
+    count++;
+    manager.addLidarScan(lidar_scan, current_pose);
+    
 }
 
 int main(int argc, char** argv) {
@@ -70,10 +92,27 @@ int main(int argc, char** argv) {
     ros::Subscriber sub = nh.subscribe("/X1/points/", 1, onPointCloudRecieved);
    
     pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontiers", 10);
+    listener = new tf::TransformListener();
    
-
+    int i = 0;
     while(ros::ok()) {
         ros::spinOnce();
+        //if(i%10 == 0){
+            pcl::PointCloud<pcl::PointXYZ> cloud;
+            cloud.header.frame_id ="world";
+            //cloud.header.stamp = ros::Time::now();
+            manager.getFrontiers(cloud);
+            std::cout << "count"<< cloud.size() <<std::endl;
+            pcl::PointCloud<pcl::PointXYZ> cloud_filtered;
+            cloud_filtered.header = cloud.header;
+            for(auto p: cloud) {
+                if(p.z< 2){
+                    cloud_filtered.push_back(p);
+                }
+            }
+            pub.publish(cloud_filtered);
+        //}
+        i++;
 
     }
     return 0;

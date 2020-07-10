@@ -39,16 +39,17 @@ struct FrontierManager {
         pos.y = v.y();
         pos.z = v.z();
         std::vector<size_t> indices; 
-        frontiers.getNeighboursWithinRadius(pos, indices, 100);
+        frontiers.getNeighboursWithinRadius(pos, indices, sc.getMaxRadius());
         std::vector<int> to_be_removed;
         for(size_t index: indices) {
-
-            if(sc.isPointInsideScan(frontiers.frontiers.pts[index])) {
+            auto pt = frontiers.frontiers.pts[index];
+            if(true/*sc.isPointInsideScan(frontiers.frontiers.pts[index])*/) {
                 //If the point is seen remove it;
                 to_be_removed.push_back(index);
             }
         }
         for(auto r: to_be_removed) {
+            std::cout << r <<std::endl;
             frontiers.removeIndex(r);
         }
         scans.add(sc);
@@ -58,19 +59,22 @@ struct FrontierManager {
      * Pass in global coordinates
      */ 
     void addFrontiers(pcl::PointCloud<pcl::PointXYZ>& points){
-        
+        long points_added = 0;
         for(auto pt: points) {
             //TODO check if we should add or not
             std::vector<size_t> neighbours;
             scans.getNeighboursWithinRadius(pt, neighbours);
             bool isInside = false;
+            //std::cout << "Found scans:" << neighbours.size() <<std::endl;
             for(auto l: neighbours){
-                isInside |= scans.scans.pts[l].isPointInsideScan(pt);
+                isInside |= scans.scans.pts[l]->isPointInsideScan(pt);
             }
             if(!isInside) {
                 frontiers.add(pt);
+                points_added++;
             }
         }
+        std::cout << "Rejected "<< points.size() - points_added << ", added" << points_added << std::endl;
     }
 
     void getFrontiers(pcl::PointCloud<pcl::PointXYZ>& cloud) {

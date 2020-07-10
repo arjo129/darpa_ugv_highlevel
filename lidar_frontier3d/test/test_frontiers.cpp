@@ -83,7 +83,7 @@ TEST(LidarHistory, basicOperations) {
     history.getNeighboursWithinRadius(pcl::PointXYZ(40,20,0), res, 30, 20);
     ASSERT_EQ(res.size(), 1);
     for(size_t index: res) {
-        auto l = history.scans.pts[index].getPosition() - Eigen::Vector3f(40,20,0);
+        auto l = history.scans.pts[index]->getPosition() - Eigen::Vector3f(40,20,0);
         ASSERT_LE(l.norm(), 20);
     }
 }
@@ -135,9 +135,9 @@ TEST(FrontierManager, addsFrontiersCorrectly) {
 
 /**
  * Test if the transform works correctly
- * - Create a scan at (20,20)
- * - Test a point that lies inside
- * - Test a point that lies outside 
+ * - Create a scan at (20,20) of a cylindrical room with radius 10
+ * - Test a point that lies inside the room
+ * - Test a point that lies outside the room
  */ 
 TEST(PositionStampedScan, transformsCorrectly) {
     PositionStampedScan sc;

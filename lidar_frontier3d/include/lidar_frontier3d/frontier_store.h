@@ -15,14 +15,14 @@ struct Frontier2D {
         start = _start;
         end = _end;
     }
-    void toPointCloud(pcl::PointCloud<pcl::PointXYZ>& points) {
+    void toPointCloud(pcl::PointCloud<pcl::PointXYZ>& points, float resolution = 0.3) {
         auto diff = end-start;
         auto length = diff.norm();
         if(!std::isfinite(diff.x()) || !std::isfinite(diff.y()) || !std::isfinite(diff.z()))
             return;
-        int max = length/0.1;
+        int max = length/resolution;
         for(int i = 0; i < max; i++) {
-            auto res = 0.1*i*diff/length;
+            auto res = resolution*i*diff/length;
             auto pt = start + res;
             points.push_back(pcl::PointXYZ(pt.x(), pt.y(), pt.z()));
         }
@@ -48,11 +48,26 @@ struct FrontierCloud_ {
 	bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
 };
 
+struct PointHash {
+    size_t operator() (const pcl::PointXYZ& pt) const {
+        long x = pt.x*3.0f;
+        long y = pt.y*3.0f;
+        long z = pt.z*3.0f;
+        return std::hash<long>()(x) ^ (std::hash<long>()(y) <<1) ^ (std::hash<long>()(z) << 2) ;
+    }
+};
+
+struct ApproxEq{ 
+    bool operator()(const pcl::PointXYZ& lhs, const pcl::PointXYZ& rhs) const {
+        return abs(lhs.x - rhs.x) <0.3 && abs(lhs.y - rhs.y) <0.3 && abs(lhs.z - rhs.z) <0.3; 
+    }
+};
+
 struct FrontierStore {
     FrontierCloud_ frontiers;
     nanoflann::KDTreeSingleIndexDynamicAdaptor<nanoflann::L2_Simple_Adaptor<float, FrontierCloud_>, FrontierCloud_, 3>* frontierAdaptor;
     std::unordered_set<size_t> erased;
-
+    std::unordered_set<pcl::PointXYZ, PointHash, ApproxEq> visited;
     FrontierStore() {
         frontierAdaptor = new nanoflann::KDTreeSingleIndexDynamicAdaptor<nanoflann::L2_Simple_Adaptor<float, FrontierCloud_>, FrontierCloud_, 3>(3, frontiers, nanoflann::KDTreeSingleIndexAdaptorParams(10));
     }
@@ -63,6 +78,9 @@ struct FrontierStore {
     void add(pcl::PointXYZ pt){
         
         assert(std::isfinite(pt.x));
+        if(visited.count(pt)) return;
+
+        visited.insert(pt);
 
         if(!erased.empty()) {
             auto index = *erased.begin();
@@ -79,23 +97,25 @@ struct FrontierStore {
     /**
      * Get neighbours within radius 
      */ 
-    void getNeighboursWithinRadius(pcl::PointXYZ pt, std::vector<size_t>& neighbours, float max_dist=100, int initial_reserve=100){
+    void getNeighboursWithinRadius(pcl::PointXYZ pt, std::vector<size_t>& neighbours, float max_dist=100, int initial_reserve=10000){
         float _pt[3];
         _pt[0] = pt.x;
         _pt[1] = pt.y;
         _pt[2] = pt.z;
         float* out_dist_sqr = (float*)malloc(initial_reserve*sizeof(float));
-        for(int i = 0 ; i < initial_reserve; i++){
-            out_dist_sqr[i] = INFINITY;
-        }
+       
         size_t* indices = (size_t*)malloc(initial_reserve*sizeof(size_t));
         while(true) {
+             for(int i = 0 ; i < initial_reserve; i++){
+            out_dist_sqr[i] = INFINITY;
+        }
             nanoflann::SearchParams params;
             nanoflann::KNNResultSet<float> resultSet(initial_reserve);
             resultSet.init(indices, out_dist_sqr);
             frontierAdaptor->findNeighbors(resultSet, _pt, nanoflann::SearchParams(10));
             int count = 0;
             for(int i = 0; i < initial_reserve; i++) {
+                std::cout << out_dist_sqr[i] << std::endl; 
                 if(out_dist_sqr[i] > max_dist*max_dist) goto cleanup;
                 else count++;
             }
