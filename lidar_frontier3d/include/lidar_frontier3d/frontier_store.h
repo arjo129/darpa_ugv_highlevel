@@ -7,7 +7,7 @@
 #include <unordered_set>
 #include <pcl/point_types.h>
 #include <pcl_ros/point_cloud.h>
-
+#include <lidar_frontier3d/voxel_grid.h>
 struct Frontier2D {
     Eigen::Vector3f start,end;
 
@@ -48,26 +48,12 @@ struct FrontierCloud_ {
 	bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
 };
 
-struct PointHash {
-    size_t operator() (const pcl::PointXYZ& pt) const {
-        long x = pt.x*3.0f;
-        long y = pt.y*3.0f;
-        long z = pt.z*3.0f;
-        return std::hash<long>()(x) ^ (std::hash<long>()(y) <<1) ^ (std::hash<long>()(z) << 2) ;
-    }
-};
 
-struct ApproxEq{ 
-    bool operator()(const pcl::PointXYZ& lhs, const pcl::PointXYZ& rhs) const {
-        return abs(lhs.x - rhs.x) <0.3 && abs(lhs.y - rhs.y) <0.3 && abs(lhs.z - rhs.z) <0.3; 
-    }
-};
 
 struct FrontierStore {
     FrontierCloud_ frontiers;
     nanoflann::KDTreeSingleIndexDynamicAdaptor<nanoflann::L2_Simple_Adaptor<float, FrontierCloud_>, FrontierCloud_, 3>* frontierAdaptor;
     std::unordered_set<size_t> erased;
-    std::unordered_set<pcl::PointXYZ, PointHash, ApproxEq> visited;
     FrontierStore() {
         frontierAdaptor = new nanoflann::KDTreeSingleIndexDynamicAdaptor<nanoflann::L2_Simple_Adaptor<float, FrontierCloud_>, FrontierCloud_, 3>(3, frontiers, nanoflann::KDTreeSingleIndexAdaptorParams(10));
     }
@@ -78,9 +64,6 @@ struct FrontierStore {
     void add(pcl::PointXYZ pt){
         
         assert(std::isfinite(pt.x));
-        if(visited.count(pt)) return;
-
-        visited.insert(pt);
 
         if(!erased.empty()) {
             auto index = *erased.begin();
