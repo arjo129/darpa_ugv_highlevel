@@ -39,11 +39,11 @@ struct FrontierManager {
         pos.y = v.y();
         pos.z = v.z();
         std::vector<size_t> indices; 
-        frontiers.getNeighboursWithinRadius(pos, indices, sc.getMaxRadius());
+        /*frontiers.getNeighboursWithinRadius(pos, indices, sc.getMaxRadius());
         std::vector<int> to_be_removed;
         for(size_t index: indices) {
             auto pt = frontiers.frontiers.pts[index];
-            if(true/*sc.isPointInsideScan(frontiers.frontiers.pts[index])*/) {
+            if(sc.isPointInsideScan(frontiers.frontiers.pts[index])) {
                 //If the point is seen remove it;
                 to_be_removed.push_back(index);
             }
@@ -51,7 +51,7 @@ struct FrontierManager {
         for(auto r: to_be_removed) {
             std::cout << r <<std::endl;
             frontiers.removeIndex(r);
-        }
+        }*/
         scans.add(sc);
     }
 
@@ -80,7 +80,16 @@ struct FrontierManager {
     void getFrontiers(pcl::PointCloud<pcl::PointXYZ>& cloud) {
         frontiers.toPCLPoints(cloud);
     }
-    
+
+    bool queryFrontierPoint(pcl::PointXYZ& pt) {
+        std::vector<size_t> neighbours;
+        scans.getNeighboursWithinRadius(pt, neighbours);
+        //std::cout << "Found scans:" << neighbours.size() <<std::endl;
+        for(auto l: neighbours){
+            if(scans.scans.pts[l]->isPointInsideScan(pt)) return true;
+        }
+        return false;   
+    }    
 };
 
 #endif

@@ -36,9 +36,9 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
     }
 
     LidarScan _lidar_scan, lidar_scan;
-    decomposeLidarScanIntoPlanes(*pcl_msg, lidar_scan);
+    decomposeLidarScanIntoPlanes(*pcl_msg, _lidar_scan);
 
-    //downsampleScan(_lidar_scan, lidar_scan, 50);
+    downsampleScan(_lidar_scan, lidar_scan, 10);
 
     std::vector<Frontier2D> frontiers;
     for(auto& ring: lidar_scan) {
@@ -77,13 +77,20 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
     pcl::PointCloud<pcl::PointXYZ> global_frame;
     pcl_ros::transformPointCloud(local_frontiers, global_frame, current_pose.inverse());
     global_frame.header.frame_id  = "world";
-    //pub.publish(global_frame);
     static int count =0;
-   // if(count%20 == 0)
-    manager.addFrontiers(global_frame);
     count++;
     manager.addLidarScan(lidar_scan, current_pose);
+
+    pcl::PointCloud<pcl::PointXYZ> filtered;
     
+    filtered.header = pcl_msg->header;
+    filtered.header.frame_id  = "world";
+    for(auto pt: global_frame) {
+        if(!manager.queryFrontierPoint(pt)) {
+            filtered.push_back(pt);
+        }
+    }
+    pub.publish(filtered);
 }
 
 int main(int argc, char** argv) {
@@ -102,7 +109,7 @@ int main(int argc, char** argv) {
             cloud.header.frame_id ="world";
             //cloud.header.stamp = ros::Time::now();
             manager.getFrontiers(cloud);
-            std::cout << "count"<< cloud.size() <<std::endl;
+            //std::cout << "count"<< cloud.size() <<std::endl;
             pcl::PointCloud<pcl::PointXYZ> cloud_filtered;
             cloud_filtered.header = cloud.header;
             for(auto p: cloud) {
@@ -110,7 +117,7 @@ int main(int argc, char** argv) {
                     cloud_filtered.push_back(p);
                 }
             }
-            pub.publish(cloud_filtered);
+            //pub.publish(cloud_filtered);
         //}
         i++;
 
