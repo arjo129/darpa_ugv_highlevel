@@ -121,6 +121,7 @@ bool isPointInside(LidarScan& scan, pcl::PointXYZ pt){
     }
 
     if(geq_index < 0) return false;
+    if(lt_index < 0) return false;
 
     if(scan[geq_index].azimuth == azimuth) {
         int index = lookupAngle(scan[geq_index].scan, yaw);
@@ -152,7 +153,7 @@ bool isPointInside(LidarScan& scan, pcl::PointXYZ pt){
     //Get intersection 
     // N.r(t)  = k =>  t= k/N.r
     auto t = k/norm.dot(ray);
-    return r<=t;
+    return r<=abs(t);
 }
 
 void fillGaps(sensor_msgs::LaserScan& scan, size_t max_gap) {
