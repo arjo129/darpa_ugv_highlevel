@@ -19,6 +19,8 @@ typedef std::vector<LidarRing> LidarScan;
 void decomposeLidarScanIntoPlanes(const pcl::PointCloud<pcl::PointXYZ>& points, LidarScan& scan_stack);
 sensor_msgs::LaserScan toLaserScan(pcl::PointCloud<pcl::PointXYZ>& pc);
 pcl::PointXYZ scanPointToPointCloud(pcl::PointXYZ point, double azimuth);
+
+pcl::PointXYZ scanPointToPointCloud(sensor_msgs::LaserScan& scan, int index, double azimuth);
 float* lookup(sensor_msgs::LaserScan& scan, int index); 
 
 /**
@@ -60,4 +62,6 @@ float EstimateYawCorrection(sensor_msgs::LaserScan scan1, sensor_msgs::LaserScan
 
 
 Eigen::Matrix4f ICPMatchPointToPoint(const pcl::PointCloud<pcl::PointXYZ>& pt1, const pcl::PointCloud<pcl::PointXYZ>& pt2, int max_iter=200, double max_error=0);
+
+bool isPointInside(LidarScan& scan, pcl::PointXYZ pt);
 #endif

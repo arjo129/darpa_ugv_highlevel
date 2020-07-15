@@ -80,6 +80,55 @@ TEST(DECOMPOSES_CORRECTLY, decomposeAndRecomposeCorrectly) {
     }
   }
 }
+
+TEST(IS_INSIDE, isCorrectlyDetectingInsideNoGaps) {
+  pcl::PointCloud<pcl::PointXYZ> cloud;
+  auto r = 10;
+  for(float i = 0; i < 360; i++) {
+    cloud.push_back(pcl::PointXYZ(r*cos(i/180*M_PI), r*sin(i/180*M_PI), 0));
+    cloud.push_back(pcl::PointXYZ(r*cos(i/180*M_PI), r*sin(i/180*M_PI), 1));
+    cloud.push_back(pcl::PointXYZ(r*cos(i/180*M_PI), r*sin(i/180*M_PI), -1));
+  }
+  LidarScan scan;
+  decomposeLidarScanIntoPlanes(cloud, scan);
+
+  pcl::PointXYZ squarelyInside(2, -2, 0.07);
+  ASSERT_EQ(isPointInside(scan, squarelyInside), true);
+
+  pcl::PointXYZ onlineInside(2, 2, 0);
+  ASSERT_EQ(isPointInside(scan, onlineInside), true);
+
+  pcl::PointXYZ outside(20, 20, 0);
+  ASSERT_EQ(isPointInside(scan, outside), false);
+
+  pcl::PointXYZ outside2(20, 20, 0.07);
+  ASSERT_EQ(isPointInside(scan, outside2), false);
+
+  pcl::PointXYZ outside3(2, 2, -100);
+  ASSERT_EQ(isPointInside(scan, outside3), false);
+}
+
+TEST(IS_INSIDE, gotGaps) {
+  pcl::PointCloud<pcl::PointXYZ> cloud;
+  auto r = 10;
+  for(float i = 0; i < 360; i++) {
+    if(i > 100) {
+      cloud.push_back(pcl::PointXYZ(r*cos(i/180*M_PI), r*sin(i/180*M_PI), 0));
+      cloud.push_back(pcl::PointXYZ(r*cos(i/180*M_PI), r*sin(i/180*M_PI), 1));
+      cloud.push_back(pcl::PointXYZ(r*cos(i/180*M_PI), r*sin(i/180*M_PI), -1));
+    }
+  }
+  LidarScan scan;
+  decomposeLidarScanIntoPlanes(cloud, scan);
+
+  pcl::PointXYZ squarelyInside(2, 2, 0.07);
+  ASSERT_EQ(isPointInside(scan, squarelyInside), true);
+
+  pcl::PointXYZ squarelyOutside(100, 100, 0.07);
+  ASSERT_EQ(isPointInside(scan, squarelyOutside), false);
+
+  ASSERT_TRUE(isPointInside(scan, pcl::PointXYZ(0,0,0)));
+}
 int main(int argc, char **argv){
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

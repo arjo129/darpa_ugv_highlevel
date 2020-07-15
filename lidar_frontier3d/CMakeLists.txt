@@ -1,28 +1,23 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(map_merge)
+project(lidar_frontier3d)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++14)
+add_compile_options(-std=c++17)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  map_merge
   pcl_ros
   roscpp
-  amapper
-  geometry_msgs
+  tf
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package (Eigen3 REQUIRED)
 find_package (PCL REQUIRED COMPONENTS io common visualization) 
-#find_path(EIGEN3_INCLUDE_DIRS "Eigen" paths "/usr/include" "/usr/local/include" path_suffixes "eigen3")
-#message(${EIGEN3_INCLUDE_DIRS})
-#if ( NOT EIGEN3_INCLUDE_DIRS )
-#    message(FATAL_ERROR "CMake variable EIGEN3_INCLUDE_DIRS not found.")
-#endif()
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -110,10 +105,10 @@ find_package (PCL REQUIRED COMPONENTS io common visualization)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES map_merge
-  CATKIN_DEPENDS pcl_ros roscpp
-  DEPENDS system_lib
+#  INCLUDE_DIRS include
+#  LIBRARIES lidar_frontier3d
+#  CATKIN_DEPENDS map_merge pcl_ros roscpp tf
+#  DEPENDS system_lib
 )
 
 ###########
@@ -128,22 +123,21 @@ include_directories(
 )
 
 ## Declare a C++ library
-add_library(${PROJECT_NAME}
-  src/laser_operations.cpp
-)
+#add_library(${PROJECT_NAME}
+#  src/lidar_frontier3d.cpp
+#)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node 
-                src/map_merge_node.cpp)
-
-
+# add_executable(${PROJECT_NAME}_node src/lidar_frontier3d_node.cpp)
+add_executable(frontier 
+                src/frontiers.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -152,42 +146,21 @@ add_executable(${PROJECT_NAME}_node
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_node
+# target_link_libraries(${PROJECT_NAME}_node
+#   ${catkin_LIBRARIES}
+# )
+
+target_link_libraries(frontier
   ${catkin_LIBRARIES}
-  ${PROJECT_NAME}
+  #${PROJECT_NAME}
   ${PCL_LIBRARIES}
   Eigen3::Eigen
   fftw3
 )
 
-target_link_libraries(${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  Eigen3::Eigen
-  fftw3
-)
-
-
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_AUTOMOC ON)
-#SET(CMAKE_AUTOUIC ON)
-
-find_package(Qt5 COMPONENTS Core Gui Widgets PrintSupport Charts)
-
-add_executable(${PROJECT_NAME}_viz
-                src/visualization_node.cpp
-                src/visualization/chartview.h
-                src/visualization/canvas.h
-                src/visualization/canvas.cpp)
-target_link_libraries(${PROJECT_NAME}_viz
-    PUBLIC
-    Qt5::Core
-    Qt5::Gui
-    Qt5::Widgets
-    Qt5::Charts
-    ${PROJECT_NAME})
 #############
 ## Install ##
 #############
@@ -235,9 +208,14 @@ target_link_libraries(${PROJECT_NAME}_viz
 #############
 
 ## Add gtest based cpp test target and link libraries
-catkin_add_gtest(${PROJECT_NAME}-test test/gap_test.cpp)
+catkin_add_gtest(${PROJECT_NAME}-test test/test_frontiers.cpp)
 if(TARGET ${PROJECT_NAME}-test)
-  target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
+   target_link_libraries(${PROJECT_NAME}-test 
+      ${catkin_LIBRARIES}
+      ${PCL_LIBRARIES}
+      Eigen3::Eigen
+      fftw3
+   )
 endif()
 
 ## Add folders to be run by python nosetests
