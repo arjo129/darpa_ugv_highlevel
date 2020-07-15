@@ -35,7 +35,8 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
         return;
     }
 
-    LidarScan _lidar_scan, lidar_scan;
+    static LidarScan _lidar_scan;
+    LidarScan lidar_scan;
     decomposeLidarScanIntoPlanes(*pcl_msg, _lidar_scan);
 
     downsampleScan(_lidar_scan, lidar_scan, 10);
