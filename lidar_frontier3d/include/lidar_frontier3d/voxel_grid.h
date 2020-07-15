@@ -1,11 +1,10 @@
 #ifndef _VOXEL_GRID_H_
 #define _VOXEL_GRID_H_
 
+#include <boost/functional.hpp>
 #include <pcl/point_types.h>
 #include <unordered_set>
 #include <tuple>
-
-
 
 template<unsigned int res>
 struct VoxelIndex {
@@ -26,7 +25,7 @@ struct VoxelIndex {
     }
 
     pcl::PointXYZ getPoint() {
-        return pcl::PointXYZ(std::get<0>(index), std::get<1>(index), std::get<2>(index));
+        return pcl::PointXYZ(std::get<0>(index)/res, std::get<1>(index)/res, std::get<2>(index)/res);
     }
 };
 
@@ -36,7 +35,11 @@ struct VoxelIndex {
 template<unsigned int res>
 struct PointHash {
     size_t operator() (VoxelIndex<res> ind) const {
-        return std::hash<std::tuple<long, long, long>>()(ind.index) ;
+        size_t hash = 0;
+        boost::hash_combine<long>(hash, std::get<0>(ind.index));
+        boost::hash_combine<long>(hash, std::get<1>(ind.index));
+        boost::hash_combine<long>(hash, std::get<2>(ind.index));
+        return hash;
     }
 };
 
@@ -141,6 +144,12 @@ public:
         VoxelIndex<res> _start(start.x, start.y, start.z);
         VoxelIndex<res> _end(end.x, end.y, end.z);
         bresenham3D<res>(start, end, visited);
+    }
+
+    void getPointCloud(pcl::PointCloud<pcl::PointXYZ>& cloud) {
+        for(auto index: visited) {
+            cloud.push_back(index.getPoint());
+        }
     }
 
 };

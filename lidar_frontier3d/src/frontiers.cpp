@@ -80,9 +80,9 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
     static int count =0;
     count++;
     manager.addLidarScan(lidar_scan, current_pose);
-
+   // manager.addFrontiers(local_frontiers);
     pcl::PointCloud<pcl::PointXYZ> filtered;
-    
+    //manager.getFrontiers(filtered);
     filtered.header = pcl_msg->header;
     filtered.header.frame_id  = "world";
     for(auto pt: global_frame) {

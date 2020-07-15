@@ -3,6 +3,8 @@
 
 #include <lidar_frontier3d/frontier_store.h>
 #include <lidar_frontier3d/lidar_history.h>
+#include <lidar_frontier3d/voxel_grid.h>
+#include <map_merge/laser_operations.h>
 #include <tf/tf.h>
 
 Eigen::Matrix4f tfTransToEigen(tf::Transform position){
@@ -27,7 +29,8 @@ Eigen::Matrix4f tfTransToEigen(tf::Transform position){
 struct FrontierManager {
     
     LidarHistory scans;
-    FrontierStore frontiers; 
+    FrontierStore frontiers;
+    VoxelGrid<4> grid;
 
     void addLidarScan(LidarScan& scan, tf::Transform position) {
         PositionStampedScan sc;
@@ -39,19 +42,15 @@ struct FrontierManager {
         pos.y = v.y();
         pos.z = v.z();
         std::vector<size_t> indices; 
-        /*frontiers.getNeighboursWithinRadius(pos, indices, sc.getMaxRadius());
-        std::vector<int> to_be_removed;
-        for(size_t index: indices) {
-            auto pt = frontiers.frontiers.pts[index];
-            if(sc.isPointInsideScan(frontiers.frontiers.pts[index])) {
-                //If the point is seen remove it;
-                to_be_removed.push_back(index);
+        for(auto ring: sc.scan) {
+            for(int i = 0 ; i < ring.scan.ranges.size(); i++){
+                auto point = scanPointToPointCloud(ring.scan, i, ring.azimuth);
+                tf::Vector3 endTf(point.x, point.y, point.z);
+                auto result = position*endTf;
+                pcl::PointXYZ pt(result.x(), result.y(), result.z());
+                grid.clearRay(pos, pt);
             }
         }
-        for(auto r: to_be_removed) {
-            std::cout << r <<std::endl;
-            frontiers.removeIndex(r);
-        }*/
         scans.add(sc);
     }
 
@@ -59,7 +58,7 @@ struct FrontierManager {
      * Pass in global coordinates
      */ 
     void addFrontiers(pcl::PointCloud<pcl::PointXYZ>& points){
-        long points_added = 0;
+        /*long points_added = 0;
         for(auto pt: points) {
             //TODO check if we should add or not
             std::vector<size_t> neighbours;
@@ -71,14 +70,20 @@ struct FrontierManager {
             }
             if(!isInside) {
                 frontiers.add(pt);
+                grid.addPoint(pt);
                 points_added++;
             }
         }
-        std::cout << "Rejected "<< points.size() - points_added << ", added" << points_added << std::endl;
+        std::cout << "Rejected "<< points.size() - points_added << ", added" << points_added << std::endl;*/
+        for(auto pt: points) {
+            if(!queryFrontierPoint(pt))
+                grid.addPoint(pt);
+        }
     }
 
     void getFrontiers(pcl::PointCloud<pcl::PointXYZ>& cloud) {
-        frontiers.toPCLPoints(cloud);
+        //frontiers.toPCLPoints(cloud);
+        grid.getPointCloud(cloud);
     }
 
     bool queryFrontierPoint(pcl::PointXYZ& pt) {
