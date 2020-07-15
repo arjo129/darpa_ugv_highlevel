@@ -59,7 +59,6 @@ sensor_msgs::LaserScan toLaserScan(pcl::PointCloud<pcl::PointXYZ>& pc) {
     return scan;
 }
 
-
 float* lookup(sensor_msgs::LaserScan& scan, int index) {
     auto length = scan.ranges.size();
     if(index < 0) {
@@ -428,8 +427,9 @@ void decomposeLidarScanIntoPlanes(pcl::PointCloud<pcl::PointXYZ>& points, std::v
 
     std::vector<double> scan_angles;
     for(auto scan: planar_scans){
-        scan_angles.push_back((double)scan.first/180.f*M_PI); 
+        scan_angles.push_back((double)scan.first); 
     }
+
     std::sort(scan_angles.begin(), scan_angles.end());
 
     for(auto angle: scan_angles) {
@@ -438,8 +438,29 @@ void decomposeLidarScanIntoPlanes(pcl::PointCloud<pcl::PointXYZ>& points, std::v
 }
 
 
+void decomposeLidarScanIntoPlanesFast(const pcl::PointCloud<pcl::PointXYZ>& points, LidarScan& scan_stack) {
+    
+    for(auto pt: points){
+        if(!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z)) {
+            continue;
+        }
+        float r = sqrt(pt.x*pt.x + pt.y*pt.y);
+        float angle = atan2(r, pt.z);
+        for(int i = 0 ; i < scan_stack.size(); i++) {
+            
+            if(angle != scan_stack[i].azimuth) continue;
+
+            
+        }
+    }
+}
 
 void decomposeLidarScanIntoPlanes(const pcl::PointCloud<pcl::PointXYZ>& points, LidarScan& scan_stack) {
+    if(scan_stack.size() != 0) {
+        decomposeLidarScanIntoPlanesFast(points, scan_stack);
+        return ;
+    }
+
     std::unordered_map<long, pcl::PointCloud<pcl::PointXYZ> > planar_scans;
     /**
      * Decompose into scan planes
