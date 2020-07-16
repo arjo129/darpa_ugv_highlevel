@@ -1,16 +1,11 @@
-image_view:
-
-  enable_opencv: true
-  wait_key_delay: 600
-
 yolo_model:
 
   config_file:
-    name: yolov2.cfg
+    name: yolov3-tiny.cfg
   weight_file:
-    name: yolov2.weights
+    name: yolov3-tiny.weights
   threshold:
-    value: 0.5
+    value: 0.3
   detection_classes:
     names:
       - person
