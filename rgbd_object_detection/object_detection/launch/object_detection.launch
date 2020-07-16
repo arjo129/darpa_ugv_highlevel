@@ -1,0 +1,7 @@
+<launch>
+	<node pkg="object_detection" type="detection_node.py" name="object_detection_node" output="screen">
+	</node>
+
+	<!-- Start darknet and ros wrapper -->
+    <include file="$(find darknet_ros)/launch/darknet_ros.launch" />
+</launch>
