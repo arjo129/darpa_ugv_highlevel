@@ -28,10 +28,11 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
     
     tf::StampedTransform current_pose;
     try{
-        listener->waitForTransform(pcl_msg->header.frame_id, "world", ros::Time::now(), ros::Duration(1.0));
-        listener->lookupTransform(pcl_msg->header.frame_id, "world", ros::Time::now()/*pcl_conversions::fromPCL(pcl_msg->header.stamp)*/, current_pose);
+        auto time_now = ros::Time::now();
+        listener->waitForTransform(pcl_msg->header.frame_id, "world", time_now, ros::Duration(1.0));
+        listener->lookupTransform(pcl_msg->header.frame_id, "world", time_now/*pcl_conversions::fromPCL(pcl_msg->header.stamp)*/, current_pose);
     } catch (tf::TransformException error) {
-        //ROS_WARN("Failed to transform tf %s", error.what());
+        ROS_WARN("Failed to transform tf %s", error.what());
         return;
     }
 
