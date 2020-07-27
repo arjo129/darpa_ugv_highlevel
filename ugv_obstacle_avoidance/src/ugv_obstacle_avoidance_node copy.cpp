@@ -66,7 +66,7 @@ float getConstraintScore(std::vector<std::tuple<float,float>> &distances){
 
 float getAngularVelocity(std::vector<std::tuple<float,float>> &distances){
     
-   if(std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y)) < 1){
+   if(std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y)+ (goal.z - current.z)*(goal.z - current.z)) < 2){
         return 0;    
    }
    
@@ -77,9 +77,9 @@ float getAngularVelocity(std::vector<std::tuple<float,float>> &distances){
 
 float getForwardVelocity(std::vector<std::tuple<float,float>> &distances){
 
-    float distance_to_goal = std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y));
+    float distance_to_goal = std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y)+ (goal.z - current.z)*(goal.z - current.z));
     
-   if( distance_to_goal< 1){
+   if( distance_to_goal< 2){
         return 0;    
    }
    if(yaw_to_goal > M_PI/2){
@@ -210,26 +210,6 @@ void goalCallBack(const geometry_msgs::PointStamped::ConstPtr& msg){
     //std::printf("%f\t%f\t%f\n" , goal.x, goal.y , goal.z);
 }
 
-float getYaw( pcl::PointXYZ &point ){
-
-    float flat_angle = std::atan(point.y/point.x);
-    
-    if(point.y > 0 && point.x > 0){
-      flat_angle += M_PI;
-    }else if(point.y > 0 && point.x < 0){
-      flat_angle += 2 * M_PI;
-    }else if(point.y < 0 && point.x < 0){
-      
-    }else if(point.y < 0 && point.x > 0){
-      flat_angle += M_PI;
-    }
-
-    flat_angle -= (M_PI);
-
-    return flat_angle;
-
-}
-
 void callback(const PointCloud::ConstPtr& msg){
   geometry_msgs::Transform trans;
   trans.translation.x = 0;
@@ -240,15 +220,24 @@ void callback(const PointCloud::ConstPtr& msg){
   trans.rotation.z = 0;
   trans.rotation.w = 1;
   pcl_ros::transformPointCloud	(*msg , out , trans);
-  std::vector<std::tuple<float,float>>distances;
+
    size_t cloudSize = out.size();
   int count = 0;
   // extract valid points from input cloud
+  float _factor = (nScanRings - 1) / (_upperBound - _lowerBound);
 
+  std::vector<int> ringCount (16,0); 
+  
+  float data[15][10000][3];
+
+  for (int i=0; i<15; i++)
+      for (int j=0; j<10000; j++)
+	      for(int k = 0; k  < 3; k ++)
+             data[i][j][k] = 0;
 
   for (int i = 0; i < cloudSize; i++) {
 
-    pcl::PointXYZ point;
+    pcl::PointXYZI point;
     point.x = out[i].x;
     point.y = out[i].y;
     point.z = out[i].z;
@@ -265,35 +254,186 @@ void callback(const PointCloud::ConstPtr& msg){
 
     count ++;
 
-    float flat_angle = getYaw(point);
-    float dist = std::sqrt(point.x*point.x+point.y*point.y);
+    float angle = std::atan(point.z / std::sqrt(point.y * point.y + point.x * point.x));
+    int ring = int(((angle * 180.0 / M_PI) - _lowerBound) * _factor + 0.5);
 
-	distances.push_back(std::tuple<float,float>(flat_angle,dist));
+    if(ring>=15){
+      continue;
+    }
+
+    int colVal = ringCount[ring];
+    if(colVal >= 10000){
+      continue;
+    }
+    
+    data[ring][colVal][0] = point.x;
+    data[ring][colVal][1] = point.y;
+    data[ring][colVal][2] = point.z;
+
+    ringCount[ring] += 1;
+
+  }
+  
+  out.clear();
+  
+  float maxDist = 0;
+  float maxDistAngle = 0;
+  
+  pcl::PointXYZ pastPoint;
+  std::vector<std::tuple<float,float>>distances;
+
+  for(int i =0 ; i < 10000;i += 1){
+    pcl::PointXYZ point;
+    getMaxTraversablePoint(data , i , &point);
+    
+    float dist = std::sqrt(point.x*point.x+point.y*point.y);
+    float flat_angle = std::atan(point.y/point.x);
+    
+    if(i == 0){
+        pastPoint.x = point.x;
+        pastPoint.y = point.y;
+        pastPoint.z = point.z;    
+    }
+    
+    if(point.y > 0 && point.x > 0){
+      flat_angle += M_PI;
+    }else if(point.y > 0 && point.x < 0){
+      flat_angle += 2 * M_PI;
+    }else if(point.y < 0 && point.x < 0){
+      
+    }else if(point.y < 0 && point.x > 0){
+      flat_angle += M_PI;
+    }
+    if(flat_angle > M_PI/2 && flat_angle < 3*M_PI/2 ){
+      flat_angle -= (M_PI);
+      distances.push_back(std::tuple<float,float>(flat_angle,dist));
+     
+    }
+    float distBetPoint = getDistanceBetween(point, pastPoint);
+
+  
+
+    while(distBetPoint > 0.1 && distBetPoint < 0.5){
+        pastPoint.x += (point.x - pastPoint.x)/std::fabs(point.x - pastPoint.x)*0.1;
+        pastPoint.y += (point.y - pastPoint.y)/std::fabs(point.y - pastPoint.y)*0.1;
+        pastPoint.z += (point.z - pastPoint.z)/std::fabs(point.z - pastPoint.z)*0.1;
+        distBetPoint = getDistanceBetween(point, pastPoint);
+        out.push_back(pastPoint);
+    }
+
+
+    out.push_back(point);
+
+    pastPoint.x = point.x;
+    pastPoint.y = point.y;
+    pastPoint.z = point.z;  
 
   }
   
   std::sort(distances.begin() , distances.end());
 
+ /*
+  std::vector<std::tuple<float,float>>freeSpaces; //start of free space in randians , end of freespace in radians
+
+  std::tuple<float,float> tempFree;
+  std::get<0>(tempFree) = 0;
+  std::get<1>(tempFree) = 0;
+
+  bool Found = false;
+  
+  for(auto &a : distances){
+    if(std::get<1>(a) > 4.0){
+      if(!Found){
+        std::get<0>(tempFree) = std::get<0>(a);
+        Found = true;
+      }
+    }else{
+      if(Found){
+        std::get<1>(tempFree) = std::get<0>(a);
+        freeSpaces.push_back(tempFree);
+        Found = false;
+      }
+    }
+  }
+
+  if(Found){
+    std::get<1>(tempFree) = M_PI/3;
+    freeSpaces.push_back(tempFree);
+  }
+
+  std::vector<std::tuple<float,float>> frontiers; // size of freespace(frontier) in radians, mid point of freespace(frontier)
+
+  int frontierCount = 0;
+  for(auto &a:freeSpaces){
+     if(std::fabs(std::get<1>(a) - std::get<0>(a)) > 0.3){
+      frontiers.push_back(std::tuple<float,float>(std::fabs(std::get<1>(a) - std::get<0>(a)) ,(std::get<1>(a) + std::get<0>(a))/2.0))  ;
+      frontierCount++;
+     }
+  }
+  
  
+  for(int i =0 ; i < 1000;i += 1){
+    maxDist = maxDist + std::get<1>(distances[i]);
+  }
+  maxDistAngle = std::get<0>(distances[250]);
+  float distTemp = maxDistAngle;
+  
+  for(int i =500 ; i < distances.size()-500;i += 1){
+    distTemp = distTemp - std::get<1>(distances[i-500]);
+    distTemp = distTemp + std::get<1>(distances[i+500]);
+    if(distTemp > maxDist){
+      maxDist = distTemp;
+      maxDistAngle = std::get<0>(distances[i]);
+    }
+  }
+  */
+  geometry_msgs::Twist t;
+
+  
+  /*
+  
+  std::sort(frontiers.begin() , frontiers.end());
+
+  float angleToTurn = 0;
+ 
+  if(frontiers.size() > 0){
+    angleToTurn = std::get<1>(frontiers[frontiers.size()-1]);
+   //std::printf("%f Found\n" , angleToTurn);
+  }
+  
+  */
   //TODO Remove the below comments
-  float v = getForwardVelocity(distances);
-  float w = getAngularVelocity(distances);
+  //float v = getForwardVelocity(distances);
+  //float w = getAngularVelocity(distances);
   
   //float score = getFreeSpaceScoreLR(distances);
   
   
   //printf("Score: %f\n" , score);
-  geometry_msgs::Twist t;
+  
+  //t.linear.x = v;
+  //t.angular.z = w;
+	//TODO till here
 
-  // t.linear.x = v;
-  // t.angular.z = w;
+    /*if(yaw_to_goal < 0.3 && yaw_to_goal > -0.3 ){
 
-  // pcl::PCLPointCloud2 pc2;
-  // pcl::toPCLPointCloud2 (out ,pc2);
-  // pub.publish(pc2);
-  // pub_vel.publish(t);
+        t.linear.x = 0;
+        t.angular.z = 0;
+    }else if (direction == 1){
+        t.linear.x = 0;
+        t.angular.z = 0.3;
+    }else if (direction == -1){
+        t.angular.z = -0.3;
+        t.linear.x = 0;
+    }*/
 
-//  out.clear();
+
+  pcl::PCLPointCloud2 pc2;
+  pcl::toPCLPointCloud2 (out ,pc2);
+  pub.publish(pc2);
+  pub_vel.publish(t);
+
+ out.clear();
   // pcl::PointCloud<pcl::PointXYZ> laserCloudIn;
   // pcl::fromROSMsg(*msg, laserCloudIn);
   // pub.publish(laserCloudIn);
@@ -304,10 +444,11 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "sub_pcl");
   ros::NodeHandle nh;
   std::printf("subscriebrs ");
-  ros::Subscriber sub = nh.subscribe<PointCloud>("traversable_pointcloud_input", 1, callback);
+  ros::Subscriber sub = nh.subscribe<PointCloud>("lidar_input", 1, callback);
   ros::Subscriber sub3 = nh.subscribe("robot_position_pose", 1, positionCallBack);
   ros::Subscriber sub2 = nh.subscribe("goal_to_explore", 1, goalCallBack);
   std::printf("subscriebrs ");
+  pub = nh.advertise<PointCloud> ("X1/points2", 1);
   pub_vel = nh.advertise<geometry_msgs::Twist> ("X1/cmd_vel", 1);
   ros::spin();
 }

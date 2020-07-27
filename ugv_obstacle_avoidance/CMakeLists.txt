@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   sensor_msgs
   geometry_msgs
+  graph_msgs
   pcl_ros
   pcl_conversions
   tf2
@@ -122,7 +123,7 @@ link_directories(${system_lib_LIBRARY_DIRS})
 catkin_package(
   #INCLUDE_DIRS include
   LIBRARIES point_cloud_preprocess
-  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs pcl_ros pcl tf2 tf2_ros pcl_conversions
+  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs pcl_ros pcl tf2 tf2_ros pcl_conversions graph_msgs
   DEPENDS system_lib
 )
 
@@ -151,7 +152,8 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node src/ugv_obstacle_avoidance_node.cpp)
-
+add_executable(terrain_graph_node src/terrain_graph_node.cpp)
+add_executable(traversable_map_node src/traversable_map_node.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -164,6 +166,12 @@ add_executable(${PROJECT_NAME}_node src/ugv_obstacle_avoidance_node.cpp)
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(${PROJECT_NAME}_node
+   ${catkin_LIBRARIES} ${PCL_LIBRARIES}
+ )
+ target_link_libraries(terrain_graph_node
+   ${catkin_LIBRARIES} ${PCL_LIBRARIES}
+ ) 
+target_link_libraries(traversable_map_node
    ${catkin_LIBRARIES} ${PCL_LIBRARIES}
  )
 
