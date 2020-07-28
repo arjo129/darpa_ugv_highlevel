@@ -9,7 +9,7 @@
 #include <lidar_frontier3d/frontier_manager.h>
 #include <tf/tf.h>
 
-ros::Publisher pub;
+ros::Publisher visualization_pub, centroid_pub;
 pcl::PointXYZ scanPointToPointCloud(pcl::PointXYZ point, double azimuth); //Access private API
 tf::TransformListener* listener;
 FrontierManager manager;
@@ -70,9 +70,12 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
     }
 
     pcl::PointCloud<pcl::PointXYZ> local_frontiers;
-        local_frontiers.header = pcl_msg->header;
+    pcl::PointCloud<pcl::PointXYZ> centroid_points;
+    local_frontiers.header = pcl_msg->header;
+    centroid_points.header = pcl_msg->header;
     for(auto frontier: frontiers) {
         frontier.toPointCloud(local_frontiers);
+        frontier.getCentroids(centroid_points);
     }
 
     pcl::PointCloud<pcl::PointXYZ> global_frame;
@@ -91,7 +94,8 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
             filtered.push_back(pt);
         }
     }
-    pub.publish(filtered);
+    visualization_pub.publish(filtered);
+    centroid_pub.publish(centroid_points);
 }
 
 int main(int argc, char** argv) {
@@ -99,7 +103,8 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh;
     ros::Subscriber sub = nh.subscribe("/X1/points/", 1, onPointCloudRecieved);
    
-    pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontiers", 10);
+    visualization_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontiers", 10);
+    centroid_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontiers/centroid", 10);
     listener = new tf::TransformListener();
    
     int i = 0;
