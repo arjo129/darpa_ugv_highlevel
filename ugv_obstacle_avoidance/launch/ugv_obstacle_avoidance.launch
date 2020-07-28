@@ -14,6 +14,7 @@
     <remap from="traversable_pointcloud_input" to="X1/points2"/>
     <remap from="robot_position_pose" to="integrated_to_init"/>
     <remap from="goal_to_explore" to="clicked_point"/>
+    <remap from="frontiers" to="frontiers"/>
   </node>
 
   

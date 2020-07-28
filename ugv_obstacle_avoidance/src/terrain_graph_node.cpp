@@ -22,18 +22,21 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <graph_msgs/Edges.h>
 #include <graph_msgs/GeometryGraph.h>
+#include <tf2/convert.h>
+#include <tf/transform_listener.h>
 
 #define _lowerBound -15.0
 #define _upperBound 15.0
 #define nScanRings 16
 #define NODE_DIST 2
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
-
-
+pcl::PointCloud<pcl::PointXYZ> out;
 graph_msgs::GeometryGraph graph;
 ros::Publisher pub;
-ros::Publisher pub_vel;
-pcl::PointCloud<pcl::PointXYZ> out;
+ros::Publisher pub2;
+
+
+int globalGraphId = 0;
 
 int global_i = 0;
 geometry_msgs::Vector3 goal;
@@ -56,6 +59,8 @@ std::vector<std::tuple<float,float>>distances;
 int id = 0;
 int mColor = 0;
 bool done = true;
+
+bool findNewFrontiers = false;
 
 
 
@@ -360,11 +365,12 @@ pcl::PointXYZ getBestNextNode(std::vector<std::tuple<float,float>> &distances , 
         pcl::PointXYZ v_intermediate_CCW(p.x - NODE_DIST * CCW_vec.x() , p.y - NODE_DIST * CCW_vec.y() , p.z - NODE_DIST * CCW_vec.z());
         pcl::PointXYZ v_intermediate_CW(p.x - NODE_DIST * CW_vec.x() , p.y - NODE_DIST * CW_vec.y() , p.z - NODE_DIST * CW_vec.z());
         
-        std::cout << i << std::endl;
+        
         //std::cout << "Score " << score << " " << total <<std::endl;
         
         float score1 = getSectionFreenessScore(distances , v_intermediate_CCW , origin);
         float score2 = getSectionFreenessScore(distances , v_intermediate_CW , origin);
+        std::cout << i <<  score1<< score2 << std::endl;
         //std::cout << CW_vec.x() <<  " " << CW_vec.y() << " " << score1 << std::endl; 
         //std::cout << CCW_vec.x() <<  " " << CCW_vec.y() << " " << score2 << std::endl; 
         if(score1 > 0.95){
@@ -393,7 +399,9 @@ pcl::PointXYZ getBestNextNode(std::vector<std::tuple<float,float>> &distances , 
     int segForPoint = getSegmentValue(p);
     int seg = getSegmentValue(bestPoint);
 
-     
+     if(getDistanceFromOrigin(bestPoint) < 2.0){
+       seg = -1;
+     }
     
     std::cout << "segemnt: "<<segForPoint << std::endl;
 
@@ -459,49 +467,40 @@ void positionCallBack(const nav_msgs::Odometry::ConstPtr& msg){
     invPose.z = poseMsg.pose.pose.orientation.z;
     invPose.w = -poseMsg.pose.pose.orientation.w;
     
-    /*
-    
-    tf2::Quaternion rotation(
-    poseMsg.pose.pose.orientation.x,
-    poseMsg.pose.pose.orientation.y,
-    poseMsg.pose.pose.orientation.z,
-    poseMsg.pose.pose.orientation.w);
-    tf2::Vector3 vector(1, 0, 0);
-    tf2::Vector3 rotated_vector = tf2::quatRotate(rotation, vector);
-    
-    tf2::Quaternion rotationRef(0,0,0.05, 0.999);
-    tf2::Vector3 ref_vector = tf2::quatRotate(rotationRef, rotated_vector);
-    
-    tf2::Vector3 goalVec(
-        goal.x - current.x,
-        goal.y - current.y,
-        0
-    );
-    
-    rotated_vector.setZ(0);
-    ref_vector.setZ(0);
-    yaw_to_goal = tf2::tf2Angle(goalVec , rotated_vector);
-    float refAngle1 = tf2::tf2Angle(goalVec , ref_vector);
-    
-    if(refAngle1 > yaw_to_goal){
-        direction = -1;
-    }else{
-        direction  = 1;
-    }
-    
-    */
-    
-    //std::printf("%f\n" , yaw_to_goal);
-    
         
  
 }
 
+
 void goalCallBack(const geometry_msgs::PointStamped::ConstPtr& msg){
 
+  findNewFrontiers = true;
 
+}
+
+
+void frontierCallBack(const PointCloud::ConstPtr& msg){
+
+  pcl::PointCloud<pcl::PointXYZ> out2;
+  
   //TODO after integrating arjo's point cloud package, loop through and for every point perform the equivalent of getting one frontier to gernerate local graph
-  /*
+  if(findNewFrontiers){
+
+  populateMap(discreteMap , 500 , distances);
+
+
+  findNewFrontiers = false;
+  tf::TransformListener* listener = new tf::TransformListener();
+  try{
+    tf::StampedTransform transform;
+    listener->waitForTransform("/world", "/X1", ros::Time(0), ros::Duration(3.0));
+    listener->lookupTransform( "/world",  "/X1",ros::Time(0), transform);
+  }
+   catch(tf::TransformException& ex){
+    ROS_ERROR("Received an exception trying to transform a point from \"world\" to \"X1\": %s", ex.what());
+  }
+
+
   geometry_msgs::Transform trans;
   trans.translation.x = 0;
   trans.translation.y = 0;
@@ -510,18 +509,21 @@ void goalCallBack(const geometry_msgs::PointStamped::ConstPtr& msg){
   trans.rotation.y = 0;
   trans.rotation.z = 0;
   trans.rotation.w = 1;
-  pcl_ros::transformPointCloud	(*msg , out , trans);
+  pcl_ros::transformPointCloud	(*msg , out2 , trans);
 
-  size_t cloudSize = out.size();
+  size_t cloudSize = out2.size();
   int count = 0;
   // extract valid points from input cloud	
 
+  std::cout << "Cloud Size"<<cloudSize << std::endl;
+
+  
   for (int i = 0; i < cloudSize; i++) {
 
     pcl::PointXYZ point;
-    point.x = out[i].x;
-    point.y = out[i].y;
-    point.z = out[i].z;
+    point.x = out2[i].x;
+    point.y = out2[i].y;
+    point.z = out2[i].z;
 
     if (!pcl_isfinite(point.x) ||
         !pcl_isfinite(point.y) ||
@@ -535,77 +537,50 @@ void goalCallBack(const geometry_msgs::PointStamped::ConstPtr& msg){
 
     count ++;
 
-    //TODO add logic here
 
-  }
-  */
-  //TODO ends here
-
-
-
-   /*std::string goalStr = msg->data.c_str();
-   std::vector <std::string> tokens; 
-      
-    // stringstream class check1 
-    std::stringstream check1(goalStr); 
-      
-    std::string intermediate; 
-      
-    // Tokenizing w.r.t. space ' ' 
-    while(std::getline(check1, intermediate, ' ')) 
-    { 
-        tokens.push_back(intermediate); 
-    } 
-    goal.x = std::atof(tokens[0].c_str());
-    goal.y = std::atof(tokens[1].c_str());
-    goal.z = std::atof(tokens[2].c_str());*/
-
-    geometry_msgs::PointStamped goalPosition = *msg;
-    goal.x = goalPosition.point.x;
-    goal.y = goalPosition.point.y;
-    goal.z = goalPosition.point.z;
-
+    marker.color.r = 0.0;
+       marker.color.g = 1.0;
+       marker.color.b = 0.0;
+       marker.pose.orientation.w = 1.0;
+       marker.pose.position.x = point.x;
+       marker.pose.position.y = point.y;
+       marker.pose.position.z = point.z;
+        marker.id = ++id;
+       ma.markers.push_back(marker);
 
     geometry_msgs::Vector3 currentC = current;
     geometry_msgs::Quaternion currentPoseC = currentPose;
     geometry_msgs::Quaternion invPoseC = invPose;
 
-    tf2::Quaternion rotation1(
-    invPoseC.x,
-    invPoseC.y,
-    invPoseC.z,
-    invPoseC.w);
 
+    geometry_msgs::PointStamped initial_pt; 
+    initial_pt.header.frame_id = "world";
+    initial_pt.point.x = point.x;
+    initial_pt.point.y = point.y;
+    initial_pt.point.z = point.z;
+    
+    geometry_msgs::PointStamped transformStamped;
+    listener->transformPoint("/X1", initial_pt , transformStamped);	
+     goal.x = transformStamped.point.x;
+      goal.y = transformStamped.point.y;
+      goal.z = transformStamped.point.z;
 
-    tf2::Vector3 vector(goal.x -currentC.x, goal.y - currentC.y, goal.z-currentC.z);
-    tf2::Vector3 goal_new_coord = tf2::quatRotate(rotation1, vector);
-
-    std::cout << goal_new_coord.x() <<  " " << goal_new_coord.y() << " " << goal_new_coord.z() << std::endl;
 
     mColor++;
 
 
     pcl::PointXYZ middle_point;
-    middle_point.x = goal_new_coord.x();
-    middle_point.y = goal_new_coord.y();
-    middle_point.z = goal_new_coord.z();
-    // float distToGoal = getDistanceFromOrigin(middle_point);
-    // int maxNumberSegments = 2*(distToGoal/2 + 4)*(distToGoal/2 + 4);
-    
-
-
+    middle_point.x = goal.x;
+    middle_point.y = goal.y;
+    middle_point.z = goal.z;
       pcl::PointXYZ start_point;
       start_point.x = 0;
       start_point.y = 0;
       start_point.z = 0;
+
+
       
-      marker.color.r = 1.0;
-       marker.pose.orientation.w = 1.0;
-       marker.pose.position.x = goal.x;
-       marker.pose.position.y = goal.y;
-       marker.pose.position.z = goal.z;
-        marker.id = ++id;
-       ma.markers.push_back(marker);
+      
       
       std::cout << "Starting" << std::endl;
       std::cout << middle_point.x <<  " " << middle_point.y << " " << middle_point.z << std::endl; 
@@ -620,7 +595,7 @@ void goalCallBack(const geometry_msgs::PointStamped::ConstPtr& msg){
 
       
     int count = 0;
-      //TODO pass in position in X1 frame and not global frame and transform later.
+      //TODO pass in position inworld frame and not global frame and transform later.
       while(getDistanceBetween(middle_point , start_point) > 2){
         middle_point = getBestNextNode(distances , middle_point , start_point, discreteMap);
       
@@ -628,22 +603,26 @@ void goalCallBack(const geometry_msgs::PointStamped::ConstPtr& msg){
         std::cout << "Mid";
         std::cout << middle_point.x <<  " " << middle_point.y << " " << middle_point.z << std::endl; 
 
-        tf2::Vector3 globalCoordMarker(marker_point.x +currentC.x, marker_point.y + currentC.y, marker_point.z+currentC.z);
-        tf2::Quaternion rotation2(
-          currentPoseC.x,
-          currentPoseC.y,
-          currentPoseC.z,
-          currentPoseC.w);
-        tf2::Vector3 globalCoordMarkerWPose = tf2::quatRotate(rotation2, globalCoordMarker);
 
-        marker.color.r = 0.0;
+        geometry_msgs::PointStamped inputMPoint;
+
+        // inputMPoint.header.stamp = ros::Time::now().toNSec();
+        inputMPoint.header.frame_id = "X1";
+        inputMPoint.point.x = middle_point.x;
+        inputMPoint.point.y = middle_point.y;
+        inputMPoint.point.z = middle_point.z;
+
+        geometry_msgs::PointStamped stamped_out;
+        
+        listener->transformPoint("/world", inputMPoint , stamped_out);	
+        marker.color.r = 1.0;
        marker.color.g = 0.0;
-       marker.color.b = 1.0;
-      marker.pose.position.x = globalCoordMarkerWPose.x();
-       marker.pose.position.y = globalCoordMarkerWPose.y();
-       marker.pose.position.z = globalCoordMarkerWPose.z();
+       marker.color.b = 0.0;
+      marker.pose.position.x = stamped_out.point.x;
+       marker.pose.position.y = stamped_out.point.y;
+       marker.pose.position.z = stamped_out.point.z;
+             
 
-       
        id++;
        marker.id = id;
        ma.markers.push_back(marker);
@@ -654,22 +633,84 @@ void goalCallBack(const geometry_msgs::PointStamped::ConstPtr& msg){
         }
       }
 
+    }
 
-      std::cout << "Graph" << std::endl;
+    std::map<int , int> nodeIdMapping;
+    graph_msgs::GeometryGraph gg;
+    gg.header.seq = globalGraphId;
+    gg.header.frame_id = "X1";
+    gg.header.stamp = ros::Time::now();
+    int point_id = 0;
       for(auto a: terrainGraph){
-        std::cout << "Node: " <<  a.first << std::endl;
+        if(a.first >= 0){
+          if(nodeIdMapping.find(a.first) == nodeIdMapping.end()){
+            auto pt = discreteMap[a.first];
+            geometry_msgs::Point tempPt;
+            tempPt.x =pt.x;
+            tempPt.y =pt.y;
+            tempPt.z =pt.z;
+            gg.nodes.push_back(tempPt);
+            gg.edges.push_back(graph_msgs::Edges());
+            nodeIdMapping[a.first] = point_id;
+            point_id++;
+          }
+        }else{
+          if(nodeIdMapping.find(a.first) == nodeIdMapping.end()){
+            geometry_msgs::Point tempPt;
+            tempPt.x = 0;
+            tempPt.y = 0;
+            tempPt.z = 0;
+            gg.nodes.push_back(tempPt);
+            gg.edges.push_back(graph_msgs::Edges());
+            nodeIdMapping[a.first] = point_id;
+            point_id++;
+          }
+        }
         for(auto b : a.second){
-          std::cout << b << " ";
-
+          if(nodeIdMapping.find(b) == nodeIdMapping.end()){
+            auto pt = discreteMap[b];
+            geometry_msgs::Point tempPt;
+            tempPt.x =pt.x;
+            tempPt.y =pt.y;
+            tempPt.z =pt.z;
+            gg.nodes.push_back(tempPt);
+            gg.edges.push_back(graph_msgs::Edges());
+            nodeIdMapping[b] = point_id;
+            point_id++;
+          }
         }
         std::cout << std::endl;
       }
-      pub.publish(ma);
-    
- 
 
     
-    //std::printf("%f\t%f\t%f\n" , goal.x, goal.y , goal.z);
+      for(auto a: terrainGraph){
+        std::cout << "Node: " <<  a.first << std::endl;
+        if(nodeIdMapping.find(a.first) == nodeIdMapping.end()){
+           continue;
+        }
+        int node_index = nodeIdMapping[a.first];
+        for(auto b : a.second){
+          std::cout << b << " ";
+          if(nodeIdMapping.find(b) == nodeIdMapping.end()){
+           continue;
+          }
+          int child_index = nodeIdMapping[b];
+          gg.edges[node_index].node_ids.push_back(child_index);
+        }
+      }
+      pub.publish(ma);
+
+      pub2.publish(gg);
+
+    //TODO add logic here
+
+    globalGraphId++;
+
+  }
+
+
+ 
+
 }
 
 void callback(const PointCloud::ConstPtr& msg){
@@ -735,16 +776,18 @@ marker.type = marker.SPHERE;
   marker.color.g = 0.0;
   marker.color.b = 0.0;
 
-  populateMap(discreteMap , 500 , distances);
-
-
   ros::init(argc, argv, "sub_pcl");
   ros::NodeHandle nh;
   std::printf("subscriebrs ");
   ros::Subscriber sub = nh.subscribe<PointCloud>("traversable_pointcloud_input", 1, callback);
   ros::Subscriber sub3 = nh.subscribe("robot_position_pose", 1, positionCallBack);
   ros::Subscriber sub2 = nh.subscribe("goal_to_explore", 1, goalCallBack);
+  ros::Subscriber sub4 = nh.subscribe<PointCloud>("frontiers", 1, frontierCallBack);
   pub = nh.advertise<visualization_msgs::MarkerArray> ("Path", 1);
+  pub2 = nh.advertise<graph_msgs::GeometryGraph> ("graph", 1);
+
+
+
   std::printf("subscriebrs ");
   ros::spin();
 }
