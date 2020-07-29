@@ -79,15 +79,14 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
         frontier.getCentroids(centroid_points);
     }
 
-    pcl::PointCloud<pcl::PointXYZ> global_frame;
-    pcl_ros::transformPointCloud(local_frontiers, global_frame, current_pose.inverse());
-    global_frame.header.frame_id  = "world";
-    static int count =0;
-    count++;
+
     manager.addLidarScan(lidar_scan, current_pose);
-   // manager.addFrontiers(local_frontiers);
+
+    pcl::PointCloud<pcl::PointXYZ> global_frame;
+    pcl_ros::transformPointCloud(centroid_points, global_frame, current_pose.inverse());
+    global_frame.header.frame_id  = "world";
+    
     pcl::PointCloud<pcl::PointXYZ> filtered;
-    //manager.getFrontiers(filtered);
     filtered.header = pcl_msg->header;
     filtered.header.frame_id  = "world";
     for(auto pt: global_frame) {
@@ -95,8 +94,8 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
             filtered.push_back(pt);
         }
     }
-    visualization_pub.publish(filtered);
-    centroid_pub.publish(centroid_points);
+    centroid_pub.publish(filtered);
+    visualization_pub.publish(centroid_points);
 }
 
 int main(int argc, char** argv) {
