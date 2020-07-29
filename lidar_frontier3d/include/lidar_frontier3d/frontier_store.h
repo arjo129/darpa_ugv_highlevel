@@ -29,6 +29,15 @@ struct Frontier2D {
 	auto pt = (start + end)/2.0;
 	points.push_back(pcl::PointXYZ(pt.x() , pt.y() , pt.z()));
     }
+
+    void getCentroids(pcl::PointCloud<pcl::PointXYZ>& points) {
+        auto centroid = (start + end)/2;
+        pcl::PointXYZ pt;
+        pt.x = centroid.x();
+        pt.y = centroid.y();
+        pt.z = centroid.z();
+        points.push_back(pt);
+    }
 };
 
 

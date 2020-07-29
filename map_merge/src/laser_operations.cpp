@@ -207,7 +207,14 @@ void naiveCornerDetector(sensor_msgs::LaserScan& scan, pcl::PointCloud<pcl::Poin
     }
 }
 
+void fastDownsample(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& out, int skip) {
+
+}
+
 void downsample(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& out, int skip) {
+    if(out.ranges.size() != 0) {
+        return;
+    } 
     out.angle_max = scan.angle_max;
     out.header = scan.header;
     out.angle_increment = scan.angle_increment*skip;
@@ -440,23 +447,35 @@ void decomposeLidarScanIntoPlanes(pcl::PointCloud<pcl::PointXYZ>& points, std::v
 
 void decomposeLidarScanIntoPlanesFast(const pcl::PointCloud<pcl::PointXYZ>& points, LidarScan& scan_stack) {
     
+    for(auto& ring: scan_stack) {
+        for(int i = 0; i < ring.scan.ranges.size(); i++) {
+            ring.scan.ranges[i] = INFINITY;
+        }
+    }
+
     for(auto pt: points){
         if(!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z)) {
             continue;
         }
         float r = sqrt(pt.x*pt.x + pt.y*pt.y);
         float angle = atan2(r, pt.z);
+        float yaw = atan2(pt.y, pt.x);
         for(int i = 0 ; i < scan_stack.size(); i++) {
-            
-            if(angle != scan_stack[i].azimuth) continue;
+            if(abs(angle - scan_stack[i].azimuth) > 0.01) continue;
 
-            
+            //std::cout << "aDDING POINT" <<std::endl;
+            size_t idx = lookupAngle(scan_stack[i].scan, yaw);
+            *lookup(scan_stack[i].scan, idx) = r;
+            if(r > scan_stack[i].scan.range_max) scan_stack[i].scan.range_max = r;
+            break;
+
         }
     }
 }
 
 void decomposeLidarScanIntoPlanes(const pcl::PointCloud<pcl::PointXYZ>& points, LidarScan& scan_stack) {
-    if(scan_stack.size() != 0) {
+    if(scan_stack.size() > 0) {
+        //Optimized route so that we dont reallocate memory all the time.
         decomposeLidarScanIntoPlanesFast(points, scan_stack);
         return ;
     }
