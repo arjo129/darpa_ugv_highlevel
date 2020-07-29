@@ -61,7 +61,7 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
 
             Eigen::Vector3f p1(prev_pt.x, prev_pt.y, prev_pt.z);
             Eigen::Vector3f p2(pt.x, pt.y, pt.z);
-            auto length = (p2 -p1).norm();
+            auto length = (p2 - p1).norm();
             if(length > 1.5) {
                 frontiers.push_back(Frontier2D(p1, p2));
             }
