@@ -285,13 +285,13 @@ void callback(const PointCloud::ConstPtr& msg){
   //printf("Score: %f\n" , score);
   geometry_msgs::Twist t;
 
-  // t.linear.x = v;
-  // t.angular.z = w;
+  t.linear.x = v;
+  t.angular.z = w;
 
   // pcl::PCLPointCloud2 pc2;
   // pcl::toPCLPointCloud2 (out ,pc2);
   // pub.publish(pc2);
-  // pub_vel.publish(t);
+  pub_vel.publish(t);
 
 //  out.clear();
   // pcl::PointCloud<pcl::PointXYZ> laserCloudIn;

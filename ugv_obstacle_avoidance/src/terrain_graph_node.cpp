@@ -478,6 +478,26 @@ void goalCallBack(const geometry_msgs::PointStamped::ConstPtr& msg){
 
 }
 
+pcl::PointXYZ transformPointToWorld(pcl::PointXYZ point , tf::TransformListener* listener){
+
+    geometry_msgs::PointStamped initial_pt; 
+    initial_pt.header.frame_id = "X1";
+    initial_pt.point.x = point.x;
+    initial_pt.point.y = point.y;
+    initial_pt.point.z = point.z;
+    
+    geometry_msgs::PointStamped transformStamped;
+    pcl::PointXYZ transformedPoint;
+    listener->transformPoint("/world", initial_pt , transformStamped);	
+    transformedPoint.x = transformStamped.point.x;
+    transformedPoint.y = transformStamped.point.y;
+    transformedPoint.z = transformStamped.point.z;
+
+    return transformedPoint;
+
+
+}
+
 
 void frontierCallBack(const PointCloud::ConstPtr& msg){
 
@@ -638,13 +658,13 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
     std::map<int , int> nodeIdMapping;
     graph_msgs::GeometryGraph gg;
     gg.header.seq = globalGraphId;
-    gg.header.frame_id = "X1";
+    gg.header.frame_id = "world";
     gg.header.stamp = ros::Time::now();
     int point_id = 0;
       for(auto a: terrainGraph){
         if(a.first >= 0){
           if(nodeIdMapping.find(a.first) == nodeIdMapping.end()){
-            auto pt = discreteMap[a.first];
+            auto pt = transformPointToWorld(discreteMap[a.first] , listener);
             geometry_msgs::Point tempPt;
             tempPt.x =pt.x;
             tempPt.y =pt.y;
@@ -668,7 +688,7 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
         }
         for(auto b : a.second){
           if(nodeIdMapping.find(b) == nodeIdMapping.end()){
-            auto pt = discreteMap[b];
+            auto pt = transformPointToWorld(discreteMap[b] , listener);
             geometry_msgs::Point tempPt;
             tempPt.x =pt.x;
             tempPt.y =pt.y;
