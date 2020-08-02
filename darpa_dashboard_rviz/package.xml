@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>darpa_dashboard_rviz</name>
+  <version>0.0.0</version>
+  <description>
+     darpa_dashboard_rviz package
+  </description>
+  <maintainer email="nwjbrandon@gmail.com">nwjbrandon</maintainer>
+  <license>BSD</license>
+
+  <url>http://ros.org/wiki/rviz_plugin_tutorials</url>
+  <author>nwjbrandon</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>qtbase5-dev</build_depend>
+  <build_depend>rviz</build_depend>
+
+  <exec_depend>libqt5-core</exec_depend>
+  <exec_depend>libqt5-gui</exec_depend>
+  <exec_depend>libqt5-widgets</exec_depend>
+  <exec_depend>rviz</exec_depend>
+
+  <build_depend>wireless_msgs</build_depend>
+  <build_export_depend>wireless_msgs</build_export_depend>
+  <exec_depend>wireless_msgs</exec_depend>
+  
+  <build_depend>interface_protocol</build_depend>
+  <build_export_depend>interface_protocol</build_export_depend>
+  <exec_depend>interface_protocol</exec_depend>
+
+  <export>
+    <rosdoc config="${prefix}/rosdoc.yaml"/>
+    <rviz plugin="${prefix}/plugin_description.xml"/>
+  </export>
+</package>

@@ -1,0 +1,44 @@
+<library path="lib/libdarpa_dashboard_rviz">
+  <class name="darpa_dashboard_rviz/Terminal"
+         type="darpa_dashboard::TerminalPanel"
+         base_class_type="rviz::Panel">
+    <description>
+      A panel widget to display ros logs.
+    </description>
+  </class>
+  <class name="darpa_dashboard_rviz/Twist"
+         type="darpa_dashboard::TwistPanel"
+         base_class_type="rviz::Panel">
+    <description>
+      A panel widget to control a robot.
+    </description>
+  </class>
+  <class name="darpa_dashboard_rviz/Init"
+         type="darpa_dashboard::InitPanel"
+         base_class_type="rviz::Panel">
+    <description>
+      A panel widget to start and stop a robot.
+    </description>
+  </class>
+  <class name="darpa_dashboard_rviz/Lora"
+         type="darpa_dashboard::LoraPanel"
+         base_class_type="rviz::Panel">
+    <description>
+      A panel widget to drop lora.
+    </description>
+  </class>
+  <class name="darpa_dashboard_rviz/Artifact"
+         type="darpa_dashboard::ArtifactPanel"
+         base_class_type="rviz::Panel">
+    <description>
+      A panel widget to drop artifact.
+    </description>
+  </class>
+  <class name="darpa_dashboard_rviz/Status"
+         type="darpa_dashboard::StatusPanel"
+         base_class_type="rviz::Panel">
+    <description>
+      A panel widget to display status of competition.
+    </description>
+  </class>
+</library>
