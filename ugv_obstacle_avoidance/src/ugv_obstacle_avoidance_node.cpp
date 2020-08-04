@@ -18,6 +18,7 @@
 #include <vector>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Quaternion.h>
+#include <std_msgs/Int8.h>
 
 #define _lowerBound -15.0
 #define _upperBound 15.0
@@ -25,7 +26,7 @@
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 
-ros::Publisher pub;
+ros::Publisher pub, status_pub;
 ros::Publisher pub_vel;
 pcl::PointCloud<pcl::PointXYZ> out;
 
@@ -71,15 +72,18 @@ float getAngularVelocity(std::vector<std::tuple<float,float>> &distances){
    }
    
    float score = getFreeSpaceScoreLR(distances);
-  
+  std::cout << yaw_to_goal <<std::endl;
    return yaw_to_goal/M_PI*1.0*direction - score/10000.0;
 }
 
 float getForwardVelocity(std::vector<std::tuple<float,float>> &distances){
 
     float distance_to_goal = std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y));
-    
+    std::cout << distance_to_goal <<std::endl;
    if( distance_to_goal< 1){
+        std_msgs::Int8 i;
+        i.data = 0;
+        status_pub.publish(i);
         return 0;    
    }
    if(yaw_to_goal > M_PI/2){
@@ -135,6 +139,7 @@ void getMaxTraversablePoint(float (*data)[10000][3] , int i , pcl::PointXYZ *poi
 void positionCallBack(const nav_msgs::Odometry::ConstPtr& msg){
     nav_msgs::Odometry poseMsg = *msg;
     geometry_msgs::Quaternion currentPose;
+    std::cout << "Got position fix" <<std::endl;
     current.x = poseMsg.pose.pose.position.x;
     current.y = poseMsg.pose.pose.position.y;
     current.z = poseMsg.pose.pose.position.z;
@@ -144,7 +149,7 @@ void positionCallBack(const nav_msgs::Odometry::ConstPtr& msg){
     currentPose.z = poseMsg.pose.pose.orientation.z;
     currentPose.w = poseMsg.pose.pose.orientation.w;
     
-    
+    std::cout << "Current goal" << goal.x << ", " << goal.y << "| " << current.x << ", " << current.y <<std::endl;
     
     tf2::Quaternion rotation(
     poseMsg.pose.pose.orientation.x,
@@ -206,7 +211,7 @@ void goalCallBack(const geometry_msgs::PointStamped::ConstPtr& msg){
     goal.y = goalPosition.point.y;
     goal.z = 0;
 
-    
+    std::cout << "Got goal" << goal.x << ", " << goal.y <<std::endl;
     //std::printf("%f\t%f\t%f\n" , goal.x, goal.y , goal.z);
 }
 
@@ -226,6 +231,7 @@ float getYaw( pcl::PointXYZ &point ){
 
     flat_angle -= (M_PI);
 
+    //std::cout << flat_angle << ", "  <<atan2(point.y, point.x) <<std::endl;
     return flat_angle;
 
 }
@@ -309,6 +315,7 @@ int main(int argc, char** argv)
   ros::Subscriber sub2 = nh.subscribe("goal_to_explore", 1, goalCallBack);
   std::printf("subscriebrs ");
   pub_vel = nh.advertise<geometry_msgs::Twist> ("X1/cmd_vel", 1);
+  status_pub = nh.advertise<std_msgs::Int8> ("/status", 1);
   ros::spin();
 }
 
