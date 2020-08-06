@@ -23,6 +23,7 @@
 #define _lowerBound -15.0
 #define _upperBound 15.0
 #define nScanRings 16
+#define MAX_TIME  30
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 
@@ -37,6 +38,12 @@ geometry_msgs::Vector3 current;
 float yaw_to_goal = 0;
 int direction = -1;
 
+enum VehicleState {
+ MOVING, AWAITING_INSTRUCTION
+};
+
+VehicleState current_state = AWAITING_INSTRUCTION; 
+ros::Time last_goal;
 
 int getRowVal(int angle_seg, int ring){
   return ring*40+angle_seg;
@@ -66,6 +73,8 @@ float getConstraintScore(std::vector<std::tuple<float,float>> &distances){
 }
 
 float getAngularVelocity(std::vector<std::tuple<float,float>> &distances){
+
+  if(current_state == AWAITING_INSTRUCTION) return 0;
     
    if(std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y)) < 1){
         return 0;    
@@ -78,16 +87,28 @@ float getAngularVelocity(std::vector<std::tuple<float,float>> &distances){
 
 float getForwardVelocity(std::vector<std::tuple<float,float>> &distances){
 
+  if(current_state == VehicleState::AWAITING_INSTRUCTION) return 0;
+
     float distance_to_goal = std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y));
     std::cout << distance_to_goal <<std::endl;
    if( distance_to_goal< 1){
         std_msgs::Int8 i;
         i.data = 0;
         status_pub.publish(i);
+        current_state = VehicleState::AWAITING_INSTRUCTION; 
         return 0;    
    }
    if(yaw_to_goal > M_PI/2){
         return 0;
+   }
+
+   auto time_since_last_goal = ros::Time::now() - last_goal;
+   if(time_since_last_goal > ros::Duration(MAX_TIME,0)) {
+     std_msgs::Int8 i;
+        i.data = -1;
+        status_pub.publish(i);
+        current_state = VehicleState::AWAITING_INSTRUCTION; 
+     return 0;
    }
    
    float yawFactor = 2*(M_PI/2 - yaw_to_goal)/M_PI*(M_PI/2 - yaw_to_goal)/M_PI*0.8*0.5;
@@ -188,24 +209,7 @@ void positionCallBack(const nav_msgs::Odometry::ConstPtr& msg){
 }
 
 void goalCallBack(const geometry_msgs::PointStamped::ConstPtr& msg){
-   /*std::string goalStr = msg->data.c_str();
-   std::vector <std::string> tokens; 
-      
-    // stringstream class check1 
-    std::stringstream check1(goalStr); 
-      
-    std::string intermediate; 
-      
-    // Tokenizing w.r.t. space ' ' 
-    while(std::getline(check1, intermediate, ' ')) 
-    { 
-        tokens.push_back(intermediate); 
-    } 
-    goal.x = std::atof(tokens[0].c_str());
-    goal.y = std::atof(tokens[1].c_str());
-    goal.z = std::atof(tokens[2].c_str());*/
-
-
+    current_state = VehicleState::MOVING;
     geometry_msgs::PointStamped goalPosition = *msg;
     goal.x = goalPosition.point.x;
     goal.y = goalPosition.point.y;
