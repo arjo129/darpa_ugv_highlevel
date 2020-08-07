@@ -480,21 +480,20 @@ void goalCallBack(const geometry_msgs::PointStamped::ConstPtr& msg){
 
 pcl::PointXYZ transformPointToWorld(pcl::PointXYZ point , tf::TransformListener* listener){
 
-    geometry_msgs::PointStamped initial_pt; 
-    initial_pt.header.frame_id = "X1";
-    initial_pt.point.x = point.x;
-    initial_pt.point.y = point.y;
-    initial_pt.point.z = point.z;
-    
-    geometry_msgs::PointStamped transformStamped;
-    pcl::PointXYZ transformedPoint;
-    listener->transformPoint("/world", initial_pt , transformStamped);	
-    transformedPoint.x = transformStamped.point.x;
-    transformedPoint.y = transformStamped.point.y;
-    transformedPoint.z = transformStamped.point.z;
+  geometry_msgs::PointStamped initial_pt; 
+  initial_pt.header.frame_id = "X1";
+  initial_pt.point.x = point.x;
+  initial_pt.point.y = point.y;
+  initial_pt.point.z = point.z;
+  
+  geometry_msgs::PointStamped transformStamped;
+  pcl::PointXYZ transformedPoint;
+  listener->transformPoint("/world", initial_pt , transformStamped);	
+  transformedPoint.x = transformStamped.point.x;
+  transformedPoint.y = transformStamped.point.y;
+  transformedPoint.z = transformStamped.point.z;
 
-    return transformedPoint;
-
+  return transformedPoint;
 
 }
 
@@ -511,13 +510,14 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
 
   findNewFrontiers = false;
   tf::TransformListener* listener = new tf::TransformListener();
+   tf::StampedTransform transform;
   try{
-    tf::StampedTransform transform;
-    listener->waitForTransform("/world", "/X1", ros::Time(0), ros::Duration(3.0));
-    listener->lookupTransform( "/world",  "/X1",ros::Time(0), transform);
+    listener->waitForTransform("/world", msg->header.frame_id, ros::Time(0), ros::Duration(3.0));
+    listener->lookupTransform( "/world", msg->header.frame_id, ros::Time(0), transform);
   }
    catch(tf::TransformException& ex){
     ROS_ERROR("Received an exception trying to transform a point from \"world\" to \"X1\": %s", ex.what());
+    
   }
 
 
@@ -529,7 +529,7 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
   trans.rotation.y = 0;
   trans.rotation.z = 0;
   trans.rotation.w = 1;
-  pcl_ros::transformPointCloud	(*msg , out2 , trans);
+  pcl_ros::transformPointCloud	(*msg , out2 , transform);
 
   size_t cloudSize = out2.size();
   int count = 0;
@@ -551,13 +551,13 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
       continue;
     }
 
-    if (point.x * point.x + point.y * point.y + point.z * point.z < 0.0001) {
+    if (point.x * point.x + point.y * point.y + point.z * point.z < 0.0001 && point.z > 2) {
       continue;
     }
 
     count ++;
 
-
+    marker.color.a = 1.0;
     marker.color.r = 0.0;
        marker.color.g = 1.0;
        marker.color.b = 0.0;
@@ -762,7 +762,7 @@ void callback(const PointCloud::ConstPtr& msg){
       continue;
     }
 
-    if (point.x * point.x + point.y * point.y + point.z * point.z < 0.0001) {
+    if (point.x * point.x + point.y * point.y + point.z * point.z < 0.0001 && point.z < 2) {
       continue;
     }
 
