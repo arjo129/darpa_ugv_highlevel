@@ -210,6 +210,7 @@ void positionCallBack(const nav_msgs::Odometry::ConstPtr& msg){
 
 void goalCallBack(const geometry_msgs::PointStamped::ConstPtr& msg){
     current_state = VehicleState::MOVING;
+    last_goal = ros::Time::now();
     geometry_msgs::PointStamped goalPosition = *msg;
     goal.x = goalPosition.point.x;
     goal.y = goalPosition.point.y;

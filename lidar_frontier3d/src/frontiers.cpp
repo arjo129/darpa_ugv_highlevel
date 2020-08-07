@@ -50,7 +50,7 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
         for(int i = 0; i < ring.scan.ranges.size(); i++) {
             auto range = ring.scan.ranges[i];
             auto angle = i*ring.scan.angle_increment + ring.scan.angle_min;
-            if(range > ring.scan.range_max) continue;
+            if(range > ring.scan.range_max || range < std::max(ring.scan.range_min, 0.7f)) continue;
             auto x = range*cos(angle);
             auto y = range*sin(angle);
             pcl::PointXYZ _pt(x,y,0);
