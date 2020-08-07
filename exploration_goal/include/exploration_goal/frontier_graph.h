@@ -5,6 +5,7 @@
 
 #include <graph_msgs/GeometryGraph.h>
 #include <graph_msgs/Edges.h>
+#include <std_msgs/UInt32.h>
 #include <Eigen/Dense>
 
 #include <nanoflann/nanoflann.hpp>
@@ -74,7 +75,11 @@ FrontierGraph::FrontierGraph(graph_msgs::GeometryGraph graph) : num_nodes(graph.
     // Convert vector based adj_list to set based adj_list for easier insertion when merging with other graphs
     for (int idx=0; idx<num_nodes; idx++)
     {
-        std::vector<int> adj_vec = graph.edges[idx];
+        std::vector<int> adj_vec;
+        for (auto edge : graph.edges[idx].node_ids)
+        {
+            adj_vec.push_back(edge);
+        }
         std::copy(adj_vec.begin(), adj_vec.end(), std::inserter(adjacency_list[idx], adjacency_list[idx].end()));
     }
 }
@@ -99,7 +104,11 @@ graph_msgs::GeometryGraph FrontierGraph::toMsg()
     for (int idx=0; idx<num_nodes; idx++)
     {
         std::vector<int> adj_vec(adjacency_list[idx].begin(), adjacency_list[idx].end());
-        graph.edges.push_back(adj_vec);
+        graph.edges.push_back(graph_msgs::Edges());
+        for (auto edge : adj_vec)
+        {
+            graph.edges[idx].node_ids.push_back(edge);
+        }
     }
 
     return graph;
