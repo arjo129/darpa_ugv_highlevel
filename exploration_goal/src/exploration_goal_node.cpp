@@ -17,7 +17,7 @@
 ros::Publisher global_graph_pub, exploration_goal_pub, request_local_graph_pub;
 FrontierGraph global_graph;
 
-int main()
+int main(int argc, char *argv[])
 {
     ros::NodeHandle nh;
     ros::init(argc, argv,"exploration_goal_node");
@@ -51,7 +51,7 @@ int main()
         // wait until robot stops moving / reaches goal
         wait_for_oscillation();
 
-        global_graph.markAsVisited(node_idx);
+        global_graph.markAsExplored(node_idx);
     }
 
 }
