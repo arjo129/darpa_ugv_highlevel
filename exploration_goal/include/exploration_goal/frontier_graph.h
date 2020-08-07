@@ -47,6 +47,8 @@ class FrontierGraph
         FrontierGraph(graph_msgs::GeometryGraph graph);
         ~FrontierGraph();
         FrontierGraph mergeLocalGraph (const FrontierGraph & local_graph);
+        geometry_msgs::Point getPointForNodeId(int node_idx);
+        int getSize();
         graph_msgs::GeometryGraph toMsg();
         void markAsUnExplored(int node_idx);
         void markAsExploring(int node_idx);
@@ -57,6 +59,7 @@ class FrontierGraph
         std::vector<std::set<int>> adjacency_list;
         std::vector<geometry_msgs::Point> node_idx_to_3d_point;
         int num_nodes;
+        int current_node_idx;
 };
 
 
@@ -65,7 +68,8 @@ FrontierGraph::FrontierGraph() : num_nodes(0)
 
 FrontierGraph::FrontierGraph(graph_msgs::GeometryGraph graph) : num_nodes(graph.nodes.size()),
                                                                 explored_state(num_nodes, NODE_UNEXPLORED),
-                                                                adjacency_list(num_nodes, std::set<int>(0))
+                                                                adjacency_list(num_nodes, std::set<int>(0)),
+                                                                current_node_idx{0}
 {
     // 0-based List containing mapping of node index to 3D points.
     node_idx_to_3d_point = graph.nodes; 
@@ -81,9 +85,30 @@ FrontierGraph::FrontierGraph(graph_msgs::GeometryGraph graph) : num_nodes(graph.
 FrontierGraph::~FrontierGraph()
 {}
 
+geometry_msgs::Point FrontierGraph::getPointForNodeId(int node_idx){
+    return node_idx_to_3d_point[node_idx];
+}
+
+int FrontierGraph::getSize(){
+    return num_nodes;
+}
+
 FrontierGraph::FrontierGraph mergeLocalGraph (const FrontierGraph & local_graph)
 {
-
+    for(int i = 0 ; local_graph.size() ; i ++){
+        for(auto &b: local_graph[i]){
+            if(i == 0){
+                adjacency_list[current_node_idx].insert(b+num_nodes-1);
+            }else{
+                std::set<int>temp_set;
+                temp_set.insert(b+num_nodes-1);
+                adjacency_list.push_back(temp_set);
+                explored_state.push_back(GraphNodeExploredState::NODE_UNEXPLORED);
+                node_idx_to_3d_point.push_back(local_graph.getPointForNodeId(i));
+            }
+        }
+    }
+    num_nodes += local_graph.getSize();
 }
 
 FrontierGraph::graph_msgs::GeometryGraph toMsg()
