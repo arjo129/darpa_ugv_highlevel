@@ -38,9 +38,9 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
 
     static LidarScan _lidar_scan;
     LidarScan lidar_scan;
-    decomposeLidarScanIntoPlanes(*pcl_msg, _lidar_scan);
+    decomposeLidarScanIntoPlanes(*pcl_msg, lidar_scan);
 
-    downsampleScan(_lidar_scan, lidar_scan, 10);
+    //downsampleScan(_lidar_scan, lidar_scan, 10);
 
     std::vector<Frontier2D> frontiers;
     for(auto& ring: lidar_scan) {
@@ -50,7 +50,7 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
         for(int i = 0; i < ring.scan.ranges.size(); i++) {
             auto range = ring.scan.ranges[i];
             auto angle = i*ring.scan.angle_increment + ring.scan.angle_min;
-            if(range > ring.scan.range_max) continue;
+            if(range > ring.scan.range_max || range < std::max(ring.scan.range_min, 0.7f)) continue;
             auto x = range*cos(angle);
             auto y = range*sin(angle);
             pcl::PointXYZ _pt(x,y,0);
@@ -62,8 +62,9 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
 
             Eigen::Vector3f p1(prev_pt.x, prev_pt.y, prev_pt.z);
             Eigen::Vector3f p2(pt.x, pt.y, pt.z);
+
             auto length = (p2 - p1).norm();
-            if(length > 1.5) {
+            if(length > 1.5 && pt.z < 1) { //Onlu frontiers 1.5m and height less than 2m
                 frontiers.push_back(Frontier2D(p1, p2));
             }
             prev_pt = pt;
@@ -90,7 +91,7 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
     filtered.header = pcl_msg->header;
     filtered.header.frame_id  = "world";
     for(auto pt: global_frame) {
-        if(!manager.queryFrontierPoint(pt)) {
+        if(!manager.queryFrontierPoint(pt) && pt.z < 2) {
             filtered.push_back(pt);
         }
     }
