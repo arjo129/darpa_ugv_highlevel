@@ -5,33 +5,34 @@
 
 #include <graph_msgs/GeometryGraph.h>
 #include <graph_msgs/Edges.h>
+#include <Eigen/Dense>
 
 #include <nanoflann/nanoflann.hpp>
 #include <vector>
 #include <algorithm>
 
-struct PointCloud3d_ {
-    std::vector<Eigen::Vector3f> pts;
+// struct PointCloud3d_ {
+//     std::vector<Eigen::Vector3f> pts;
     
-    inline float kdtree_get_pt(const size_t idx, const size_t dim) const
-	{
-		if (dim == 0) return pts[idx].x;
-		else if (dim == 1) return pts[idx].y;
-		else return pts[idx].z;
-	}
+//     inline float kdtree_get_pt(const size_t idx, const size_t dim) const
+// 	{
+// 		if (dim == 0) return pts[idx].x;
+// 		else if (dim == 1) return pts[idx].y;
+// 		else return pts[idx].z;
+// 	}
 
-    inline size_t kdtree_get_point_count() const { return pts.size(); }
+//     inline size_t kdtree_get_point_count() const { return pts.size(); }
 
-    template <class BBOX>
-	bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
+//     template <class BBOX>
+// 	bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
 
-};
+// };
 
-typedef nanoflann::KDTreeSingleIndexDynamicAdaptor<
-		L2_Simple_Adaptor<float, PointCloud3d_ > ,
-		PointCloud3d_,
-		3
-		> kd_tree_t;
+// typedef nanoflann::KDTreeSingleIndexDynamicAdaptor<
+// 		L2_Simple_Adaptor<float, PointCloud3d_ > ,
+// 		PointCloud3d_,
+// 		3
+// 		> kd_tree_t;
 
 typedef enum GraphNodeExploredState 
 {
@@ -65,7 +66,7 @@ FrontierGraph::FrontierGraph() : num_nodes(0)
 
 FrontierGraph::FrontierGraph(graph_msgs::GeometryGraph graph) : num_nodes(graph.nodes.size()),
                                                                 explored_state(num_nodes, NODE_UNEXPLORED),
-                                                                adjacency_list(num_nodes, std::set<int>(0))
+                                                                adjacency_list(num_nodes, std::set<int>())
 {
     // 0-based List containing mapping of node index to 3D points.
     node_idx_to_3d_point = graph.nodes; 
@@ -73,7 +74,7 @@ FrontierGraph::FrontierGraph(graph_msgs::GeometryGraph graph) : num_nodes(graph.
     // Convert vector based adj_list to set based adj_list for easier insertion when merging with other graphs
     for (int idx=0; idx<num_nodes; idx++)
     {
-        vector<int> adj_vec = graph.edges[idx];
+        std::vector<int> adj_vec = graph.edges[idx];
         std::copy(adj_vec.begin(), adj_vec.end(), std::inserter(adjacency_list[idx], adjacency_list[idx].end()));
     }
 }
@@ -81,12 +82,12 @@ FrontierGraph::FrontierGraph(graph_msgs::GeometryGraph graph) : num_nodes(graph.
 FrontierGraph::~FrontierGraph()
 {}
 
-FrontierGraph::FrontierGraph mergeLocalGraph (const FrontierGraph & local_graph)
+FrontierGraph FrontierGraph::mergeLocalGraph (const FrontierGraph & local_graph)
 {
 
 }
 
-FrontierGraph::graph_msgs::GeometryGraph toMsg()
+graph_msgs::GeometryGraph FrontierGraph::toMsg()
 {
     graph_msgs::GeometryGraph graph;
 
@@ -97,16 +98,16 @@ FrontierGraph::graph_msgs::GeometryGraph toMsg()
     
     for (int idx=0; idx<num_nodes; idx++)
     {
-        vector<int> adj_vec(adjacency_list[idx].begin(), adjacency_list[idx].end());
+        std::vector<int> adj_vec(adjacency_list[idx].begin(), adjacency_list[idx].end());
         graph.edges.push_back(adj_vec);
     }
 
     return graph;
 }
 
-FrontierGraph::void markAsUnExplored(int node_idx) {explored_state[node_idx] = NODE_UNEXPLORED;}
-FrontierGraph::void markAsExploring(int node_idx) { explored_state[node_idx] = NODE_EXPLORING; }
-FrontierGraph::void markAsExplored(int node_idx) { explored_state[node_idx] = NODE_EXPLORED; }
+void FrontierGraph::markAsUnExplored(int node_idx) {explored_state[node_idx] = NODE_UNEXPLORED;}
+void FrontierGraph::markAsExploring(int node_idx) { explored_state[node_idx] = NODE_EXPLORING; }
+void FrontierGraph::markAsExplored(int node_idx) { explored_state[node_idx] = NODE_EXPLORED; }
 
 
 
