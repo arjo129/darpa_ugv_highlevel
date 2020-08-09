@@ -12,6 +12,8 @@
 #include <vector>
 #include <algorithm>
 
+#define GLOBAL_TF_FRAME "world"
+
 // struct PointCloud3d_ {
 //     std::vector<Eigen::Vector3f> pts;
     
@@ -57,7 +59,7 @@ class FrontierGraph
         void markAsExploring(int node_idx);
         void markAsExplored(int node_idx);
 
-    private:
+    protected:
         std::vector<int> explored_state;
         std::vector<std::set<int>> adjacency_list;
         std::vector<geometry_msgs::Point> node_idx_to_3d_point;
@@ -69,10 +71,11 @@ class FrontierGraph
 FrontierGraph::FrontierGraph() : num_nodes(0)
 {}
 
-FrontierGraph::FrontierGraph(graph_msgs::GeometryGraph graph) : num_nodes(graph.nodes.size()),
-                                                                explored_state(num_nodes, NODE_UNEXPLORED),
-                                                                adjacency_list(num_nodes, std::set<int>{})
+FrontierGraph::FrontierGraph(graph_msgs::GeometryGraph graph) : num_nodes(graph.nodes.size())
 {
+    explored_state.resize(num_nodes, NODE_UNEXPLORED);
+    adjacency_list.resize(num_nodes, std::set<int>{});
+
     // 0-based List containing mapping of node index to 3D points.
     node_idx_to_3d_point = graph.nodes; 
 
@@ -126,7 +129,7 @@ graph_msgs::GeometryGraph FrontierGraph::toMsg()
 {
     graph_msgs::GeometryGraph graph;
 
-    graph.header.frame_id = "world";
+    graph.header.frame_id = GLOBAL_TF_FRAME;
     graph.header.stamp = ros::Time::now();
 
     graph.nodes = node_idx_to_3d_point;
