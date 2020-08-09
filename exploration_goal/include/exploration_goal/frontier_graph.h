@@ -56,6 +56,8 @@ class FrontierGraph
         void markAsUnExplored(int node_idx);
         void markAsExploring(int node_idx);
         void markAsExplored(int node_idx);
+        int getNextGoal();
+        int getParent(int);
 
     private:
         std::vector<int> explored_state;
@@ -103,23 +105,46 @@ std::vector<std::set<int>>& FrontierGraph::getAL(){
     return adjacency_list;
 }
 
-FrontierGraph FrontierGraph::mergeLocalGraph (FrontierGraph & local_graph)
-{
+FrontierGraph FrontierGraph::mergeLocalGraph (FrontierGraph & local_graph){
     auto localAL = local_graph.getAL();
     for(int i = 0 ; localAL.size() ; i ++){
+        std::set<int>temp_set;
         for(auto &b: localAL[i]){
             if(i == 0){
                 adjacency_list[current_node_idx].insert(b+num_nodes-1);
             }else{
-                std::set<int>temp_set;
                 temp_set.insert(b+num_nodes-1);
-                adjacency_list.push_back(temp_set);
-                explored_state.push_back(GraphNodeExploredState::NODE_UNEXPLORED);
-                node_idx_to_3d_point.push_back(local_graph.getPointForNodeId(i));
             }
+        }
+        if(i != 0){
+            adjacency_list.push_back(temp_set);
+            explored_state.push_back(GraphNodeExploredState::NODE_UNEXPLORED);
+            node_idx_to_3d_point.push_back(local_graph.getPointForNodeId(i));
         }
     }
     num_nodes += local_graph.getSize();
+}
+
+int FrontierGraph::getNextGoal(){
+    if(adjacency_list[current_node_idx].empty()){
+        return getParent(current_node_idx);
+    }
+    
+    for(auto &child_node: adjacency_list[current_node_idx]){
+        if(explored_state[child_node] == GraphNodeExploredState::NODE_EXPLORED){
+            continue;
+        }else if(explored_state[child_node] == GraphNodeExploredState::NODE_UNEXPLORED){
+            return child_node;
+        }
+    }
+}
+
+int FrontierGraph::getParent(int child_node){
+    for(int i = 0; i < adjacency_list.size() ; i ++){
+        if(adjacency_list[i].find(child_node) != adjacency_list[i].end()){
+            return i;
+        }
+    }
 }
 
 graph_msgs::GeometryGraph FrontierGraph::toMsg()
