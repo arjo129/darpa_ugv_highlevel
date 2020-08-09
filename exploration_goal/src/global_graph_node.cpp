@@ -13,9 +13,10 @@
 ros::Publisher global_graph_pub;
 FrontierGraph global_graph;
 
-void onLocalGraphRecv(const graph_msgs::GeometryGraph local_graph)
+void onLocalGraphRecv(const graph_msgs::GeometryGraph local_graph_msg)
 {
-    // global_graph.mergeLocalGraph(local_graph);
+    FrontierGraph local_graph(local_graph_msg);
+    global_graph.mergeLocalGraph(local_graph);
 }
 
 int main(int argc, char *argv[])
