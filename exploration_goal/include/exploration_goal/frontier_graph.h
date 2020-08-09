@@ -50,7 +50,7 @@ class FrontierGraph
         FrontierGraph();
         FrontierGraph(graph_msgs::GeometryGraph graph);
         ~FrontierGraph();
-        FrontierGraph mergeLocalGraph (FrontierGraph & local_graph);
+        void mergeLocalGraph (FrontierGraph & local_graph);
         geometry_msgs::Point getPointForNodeId(int node_idx);
         std::vector<std::set<int>> & getAL();
         int getSize();
@@ -108,13 +108,13 @@ std::vector<std::set<int>>& FrontierGraph::getAL(){
     return adjacency_list;
 }
 
-FrontierGraph FrontierGraph::mergeLocalGraph (FrontierGraph & local_graph){
+void FrontierGraph::mergeLocalGraph (FrontierGraph & local_graph){
     auto localAL = local_graph.getAL();
-    for(int i = 0 ; localAL.size() ; i ++){
+    for(int i = 0 ; i < localAL.size() ; i ++){
         std::set<int>temp_set;
         for(auto &b: localAL[i]){
             if(i == 0){
-                adjacency_list[current_node_idx].insert(b+num_nodes-1);
+                adjacency_list[num_nodes-1].insert(b+num_nodes-1);
             }else{
                 temp_set.insert(b+num_nodes-1);
             }
@@ -125,7 +125,7 @@ FrontierGraph FrontierGraph::mergeLocalGraph (FrontierGraph & local_graph){
             node_idx_to_3d_point.push_back(local_graph.getPointForNodeId(i));
         }
     }
-    num_nodes += local_graph.getSize();
+    num_nodes += local_graph.getSize() - 1;
 }
 
 int FrontierGraph::getNextGoal(){
