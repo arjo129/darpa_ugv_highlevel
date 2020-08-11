@@ -21,11 +21,22 @@ struct Frontier2D {
         if(!std::isfinite(diff.x()) || !std::isfinite(diff.y()) || !std::isfinite(diff.z()))
             return;
         int max = length/resolution;
-        for(int i = 0; i < max; i++) {
+        /*for(int i = 0; i < max; i++) {
             auto res = resolution*i*diff/length;
             auto pt = start + res;
             points.push_back(pcl::PointXYZ(pt.x(), pt.y(), pt.z()));
-        }
+        }*/
+	auto pt = (start + end)/2.0;
+	points.push_back(pcl::PointXYZ(pt.x() , pt.y() , pt.z()));
+    }
+
+    void getCentroids(pcl::PointCloud<pcl::PointXYZ>& points) {
+        auto centroid = (start + end)/2;
+        pcl::PointXYZ pt;
+        pt.x = centroid.x();
+        pt.y = centroid.y();
+        pt.z = centroid.z();
+        points.push_back(pt);
     }
 };
 
