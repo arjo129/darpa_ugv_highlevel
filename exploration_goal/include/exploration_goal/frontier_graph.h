@@ -125,7 +125,7 @@ FrontierGraph FrontierGraph::mergeLocalGraph (FrontierGraph & local_graph){
             node_idx_to_3d_point.push_back(local_graph.getPointForNodeId(i));
         }
     }
-    num_nodes += local_graph.getSize();
+    num_nodes += local_graph.getSize() - 1;
 }
 
 int FrontierGraph::getNextGoal(){
