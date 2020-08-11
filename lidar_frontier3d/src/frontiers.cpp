@@ -9,7 +9,7 @@
 #include <lidar_frontier3d/frontier_manager.h>
 #include <tf/tf.h>
 
-ros::Publisher pub;
+ros::Publisher visualization_pub, centroid_pub;
 pcl::PointXYZ scanPointToPointCloud(pcl::PointXYZ point, double azimuth); //Access private API
 tf::TransformListener* listener;
 FrontierManager manager;
@@ -36,10 +36,11 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
         return;
     }
 
-    LidarScan _lidar_scan, lidar_scan;
-    decomposeLidarScanIntoPlanes(*pcl_msg, _lidar_scan);
+    static LidarScan _lidar_scan;
+    LidarScan lidar_scan;
+    decomposeLidarScanIntoPlanes(*pcl_msg, lidar_scan);
 
-    downsampleScan(_lidar_scan, lidar_scan, 10);
+    //downsampleScan(_lidar_scan, lidar_scan, 10);
 
     std::vector<Frontier2D> frontiers;
     for(auto& ring: lidar_scan) {
@@ -49,7 +50,7 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
         for(int i = 0; i < ring.scan.ranges.size(); i++) {
             auto range = ring.scan.ranges[i];
             auto angle = i*ring.scan.angle_increment + ring.scan.angle_min;
-            if(range > ring.scan.range_max) continue;
+            if(range > ring.scan.range_max || range < std::max(ring.scan.range_min, 0.7f)) continue;
             auto x = range*cos(angle);
             auto y = range*sin(angle);
             pcl::PointXYZ _pt(x,y,0);
@@ -61,8 +62,9 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
 
             Eigen::Vector3f p1(prev_pt.x, prev_pt.y, prev_pt.z);
             Eigen::Vector3f p2(pt.x, pt.y, pt.z);
-            auto length = (p2 -p1).norm();
-            if(length > 1.5) {
+
+            auto length = (p2 - p1).norm();
+            if(length > 1.5 && pt.z < 1) { //Onlu frontiers 1.5m and height less than 2m
                 frontiers.push_back(Frontier2D(p1, p2));
             }
             prev_pt = pt;
@@ -70,28 +72,31 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
     }
 
     pcl::PointCloud<pcl::PointXYZ> local_frontiers;
-        local_frontiers.header = pcl_msg->header;
+    pcl::PointCloud<pcl::PointXYZ> centroid_points;
+    local_frontiers.header = pcl_msg->header;
+    centroid_points.header = pcl_msg->header;
     for(auto frontier: frontiers) {
         frontier.toPointCloud(local_frontiers);
+        frontier.getCentroids(centroid_points);
     }
 
-    pcl::PointCloud<pcl::PointXYZ> global_frame;
-    pcl_ros::transformPointCloud(local_frontiers, global_frame, current_pose.inverse());
-    global_frame.header.frame_id  = "world";
-    static int count =0;
-    count++;
+
     manager.addLidarScan(lidar_scan, current_pose);
-   // manager.addFrontiers(local_frontiers);
+
+    pcl::PointCloud<pcl::PointXYZ> global_frame;
+    pcl_ros::transformPointCloud(centroid_points, global_frame, current_pose.inverse());
+    global_frame.header.frame_id  = "world";
+    
     pcl::PointCloud<pcl::PointXYZ> filtered;
-    //manager.getFrontiers(filtered);
     filtered.header = pcl_msg->header;
     filtered.header.frame_id  = "world";
     for(auto pt: global_frame) {
-        if(!manager.queryFrontierPoint(pt)) {
+        if(!manager.queryFrontierPoint(pt) && pt.z < 2) {
             filtered.push_back(pt);
         }
     }
-    pub.publish(filtered);
+    centroid_pub.publish(filtered);
+    visualization_pub.publish(centroid_points);
 }
 
 int main(int argc, char** argv) {
@@ -99,7 +104,8 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh;
     ros::Subscriber sub = nh.subscribe("/X1/points/", 1, onPointCloudRecieved);
    
-    pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontiers", 10);
+    visualization_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontiers", 10);
+    centroid_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontiers/centroid", 10);
     listener = new tf::TransformListener();
    
     int i = 0;
