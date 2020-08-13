@@ -722,6 +722,8 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
 
       pub2.publish(gg);
 
+      terrainGraph.clear();
+
     //TODO add logic here
 
     globalGraphId++;
