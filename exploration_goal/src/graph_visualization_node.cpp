@@ -80,19 +80,18 @@ visualization_msgs::Marker getVertexMarkers(const graph_msgs::GeometryGraph grap
         vertex_marker.points.push_back(graph_msg.nodes[vertex_idx]);
 
         std_msgs::ColorRGBA color_msg;
-        // if (graph_msg.explored[vertex_idx] == GraphNodeExploredState::NODE_UNEXPLORED)
-        // {
-        //     color_msg.r = 1.0;color_msg.g = 1.0;color_msg.b = 1.0;color_msg.a = 1.0; // white
-        // }
-        // else if (graph_msg.explored[vertex_idx] == GraphNodeExploredState::NODE_EXPLORED)
-        // {
-        //     color_msg.r = 1.0;color_msg.g = 0.0;color_msg.b = 0.0;color_msg.a = 1.0; // red
-        // }
+        if (graph_msg.explored[vertex_idx] == GraphNodeExploredState::NODE_UNEXPLORED)
+        {
+            color_msg.r = 1.0;color_msg.g = 1.0;color_msg.b = 1.0;color_msg.a = 1.0; // white
+        }
+        else if (graph_msg.explored[vertex_idx] == GraphNodeExploredState::NODE_EXPLORED)
+        {
+            color_msg.r = 1.0;color_msg.g = 0.0;color_msg.b = 0.0;color_msg.a = 1.0; // red
+        }
         // else if (graph_msg.explored[vertex_idx] == GraphNodeExploredState::CURRENT_NODE)
         // {
         //     color_msg.r = 0.0;color_msg.g = 1.0;color_msg.b = 0.0;color_msg.a = 1.0; // green
         // }
-        color_msg.r = 1.0;color_msg.g = 1.0;color_msg.b = 1.0;color_msg.a = 1.0;
 
         vertex_marker.colors.push_back(color_msg);
     }
