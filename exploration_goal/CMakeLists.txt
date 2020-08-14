@@ -30,8 +30,8 @@ include_directories(
 #   src/${PROJECT_NAME}/exploration_goal.cpp
 # )
 
-#add_executable(exploration_goal
-#                src/exploration_goal_node.cpp)
+add_executable(exploration_goal
+                src/exploration_goal_node.cpp)
 
 add_executable(global_graph_debug 
                 src/global_graph_node.cpp)
@@ -43,6 +43,12 @@ add_executable(global_graph_debug
 #)
 
 target_link_libraries(global_graph_debug
+  ${catkin_LIBRARIES}
+  #${PROJECT_NAME}
+  Eigen3::Eigen
+)
+
+target_link_libraries(exploration_goal
   ${catkin_LIBRARIES}
   #${PROJECT_NAME}
   Eigen3::Eigen

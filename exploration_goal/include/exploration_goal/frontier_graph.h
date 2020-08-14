@@ -128,8 +128,16 @@ FrontierGraph FrontierGraph::mergeLocalGraph (FrontierGraph & local_graph){
     num_nodes += local_graph.getSize() - 1;
 }
 
+bool FrontierGraph::isLeafNode(){
+    if(adjacency_list[current_node_idx].empty()){
+        return true;
+    }
+    return false;
+}
+
 int FrontierGraph::getNextGoal(){
     if(adjacency_list[current_node_idx].empty()){
+        //
         return getParent(current_node_idx);
     }
     
