@@ -36,12 +36,12 @@ int main(int argc, char *argv[])
             request_local_graph_pub.publish(temp);
 
             // wait for local terrain graph to be received
-            graph_msgs::GeometryGraph local_graph;
+            boost::shared_ptr<graph_msgs::GeometryGraph const> local_graph;
             local_graph = ros::topic::waitForMessage<graph_msgs::GeometryGraph>(LOCAL_GRAPH_TOPIC, nh, ros::Duration(5.0));
 
             // Some frontiers are returned as local graph
             if (local_graph != NULL){
-                FrontierGraph local_graph_obj(local_graph);
+                FrontierGraph local_graph_obj(*local_graph);
                 global_graph.mergeLocalGraph(local_graph_obj);
             }
 
@@ -49,8 +49,8 @@ int main(int argc, char *argv[])
 
         geometry_msgs::PointStamped goal = global_graph.getNextGoal();
         exploration_goal_pub.publish(goal);
-        int status = ros::topic::waitForMessage<std_msgs::Int8>(ROBOT_GOAL_STATUS, nh, ros::Duration(25.0));
-        if(status == 0){
+        std_msgs::Int8ConstPtr status = ros::topic::waitForMessage<std_msgs::Int8>(ROBOT_GOAL_STATUS, nh, ros::Duration(25.0));
+        if(status->data == 0){
             //reached goal
             global_graph.updateNewGoalSuccess();
         }else{
