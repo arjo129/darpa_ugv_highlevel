@@ -16,6 +16,7 @@ ros::Publisher vis_pub;
 
 visualization_msgs::Marker getEdgeMarkers(const graph_msgs::GeometryGraph graph_msg)
 {
+    ROS_INFO("[Viz] Setting Edge Markers");
     // Plot all edges
     visualization_msgs::Marker edge_marker;
     edge_marker.header.stamp = ros::Time::now();
@@ -56,6 +57,7 @@ visualization_msgs::Marker getEdgeMarkers(const graph_msgs::GeometryGraph graph_
 
 visualization_msgs::Marker getVertexMarkers(const graph_msgs::GeometryGraph graph_msg)
 {
+    ROS_INFO("[Viz] Setting Vertex Markers");
     // Plot all vertices
     visualization_msgs::Marker vertex_marker;
     vertex_marker.header.stamp = ros::Time::now();
@@ -88,10 +90,10 @@ visualization_msgs::Marker getVertexMarkers(const graph_msgs::GeometryGraph grap
         {
             color_msg.r = 1.0;color_msg.g = 0.0;color_msg.b = 0.0;color_msg.a = 1.0; // red
         }
-        // else if (graph_msg.explored[vertex_idx] == GraphNodeExploredState::CURRENT_NODE)
-        // {
-        //     color_msg.r = 0.0;color_msg.g = 1.0;color_msg.b = 0.0;color_msg.a = 1.0; // green
-        // }
+        else if (graph_msg.explored[vertex_idx] == GraphNodeExploredState::NODE_EXPLORING)
+        {
+            color_msg.r = 0.0;color_msg.g = 1.0;color_msg.b = 0.0;color_msg.a = 1.0; // green
+        }
 
         vertex_marker.colors.push_back(color_msg);
     }
@@ -109,6 +111,8 @@ void onGraphRecv(const graph_msgs::GeometryGraph graph_msg)
     marker_array.markers.push_back(edge_marker);
     marker_array.markers.push_back(vertex_marker);
 
+    ROS_INFO("[Viz] Graph Vertices and Edges Marker Array Published...");
+
     vis_pub.publish(marker_array);
 }
 
@@ -116,9 +120,9 @@ void onGraphRecv(const graph_msgs::GeometryGraph graph_msg)
 
 int main(int argc, char* argv[])
 {
-    std::string graph_topic, graph_vis_topic;
-    ros::NodeHandle nh;
     ros::init(argc, argv,"global_exploration_graph_node");
+    ros::NodeHandle nh;
+    std::string graph_topic, graph_vis_topic;
 
     if (!(ros::param::has("~graph_topic")) || !(ros::param::has("~graph_vis_topic")))
     {
