@@ -2,8 +2,8 @@
 
     <!-- <group ns=""> -->
 
-        <node pkg="exploration_goal" type="global_graph_debug" name="global_graph_debug" output="screen">
-        </node>
+        <!-- <node pkg="exploration_goal" type="global_graph_debug" name="global_graph_debug" output="screen">
+        </node> -->
 
         <node pkg="exploration_goal" type="exploration_goal" name="exploration_goal" output="screen">
         </node>
