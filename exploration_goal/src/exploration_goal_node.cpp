@@ -7,7 +7,8 @@
 #define LOCAL_GRAPH_TOPIC "graph"
 #define GLOBAL_GRAPH_TOPIC "global_graph"
 #define SELECTED_GOAL_TOPIC "goal_to_explore"
-#define REQUEST_LOCAL_GRAPH_TOPIC "clicked_point"
+#define REQUEST_LOCAL_GRAPH_TOPIC "req_local_graph"
+#define ROBOT_GOAL_STATUS "status"
 
 /**
  * This node accepts local graphs produced by (ugv_obs_avoid pkg) frontier detection + path planning / branching and 
@@ -22,36 +23,45 @@ int main(int argc, char *argv[])
     ros::NodeHandle nh;
     ros::init(argc, argv,"exploration_goal_node");
 
-    exploration_goal_pub = nh.advertise<geometry_msgs::PointStamped> >(SELECTED_GOAL_TOPIC, 1);
-    global_graph_pub = nh.advertise<graph_msgs::GeometryGraph> >(GLOBAL_GRAPH_TOPIC, 1);
-    request_local_graph_pub = nh.advertise<geometry_msgs::PointStamped> >(REQUEST_LOCAL_GRAPH_TOPIC, 1);
-
+    exploration_goal_pub = nh.advertise<geometry_msgs::PointStamped>(SELECTED_GOAL_TOPIC, 1);
+    global_graph_pub = nh.advertise<graph_msgs::GeometryGraph>(GLOBAL_GRAPH_TOPIC, 1);
+    request_local_graph_pub = nh.advertise<geometry_msgs::PointStamped>(REQUEST_LOCAL_GRAPH_TOPIC, 1);
+    
     while(ros::ok())
     {
-        // request for local terrain graph
-        geometry_msgs::PointStamped temp;
-        request_local_graph_pub.publish(temp);
+        if(global_graph.getAL().size() == 0 ||global_graph.isLeafNode()){
 
-        // wait for local terrain graph to be received
-        graph_msgs::GeometryGraphPtr local_graph;
-        local_graph = ros::topic::waitForMessage<graph_msgs::GeometryGraph>(LOCAL_GRAPH_TOPIC, nh, ros::Duration(1.0));
+               // request for local terrain graph
+            geometry_msgs::PointStamped temp;
+            request_local_graph_pub.publish(temp);
 
-        // Some frontiers are returned as local graph
-        if (local_graph != NULL)
-        {
-            global_graph.mergeLocalGraph(*local_graph);
+            // wait for local terrain graph to be received
+            graph_msgs::GeometryGraphPtr local_graph;
+            local_graph = ros::topic::waitForMessage<graph_msgs::GeometryGraph>(LOCAL_GRAPH_TOPIC, nh, ros::Duration(5.0));
+
+            // Some frontiers are returned as local graph
+            if (local_graph != NULL){
+                FrontierGraph local_graph_obj(*local_graph);
+                global_graph.mergeLocalGraph(local_graph_obj);
+            }
+
         }
 
-        // choose best exploration goal from global graph
-        int node_idx = get_exploration_goal(global_graph);
-        Goal goal = global_graph[node_idx];
-
+        geometry_msgs::PointStamped goal = global_graph.getNextGoal();
         exploration_goal_pub.publish(goal);
+        int status = 0;
+        // int status = ros::topic::waitForMessage<std_msgs::int8>(ROBOT_GOAL_STATUS, nh, ros::Duration(25.0));
+        if(status == 0){
+            //reached goal
+            global_graph.updateNewGoalSuccess();
+        }else{
+            global_graph.updateNewGoalFail();
+            goal = global_graph.reset();
+            exploration_goal_pub.publish(goal);
+            // int status = ros::topic::waitForMessage<std_msgs::int8>(ROBOT_GOAL_STATUS, nh, ros::Duration(25.0));
 
-        // wait until robot stops moving / reaches goal
-        wait_for_oscillation();
+        }
 
-        global_graph.markAsExplored(node_idx);
     }
 
 }

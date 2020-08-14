@@ -7,6 +7,7 @@
 #include <graph_msgs/Edges.h>
 #include <std_msgs/UInt32.h>
 #include <Eigen/Dense>
+#include <geometry_msgs/PointStamped.h>
 
 #include <nanoflann/nanoflann.hpp>
 #include <vector>
@@ -41,7 +42,8 @@ typedef enum GraphNodeExploredState
 {
     NODE_UNEXPLORED = 0,
     NODE_EXPLORING = 1,
-    NODE_EXPLORED = 2
+    NODE_EXPLORED = 2,
+    NODE_UNEXPLORABLE = 3
 } GraphNodeExploredState;
 
 class FrontierGraph 
@@ -50,7 +52,7 @@ class FrontierGraph
         FrontierGraph();
         FrontierGraph(graph_msgs::GeometryGraph graph);
         ~FrontierGraph();
-        FrontierGraph mergeLocalGraph (FrontierGraph & local_graph);
+        void mergeLocalGraph (FrontierGraph & local_graph);
         geometry_msgs::Point getPointForNodeId(int node_idx);
         std::vector<std::set<int>> & getAL();
         int getSize();
@@ -58,8 +60,14 @@ class FrontierGraph
         void markAsUnExplored(int node_idx);
         void markAsExploring(int node_idx);
         void markAsExplored(int node_idx);
-        int getNextGoal();
+        void markAsUnExplorable(int node_idx);
+        int getNextGoalId();
+        geometry_msgs::PointStamped getNextGoal();
         int getParent(int);
+        bool isLeafNode();
+        geometry_msgs::PointStamped reset();
+        void updateNewGoalSuccess();
+        void updateNewGoalFail();
 
     protected:
         std::vector<int> explored_state;
@@ -67,6 +75,7 @@ class FrontierGraph
         std::vector<geometry_msgs::Point> node_idx_to_3d_point;
         int num_nodes;
         int current_node_idx;
+        int upcoming_node_idx;
 };
 
 
@@ -108,13 +117,13 @@ std::vector<std::set<int>>& FrontierGraph::getAL(){
     return adjacency_list;
 }
 
-FrontierGraph FrontierGraph::mergeLocalGraph (FrontierGraph & local_graph){
+void FrontierGraph::mergeLocalGraph (FrontierGraph & local_graph){
     auto localAL = local_graph.getAL();
-    for(int i = 0 ; localAL.size() ; i ++){
+    for(int i = 0 ; i < localAL.size() ; i ++){
         std::set<int>temp_set;
         for(auto &b: localAL[i]){
             if(i == 0){
-                adjacency_list[current_node_idx].insert(b+num_nodes-1);
+                adjacency_list[num_nodes-1].insert(b+num_nodes-1);
             }else{
                 temp_set.insert(b+num_nodes-1);
             }
@@ -135,19 +144,50 @@ bool FrontierGraph::isLeafNode(){
     return false;
 }
 
-int FrontierGraph::getNextGoal(){
+int FrontierGraph::getNextGoalId(){
     if(adjacency_list[current_node_idx].empty()){
-        //
         return getParent(current_node_idx);
     }
     
     for(auto &child_node: adjacency_list[current_node_idx]){
-        if(explored_state[child_node] == GraphNodeExploredState::NODE_EXPLORED){
+        if(explored_state[child_node] == GraphNodeExploredState::NODE_EXPLORED || explored_state[child_node] == GraphNodeExploredState::NODE_UNEXPLORABLE){
             continue;
         }else if(explored_state[child_node] == GraphNodeExploredState::NODE_UNEXPLORED){
             return child_node;
         }
     }
+
+    return getParent(current_node_idx);
+}
+
+
+geometry_msgs::PointStamped FrontierGraph::getNextGoal(){
+    geometry_msgs::PointStamped goal;
+    goal.header.frame_id = GLOBAL_TF_FRAME;
+    goal.header.stamp = ros::Time::now();
+    int id = getNextGoalId();
+    upcoming_node_idx = id;
+    geometry_msgs::Point goalpoint = getPointForNodeId(id);
+    goal.point = goalpoint;
+    return goal;
+}
+
+geometry_msgs::PointStamped FrontierGraph::reset(){
+    geometry_msgs::PointStamped goal;
+    goal.header.frame_id = GLOBAL_TF_FRAME;
+    goal.header.stamp = ros::Time::now();
+    geometry_msgs::Point goalpoint = getPointForNodeId(current_node_idx);
+    goal.point = goalpoint;
+    return goal;
+}
+
+void FrontierGraph::updateNewGoalSuccess(){
+    current_node_idx = upcoming_node_idx;
+    markAsExplored(current_node_idx);
+}
+
+void FrontierGraph::updateNewGoalFail(){
+    markAsUnExplorable(upcoming_node_idx);
 }
 
 int FrontierGraph::getParent(int child_node){
@@ -183,6 +223,7 @@ graph_msgs::GeometryGraph FrontierGraph::toMsg()
 void FrontierGraph::markAsUnExplored(int node_idx) {explored_state[node_idx] = NODE_UNEXPLORED;}
 void FrontierGraph::markAsExploring(int node_idx) { explored_state[node_idx] = NODE_EXPLORING; }
 void FrontierGraph::markAsExplored(int node_idx) { explored_state[node_idx] = NODE_EXPLORED; }
+void FrontierGraph::markAsUnExplorable(int node_idx) { explored_state[node_idx] = NODE_UNEXPLORABLE; }
 
 
 

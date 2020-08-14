@@ -44,7 +44,6 @@ add_executable(global_graph_debug
 
 target_link_libraries(global_graph_debug
   ${catkin_LIBRARIES}
-  #${PROJECT_NAME}
   Eigen3::Eigen
 )
 
@@ -61,8 +60,13 @@ target_link_libraries(exploration_goal
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_exploration_goal.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
+
+catkin_add_gtest(${PROJECT_NAME}-graph_test test/test_graph_merging.cpp)
+if(TARGET ${PROJECT_NAME}-graph_test)
+  target_link_libraries(
+    ${PROJECT_NAME}-graph_test 
+    ${catkin_LIBRARIES}
+    Eigen3::Eigen
+  )
+endif()
 
