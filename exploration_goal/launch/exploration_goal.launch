@@ -1,0 +1,18 @@
+<launch>
+
+    <group ns="">
+
+        <node pkg="exploration_goal" type="global_graph_debug" name="global_graph_debug" output="screen">
+        </node>
+
+        <node pkg="exploration_goal" type="exploration_goal" name="exploration_goal" output="screen">
+        </node>
+
+        <node pkg="exploration_goal" type="graph_visualization" name="global_graph_viz" output="screen">
+            <rosparam param="graph_topic">global_graph</rosparam>
+            <rosparam param="graph_vis_topic">global_graph/vis</rosparam>
+        </node>
+
+    </group>
+
+</launch>

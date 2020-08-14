@@ -36,6 +36,9 @@ include_directories(
 add_executable(global_graph_debug 
                 src/global_graph_node.cpp)
 
+add_executable(graph_visualization 
+                src/graph_visualization_node.cpp)
+
 #target_link_libraries(
 #  ${catkin_LIBRARIES}
 #  #${PROJECT_NAME}
@@ -43,6 +46,11 @@ add_executable(global_graph_debug
 #)
 
 target_link_libraries(global_graph_debug
+  ${catkin_LIBRARIES}
+  Eigen3::Eigen
+)
+
+target_link_libraries(graph_visualization
   ${catkin_LIBRARIES}
   Eigen3::Eigen
 )
