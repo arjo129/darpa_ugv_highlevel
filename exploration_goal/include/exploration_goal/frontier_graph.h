@@ -6,6 +6,7 @@
 #include <graph_msgs/GeometryGraph.h>
 #include <graph_msgs/Edges.h>
 #include <std_msgs/UInt32.h>
+#include <std_msgs/UInt8.h>
 #include <Eigen/Dense>
 #include <geometry_msgs/PointStamped.h>
 
@@ -68,8 +69,9 @@ class FrontierGraph
         geometry_msgs::PointStamped reset();
         void updateNewGoalSuccess();
         void updateNewGoalFail();
+        void setGraph(FrontierGraph temp);
 
-    protected:
+//    protected:
         std::vector<int> explored_state;
         std::vector<std::set<int>> adjacency_list;
         std::vector<geometry_msgs::Point> node_idx_to_3d_point;
@@ -79,10 +81,10 @@ class FrontierGraph
 };
 
 
-FrontierGraph::FrontierGraph() : num_nodes(0)
+FrontierGraph::FrontierGraph() : num_nodes(0), current_node_idx(0)
 {}
 
-FrontierGraph::FrontierGraph(graph_msgs::GeometryGraph graph) : num_nodes(graph.nodes.size())
+FrontierGraph::FrontierGraph(graph_msgs::GeometryGraph graph) : num_nodes(graph.nodes.size()), current_node_idx(0)
 {
     explored_state.resize(num_nodes, NODE_UNEXPLORED);
     adjacency_list.resize(num_nodes, std::set<int>{});
@@ -117,13 +119,31 @@ std::vector<std::set<int>>& FrontierGraph::getAL(){
     return adjacency_list;
 }
 
+void FrontierGraph::setGraph(FrontierGraph temp)
+{
+    explored_state = temp.explored_state;
+    adjacency_list = temp.getAL();
+    node_idx_to_3d_point = temp.node_idx_to_3d_point;
+    num_nodes = temp.getSize();
+    current_node_idx = temp.current_node_idx;
+    upcoming_node_idx = temp.upcoming_node_idx;
+
+}
+
 void FrontierGraph::mergeLocalGraph (FrontierGraph & local_graph){
+    if (num_nodes == 0)
+    {
+        setGraph(local_graph);
+        return;
+    }
+    
     auto localAL = local_graph.getAL();
     for(int i = 0 ; i < localAL.size() ; i ++){
         std::set<int>temp_set;
         for(auto &b: localAL[i]){
             if(i == 0){
-                adjacency_list[num_nodes-1].insert(b+num_nodes-1);
+                std::cout << "Adding " << b+num_nodes-1 << " at idx= " << current_node_idx << std::endl;
+                adjacency_list[current_node_idx].insert(b+num_nodes-1);
             }else{
                 temp_set.insert(b+num_nodes-1);
             }
@@ -145,6 +165,7 @@ bool FrontierGraph::isLeafNode(){
 }
 
 int FrontierGraph::getNextGoalId(){
+    std::cout << "next goal id. curr = " << current_node_idx << std::endl;
     if(adjacency_list[current_node_idx].empty()){
         return getParent(current_node_idx);
     }
@@ -209,6 +230,16 @@ graph_msgs::GeometryGraph FrontierGraph::toMsg()
     
     for (int idx=0; idx<num_nodes; idx++)
     {
+        std_msgs::UInt8 explored_msg;
+        if (idx == upcoming_node_idx)
+        {
+            graph.explored.push_back(GraphNodeExploredState::NODE_EXPLORING);
+        }
+        else
+        {
+            graph.explored.push_back(explored_state[idx]);
+        }
+
         std::vector<int> adj_vec(adjacency_list[idx].begin(), adjacency_list[idx].end());
         graph.edges.push_back(graph_msgs::Edges());
         for (auto edge : adj_vec)

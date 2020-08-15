@@ -21,8 +21,8 @@ void onLocalGraphRecv(const graph_msgs::GeometryGraph local_graph_msg)
 
 int main(int argc, char *argv[])
 {
-    ros::NodeHandle nh;
     ros::init(argc, argv,"global_exploration_graph_node");
+    ros::NodeHandle nh;
 
     ros::Subscriber local_graph_sub = nh.subscribe(LOCAL_GRAPH_TOPIC, 1, onLocalGraphRecv);
     global_graph_pub = nh.advertise<graph_msgs::GeometryGraph> (GLOBAL_GRAPH_TOPIC, 1);
