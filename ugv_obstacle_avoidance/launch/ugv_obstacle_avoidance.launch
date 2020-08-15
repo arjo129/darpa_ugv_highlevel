@@ -6,14 +6,14 @@
   <node pkg="ugv_obstacle_avoidance" name="ugv_obstacle_avoidance_node" output="screen" type="ugv_obstacle_avoidance_node">
     <remap from="traversable_pointcloud_input" to="X1/points2"/>
     <remap from="robot_position_pose" to="integrated_to_init"/>
-    <remap from="goal_to_explore" to="req_local_graph"/>
+    <remap from="goal_to_explore" to="goal_to_explore"/>
   </node>
 
 
   <node pkg="ugv_obstacle_avoidance" name="terrain_graph_node" output="screen" type="terrain_graph_node">
     <remap from="traversable_pointcloud_input" to="X1/points2"/>
     <remap from="robot_position_pose" to="integrated_to_init"/>
-    <remap from="goal_to_explore" to="goal_to_explore"/>
+    <remap from="goal_to_explore" to="req_local_graph"/>
     <remap from="frontiers" to="frontiers"/>
   </node>
 
