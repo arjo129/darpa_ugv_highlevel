@@ -56,20 +56,44 @@ float getDistanceBetween(pcl::PointXYZ p1 , pcl::PointXYZ p2){
 float getFreeSpaceScoreLR(std::vector<std::tuple<float,float>> &distances){
     float score = 0;
     for(auto &a : distances){
-        if(std::get<1>(a) < 2.0){
-          if(std::get<0>(a) < 0){
-            score -= std::pow((M_PI - std::fabs(std::get<0>(a))) , 2)*(2.0/std::get<1>(a));
-          }else{
-            score += std::pow((M_PI - std::fabs(std::get<0>(a))) , 2)*(2.0/std::get<1>(a));
-          }
+      if(std::get<1>(a) < 2.0){
+        if(std::get<0>(a) < 0){
+          score -= std::pow((M_PI - std::fabs(std::get<0>(a))) , 2)*(2.0/std::get<1>(a));
+        }else{
+          score += std::pow((M_PI - std::fabs(std::get<0>(a))) , 2)*(2.0/std::get<1>(a));
         }
+      }
+    }
+    //std::printf("%f\n" , score);
+    return score;
+}
+
+float getFreeSpaceScoreFB(std::vector<std::tuple<float,float>> &distances){
+    float score = 0;
+    for(auto &a : distances){
+      if(std::get<1>(a) < 2.0){
+        if(std::fabs(std::get<0>(a)) < (M_PI/2.0)){
+          score -= std::pow((M_PI - std::fabs(std::get<0>(a))) , 2)*(2.0/std::get<1>(a));
+        }else{
+          score += std::pow((M_PI - std::fabs(std::get<0>(a))) , 2)*(2.0/std::get<1>(a));
+        }
+      }
     }
     //std::printf("%f\n" , score);
     return score;
 }
 
 float getConstraintScore(std::vector<std::tuple<float,float>> &distances){
+    float score = 0;
+    for(auto &a : distances){
+      if(std::get<1>(a) < 2.0){
 
+          score += std::pow((M_PI - std::fabs(std::get<0>(a))) , 2)*(2.0/std::get<1>(a));
+        
+      }
+    }
+    //std::printf("%f\n" , score);
+    return score;
 }
 
 float getAngularVelocity(std::vector<std::tuple<float,float>> &distances){
@@ -81,8 +105,13 @@ float getAngularVelocity(std::vector<std::tuple<float,float>> &distances){
    }
    
    float score = getFreeSpaceScoreLR(distances);
+   if(yaw_to_goal > M_PI/3){
+        //U-turn mode
+        std::cout << "U-Turn Mode" <<std::endl;
+        return yaw_to_goal/M_PI*0.6*direction;
+   }
   std::cout << yaw_to_goal <<std::endl;
-   return yaw_to_goal/M_PI*1.0*direction - score/10000.0;
+   return yaw_to_goal/M_PI*0.6*direction - score/10000.0;
 }
 
 float getForwardVelocity(std::vector<std::tuple<float,float>> &distances){
@@ -98,8 +127,15 @@ float getForwardVelocity(std::vector<std::tuple<float,float>> &distances){
         current_state = VehicleState::AWAITING_INSTRUCTION; 
         return 0;    
    }
-   if(yaw_to_goal > M_PI/2){
-        return 0;
+   if(yaw_to_goal > M_PI/3){
+        //U-turn mode
+        float frontBackSpaceScore = getFreeSpaceScoreFB(distances);
+
+        if(frontBackSpaceScore < 0){
+          return -0.2;
+        }else{
+          return 0.2;
+        }
    }
 
    auto time_since_last_goal = ros::Time::now() - last_goal;
@@ -293,7 +329,7 @@ void callback(const PointCloud::ConstPtr& msg){
   //float score = getFreeSpaceScoreLR(distances);
   
   
-  //printf("Score: %f\n" , score);
+  printf("\nTwist Msgs: %f\t%f\n" , v,w);
   geometry_msgs::Twist t;
 
   t.linear.x = v;

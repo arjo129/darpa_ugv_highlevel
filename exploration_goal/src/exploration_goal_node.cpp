@@ -3,7 +3,6 @@
 #include <std_msgs/Int8.h>
 #include <std_msgs/Empty.h>
 #include <exploration_goal/frontier_graph.h>
-#include <exploration_goal/goal_selector.h>
 
 #define LOCAL_GRAPH_TOPIC "graph"
 #define GLOBAL_GRAPH_TOPIC "global_graph"
