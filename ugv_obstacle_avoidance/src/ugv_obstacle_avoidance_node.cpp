@@ -56,11 +56,34 @@ float getDistanceBetween(pcl::PointXYZ p1 , pcl::PointXYZ p2){
 float getFreeSpaceScoreLR(std::vector<std::tuple<float,float>> &distances){
     float score = 0;
     for(auto &a : distances){
-      if(std::get<1>(a) < 2.0){
+      if(std::get<1>(a) < 3.0){
         if(std::get<0>(a) < 0){
-          score -= std::pow((M_PI - std::fabs(std::get<0>(a))) , 2)*(2.0/std::get<1>(a));
+          score -= std::pow((M_PI - std::fabs(std::get<0>(a))) , 2)*std::pow((3.0-std::get<1>(a)),3);
+          
         }else{
-          score += std::pow((M_PI - std::fabs(std::get<0>(a))) , 2)*(2.0/std::get<1>(a));
+          score += std::pow((M_PI - std::fabs(std::get<0>(a))) , 2)*std::pow((3.0-std::get<1>(a)),3);
+          
+        }
+      }
+    }
+    //std::printf("%f\n" , score);
+    return score;
+}
+
+float getFreeSpaceScoreLRAgg(std::vector<std::tuple<float,float>> &distances){
+    float score = 0;
+    for(auto &a : distances){
+      if(std::get<1>(a) < 3.0){
+        if(std::get<0>(a) < 0){
+          score -= std::pow((M_PI - std::fabs(std::get<0>(a))) , 2)*std::pow((3.0-std::get<1>(a)),3);
+          if(std::get<1>(a) < 0.8){
+            score -= 20;
+          }
+        }else{
+          score += std::pow((M_PI - std::fabs(std::get<0>(a))) , 2)*std::pow((3.0-std::get<1>(a)),3);
+          if(std::get<1>(a) < 0.8){
+            score += 20;
+          }
         }
       }
     }
@@ -71,16 +94,72 @@ float getFreeSpaceScoreLR(std::vector<std::tuple<float,float>> &distances){
 float getFreeSpaceScoreFB(std::vector<std::tuple<float,float>> &distances){
     float score = 0;
     for(auto &a : distances){
-      if(std::get<1>(a) < 2.0){
-        if(std::fabs(std::get<0>(a)) < (M_PI/2.0)){
-          score -= std::pow((M_PI - std::fabs(std::get<0>(a))) , 2)*(2.0/std::get<1>(a));
-        }else{
-          score += std::pow((M_PI - std::fabs(std::get<0>(a))) , 2)*(2.0/std::get<1>(a));
+      if(std::get<1>(a) < 3.0){
+        if(std::fabs(std::get<0>(a)) < (M_PI/4.0)){
+          score -= std::pow((3.0-std::get<1>(a)),3);
+        }else if(std::fabs(std::get<0>(a)) > (3*M_PI/4.0)){
+          score += std::pow((3.0-std::get<1>(a)),3);
         }
       }
     }
     //std::printf("%f\n" , score);
     return score;
+}
+
+
+float getFrontFreenessScore(std::vector<std::tuple<float,float>> &distances){
+    
+
+    float lower_bound_dist = 1;
+    float upper_bound_dist = 2;
+    
+    float lower_bound_angle = -M_PI/3;
+    float upper_bound_angle = M_PI/3;
+
+    float total = 0;
+    float score = 0;
+
+    float totalCount = 0;
+    
+    for(auto &a: distances){
+	  totalCount += 1;
+        if(std::get<0>(a) < upper_bound_angle && std::get<0>(a) > lower_bound_angle){
+            total += (upper_bound_dist - lower_bound_dist);
+            if(std::get<1>(a) > upper_bound_dist ){
+                score += (upper_bound_dist - lower_bound_dist);
+            }else if(std::get<1>(a) > lower_bound_dist ){
+                score += (std::get<1>(a) - lower_bound_dist);
+            }
+        }
+    }
+    return score/total;
+}
+float getBackFreenessScore(std::vector<std::tuple<float,float>> &distances){
+    
+
+    float lower_bound_dist = 1;
+    float upper_bound_dist = 2;
+    
+    float lower_bound_angle = -4*M_PI/6;
+    float upper_bound_angle = 4*M_PI/6;
+
+    float total = 0;
+    float score = 0;
+
+    float totalCount = 0;
+    
+    for(auto &a: distances){
+	  totalCount += 1;
+        if(std::get<0>(a) > upper_bound_angle || std::get<0>(a) < lower_bound_angle){
+            total += (upper_bound_dist - lower_bound_dist);
+            if(std::get<1>(a) > upper_bound_dist ){
+                score += (upper_bound_dist - lower_bound_dist);
+            }else if(std::get<1>(a) > lower_bound_dist ){
+                score += (std::get<1>(a) - lower_bound_dist);
+            }
+        }
+    }
+    return score/total;
 }
 
 float getConstraintScore(std::vector<std::tuple<float,float>> &distances){
@@ -97,25 +176,44 @@ float getConstraintScore(std::vector<std::tuple<float,float>> &distances){
 }
 
 float getAngularVelocity(std::vector<std::tuple<float,float>> &distances){
-
+std::cout << "get angular velocity" <<std::endl;
   if(current_state == AWAITING_INSTRUCTION) return 0;
     
    if(std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y)) < 1){
         return 0;    
    }
    
-   float score = getFreeSpaceScoreLR(distances);
+  float lrscore = getFreeSpaceScoreLR(distances);
+  float lrscoreA = getFreeSpaceScoreLRAgg(distances);
+  float fbscore = getFreeSpaceScoreFB(distances);
+  float score = getConstraintScore(distances);
+  float frontSpace = getFrontFreenessScore(distances);
+  float backSpace = getBackFreenessScore(distances);
+
    if(yaw_to_goal > M_PI/3){
-        //U-turn mode
-        std::cout << "U-Turn Mode" <<std::endl;
-        return yaw_to_goal/M_PI*0.6*direction;
+        //Uturn mode
+        return yaw_to_goal/M_PI*direction;
+      // if(score > 15000){
+      //   //too constrained find more space
+      //   return -lrscore/20000.0;
+      // }else{
+        
+      // }
+   }else{
+      return yaw_to_goal/M_PI*direction*1.5 - lrscoreA/20000.0; 
    }
-  std::cout << yaw_to_goal <<std::endl;
-   return yaw_to_goal/M_PI*0.6*direction - score/10000.0;
+   
+  //  int reversingFactor = 1;
+  //  if(frontBackSpaceScore < -2000)reversingFactor = 3;
+  
+  // std::cout << "Left Right SCore: " << score <<std::endl;
+  //  return yaw_to_goal/M_PI*0.6*direction*reversingFactor - score/30000.0;
+    return 0;
 }
 
 float getForwardVelocity(std::vector<std::tuple<float,float>> &distances){
-
+  std::cout << "getting forward velo" <<std::endl;
+   
   if(current_state == VehicleState::AWAITING_INSTRUCTION) return 0;
 
     float distance_to_goal = std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y));
@@ -127,34 +225,78 @@ float getForwardVelocity(std::vector<std::tuple<float,float>> &distances){
         current_state = VehicleState::AWAITING_INSTRUCTION; 
         return 0;    
    }
+
+  float lrscore = getFreeSpaceScoreLR(distances);
+  float fbscore = getFreeSpaceScoreFB(distances);
+  float score = getConstraintScore(distances);
+  float frontSpace = getFrontFreenessScore(distances);
+  float backSpace = getBackFreenessScore(distances);
+
    if(yaw_to_goal > M_PI/3){
-        //U-turn mode
-        float frontBackSpaceScore = getFreeSpaceScoreFB(distances);
-
-        if(frontBackSpaceScore < 0){
-          return -0.2;
+        //Uturn mode
+      if(score > 15000){
+        //too constrained find more space
+        if(fbscore < -2000 || frontSpace  < (backSpace - 0.2)){
+            return -0.3;
+          }else{
+            return 0.2;
+          }
+      }else{
+        if( distance_to_goal< 2){
+          return 0.1;
         }else{
-          return 0.2;
+          if(fbscore < -2000 || frontSpace  < (backSpace - 0.2)){
+            return -0.3;
+          }else{
+            return 0.1;
+          }
         }
+      }
    }
+      float yawFactor = (M_PI/2 - yaw_to_goal)/M_PI;
+      float constraintFactor = (25000.0-score)/25000;
+      float obstacleFactor = (30000 - std::fabs(lrscore))/30000.0;
+      return (yawFactor + constraintFactor + obstacleFactor)/3.0*0.8; 
+   
 
-   auto time_since_last_goal = ros::Time::now() - last_goal;
-   if(time_since_last_goal > ros::Duration(MAX_TIME,0)) {
-     std_msgs::Int8 i;
-        i.data = -1;
-        status_pub.publish(i);
-        current_state = VehicleState::AWAITING_INSTRUCTION; 
-     return 0;
-   }
+
+  //  if( distance_to_goal< 2){
+  //       if(yaw_to_goal > M_PI/4){
+  //         return 0;
+  //       }
+  //  }
+  //  float frontBackSpaceScore = getFreeSpaceScoreFB(distances);
+  // std::cout << "FRONT BACK SCORE " <<frontBackSpaceScore << std::endl;
+  //  if(yaw_to_goal > M_PI/2){
+  //       //U-turn mode
+  //       if(frontBackSpaceScore < 0){
+  //         return -0.2;
+  //       }else{
+  //         return 0.2;
+  //       }
+  //  }
+
+  //  auto time_since_last_goal = ros::Time::now() - last_goal;
+  //  if(time_since_last_goal > ros::Duration(MAX_TIME,0)) {
+  //    std_msgs::Int8 i;
+  //       i.data = -1;
+  //       status_pub.publish(i);
+  //       current_state = VehicleState::AWAITING_INSTRUCTION; 
+  //    return 0;
+  //  }
    
-   float yawFactor = 2*(M_PI/2 - yaw_to_goal)/M_PI*(M_PI/2 - yaw_to_goal)/M_PI*0.8*0.5;
-   float distanceFactor = 0.8;
+  //  float yawFactor = 2*(M_PI/2 - yaw_to_goal)/M_PI*(M_PI/2 - yaw_to_goal)/M_PI*0.8*0.5;
+  //  float distanceFactor = 0.8;
    
-   if(distance_to_goal < 2){
-        distanceFactor = (distance_to_goal)/2*0.8;
-   }
-   distanceFactor *= 0.5;
-   return distanceFactor + yawFactor;
+  //  if(distance_to_goal < 2){
+  //       distanceFactor = (distance_to_goal)/2*0.8;
+  //  }
+  //  distanceFactor *= 0.5;
+  //  int directionFactor = 1;
+
+  //   if(frontBackSpaceScore < -2000)directionFactor = -1;
+
+  //  return (distanceFactor + yawFactor)*directionFactor;
 
 }
 
@@ -196,7 +338,7 @@ void getMaxTraversablePoint(float (*data)[10000][3] , int i , pcl::PointXYZ *poi
 void positionCallBack(const nav_msgs::Odometry::ConstPtr& msg){
     nav_msgs::Odometry poseMsg = *msg;
     geometry_msgs::Quaternion currentPose;
-    std::cout << "Got position fix" <<std::endl;
+    // std::cout << "Got position fix" <<std::endl;
     current.x = poseMsg.pose.pose.position.x;
     current.y = poseMsg.pose.pose.position.y;
     current.z = poseMsg.pose.pose.position.z;
@@ -206,7 +348,7 @@ void positionCallBack(const nav_msgs::Odometry::ConstPtr& msg){
     currentPose.z = poseMsg.pose.pose.orientation.z;
     currentPose.w = poseMsg.pose.pose.orientation.w;
     
-    std::cout << "Current goal" << goal.x << ", " << goal.y << "| " << current.x << ", " << current.y <<std::endl;
+    // std::cout << "Current goal" << goal.x << ", " << goal.y << "| " << current.x << ", " << current.y <<std::endl;
     
     tf2::Quaternion rotation(
     poseMsg.pose.pose.orientation.x,
@@ -325,9 +467,27 @@ void callback(const PointCloud::ConstPtr& msg){
   //TODO Remove the below comments
   float v = getForwardVelocity(distances);
   float w = getAngularVelocity(distances);
+
+  if(v > 1.5){
+    v = 1.5;
+  }else if(v < -1.5){
+    v = -1.5;
+  }
+
+  if(w > 1.0){
+    w = 1.0;
+  }else if(w < -1.0){
+    w = -1.0;
+  }
   
-  //float score = getFreeSpaceScoreLR(distances);
-  
+  // float score = getFreeSpaceScoreLR(distances);
+  // float frontBackSpaceScore = getFreeSpaceScoreFB(distances);
+  // float scoreOverall = getConstraintScore(distances);
+
+  // float frontSpace = getFrontFreenessScore(distances);
+  // float backSpace = getBackFreenessScore(distances);
+
+  // std::cout << " " << score  << "\t" << frontSpace << "\t" << backSpace << "\t"<< frontBackSpaceScore << "\t" << scoreOverall << std::endl;
   
   printf("\nTwist Msgs: %f\t%f\n" , v,w);
   geometry_msgs::Twist t;
@@ -338,6 +498,7 @@ void callback(const PointCloud::ConstPtr& msg){
   // pcl::PCLPointCloud2 pc2;
   // pcl::toPCLPointCloud2 (out ,pc2);
   // pub.publish(pc2);
+
   pub_vel.publish(t);
 
 //  out.clear();

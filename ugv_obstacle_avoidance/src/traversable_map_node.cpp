@@ -49,7 +49,7 @@ bool steep(float *p1 , float *p2){
   float angle = std::atan(  (p2[2]- p1[2]) / std::sqrt((p2[1]- p1[1]) * (p2[1]- p1[1]) + (p2[0]- p1[0]) * (p2[0]- p1[0]) )  );
 
 
-  if(angle > 0.87 || distanceFromOrigin(p2 , true) < distanceFromOrigin(p1 ,true)  ||(p2[2]- p1[2]) < -0.3){
+  if(angle > 0.70 || distanceFromOrigin(p2 , true) < distanceFromOrigin(p1 ,true)  ||(p2[2]- p1[2]) < -0.3){
     return true;
   }else{
     return false;

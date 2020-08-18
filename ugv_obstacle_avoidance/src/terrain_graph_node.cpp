@@ -16,6 +16,7 @@
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/PointStamped.h>
 #include <vector>
+#include <queue>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Quaternion.h>
 #include <visualization_msgs/Marker.h>
@@ -125,7 +126,7 @@ int getArcSegmentFromYaw(float yaw , int numOfSegments){
   if(yaw < 0){
     yaw += 2* M_PI;
   }
-  std::cout << "Arcyaw: " << yaw <<std::endl;
+  // std::cout << "Arcyaw: " << yaw <<std::endl;
 
   return yaw / ((2*M_PI)/(float)numOfSegments);
 
@@ -138,7 +139,7 @@ int getSegmentValue(pcl::PointXYZ &point){
     int numSegmentsInSemi = ((semiCircle+1) * 2 + 1)*2;
     int arcSegment = getArcSegmentFromYaw(getYaw(point) , numSegmentsInSemi );
     
-    std::cout << semiCircle << " " << numSegmentsInSemi << " " << arcSegment << std::endl;  
+    // std::cout << semiCircle << " " << numSegmentsInSemi << " " << arcSegment << std::endl;  
     
     return 2*(semiCircle+1)*(semiCircle+1) - 2 + arcSegment;
 }
@@ -288,37 +289,14 @@ float getSectionFreenessScore(std::vector<std::tuple<float,float>> &distances , 
         }
     }
     //std::cout << totalCount << std::endl;
-    //std::cout << "Score " << score << " " << total <<std::endl;
-    //std::cout << p.x <<  " " << p.y << " " << p.z << std::endl; 
+    // std::cout << "Score " << score << " " << total <<std::endl;
+    // std::cout << score/total << std::endl; 
     
     return score/total;
 }
 
 void populateMap(std::map<int , pcl::PointXYZ> &discreteMap , int maxNumberSegments , std::vector<std::tuple<float,float>> &distances){
   
-  // visualization_msgs::Marker test;
-  //     test.header.frame_id = "simple_cave_01";
-  //     test.type = test.SPHERE;
-  //      test.action = test.ADD;
-  //      test.scale.x = 0.2;
-  //      test.scale.y = 0.2;
-  //      test.scale.z = 0.2;
-  //      test.color.a = 1.0;
-  //      test.color.r = 0.0;
-  //      test.color.g = 1.0;
-  //      test.color.b = 1.0;
-  //      test.pose.orientation.w = 1.0;
-       
-
-    // for(auto a: discreteMap){
-    //   std::cout << a.first << ": " << a.second.x << " " << a.second.y << " " <<  getDistanceFromOrigin(a.second)  << " " << getYaw(a.second) << std::endl;
-    //    test.id = a.first + 1000*(id+1);
-    //    test.pose.position.x = a.second.x;
-    //    test.pose.position.y = a.second.y;
-    //    test.pose.position.z = 0;
-        
-    //    ma.markers.push_back(test);
-    // }
   
   for(int i = 0 ; i <= maxNumberSegments; i ++){
     // auto point = getCenterForSegment(distances , i);
@@ -326,17 +304,12 @@ void populateMap(std::map<int , pcl::PointXYZ> &discreteMap , int maxNumberSegme
     pcl::PointXYZ point(0,0,0);
 
     discreteMap[i] = point;
-    std::cout << i << " " << point.x << " " << point.y <<std::endl; 
-    // test.id = i + 1000*(id+1);
-    // test.color.r  = ((float)i)/maxNumberSegments;
-    // test.pose.position.x = point.x;
-    // test.pose.position.y = point.y;
-    // test.pose.position.z = point.z;
-    // ma.markers.push_back(test);
+    // std::cout << i << " " << point.x << " " << point.y <<std::endl; 
+   
   }
 }
 
-pcl::PointXYZ getBestNextNode(std::vector<std::tuple<float,float>> &distances , pcl::PointXYZ &p , pcl::PointXYZ &origin , std::map<int , pcl::PointXYZ> &discreteSegmentMap){
+int getBestNextNode(std::vector<std::tuple<float,float>> &distances , pcl::PointXYZ &p , pcl::PointXYZ &origin , std::map<int , pcl::PointXYZ> &discreteSegmentMap){
     
     pcl::PointXYZ v_p;
     
@@ -370,15 +343,17 @@ pcl::PointXYZ getBestNextNode(std::vector<std::tuple<float,float>> &distances , 
         
         float score1 = getSectionFreenessScore(distances , v_intermediate_CCW , origin);
         float score2 = getSectionFreenessScore(distances , v_intermediate_CW , origin);
-        std::cout << i <<  score1<< score2 << std::endl;
+        // std::cout << i <<  score1<< score2 << std::endl;
         //std::cout << CW_vec.x() <<  " " << CW_vec.y() << " " << score1 << std::endl; 
         //std::cout << CCW_vec.x() <<  " " << CCW_vec.y() << " " << score2 << std::endl; 
         if(score1 > 0.95){
             bestPoint =  v_intermediate_CCW;
+            bestScore = score1;
             break;
         }
         if(score2 > 0.95){
             bestPoint =  v_intermediate_CW;
+            bestScore = score2;
             break;
         }
         
@@ -393,9 +368,11 @@ pcl::PointXYZ getBestNextNode(std::vector<std::tuple<float,float>> &distances , 
         }
     
     }
-    //for(auto a: discreteSegmentMap){
-      //std::cout << "Finding node !!" << a.first << ": " << a.second.x << " " << a.second.y << " " <<  getDistanceFromOrigin(a.second)  << " " << getYaw(a.second) << std::endl;
-    //}
+    // std::cout << bestPoint.x << " " << bestPoint.y << " " << bestPoint.z << " " << bestScore << std::endl;
+    // if(bestScore < 0.4){
+    //   return pcl::PointXYZ(0,0,0);
+    // }
+
     int segForPoint = getSegmentValue(p);
     int seg = getSegmentValue(bestPoint);
 
@@ -403,48 +380,37 @@ pcl::PointXYZ getBestNextNode(std::vector<std::tuple<float,float>> &distances , 
        seg = -1;
      }
     
-    std::cout << "segemnt: "<<segForPoint << std::endl;
-
-    // marker.color.r = 1.0;
-    //    marker.color.g = 0.0;
-    //    marker.color.b = 0.0;
-    //  marker.pose.position.x = bestPoint.x;
-    //    marker.pose.position.y = bestPoint.y;
-    //    marker.pose.position.z = bestPoint.z;
-    //    id++;
-    //    marker.id = id;
-    //    ma.markers.push_back(marker);
-
-
-    // p.x = bestPoint.x;
-    // p.y = bestPoint.y;
-    // p.z = bestPoint.z;
-    terrainGraph[seg].insert(segForPoint);
+    // std::cout << "segemnt: "<<segForPoint << std::endl;
 
     if(discreteSegmentMap.find(seg) == discreteSegmentMap.end()){
 
-      std::cout << "Not Found" << std::endl; 
+      // std::cout << "Not Found" << std::endl; 
 
-      return bestPoint;
+      return 2;
+      //No path
 
       
     }else{
 
-      std::cout << "Found" << std::endl; 
+      terrainGraph[seg].insert(segForPoint);
+      // std::cout << "Found" << std::endl; 
       auto pt = discreteSegmentMap[seg];
 
       if(pt.x == 0 && pt.y ==0 && pt.z == 0){
         discreteSegmentMap[seg] = bestPoint;
-        return bestPoint;
+        p.x = bestPoint.x;
+        p.y = bestPoint.y;
+        p.z = bestPoint.z;
+        return 0;
+        //continue finding to startpoint
       }
-
-      return pt;
+      p.x = pt.x;
+        p.y = pt.y;
+        p.z = pt.z;
+      return 1; // path alr found
       
 
     }
-
-
-    
     
 
 }
@@ -475,6 +441,7 @@ void positionCallBack(const nav_msgs::Odometry::ConstPtr& msg){
 void goalCallBack(const geometry_msgs::PointStamped::ConstPtr& msg){
 
   findNewFrontiers = true;
+  std::cout << "FINDING FRONTIERS NOWWWW __________________________________________________________" << std::endl;
 
 }
 
@@ -502,10 +469,9 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
 
   pcl::PointCloud<pcl::PointXYZ> out2;
   
-  //TODO after integrating arjo's point cloud package, loop through and for every point perform the equivalent of getting one frontier to gernerate local graph
   if(findNewFrontiers){
 
-  populateMap(discreteMap , 500 , distances);
+  populateMap(discreteMap , 1000 , distances);
 
 
   findNewFrontiers = false;
@@ -535,15 +501,13 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
   int count = 0;
   // extract valid points from input cloud	
 
-  std::cout << "Cloud Size"<<cloudSize << std::endl;
-
   
   for (int i = 0; i < cloudSize; i++) {
 
     pcl::PointXYZ point;
     point.x = out2[i].x;
     point.y = out2[i].y;
-    point.z = out2[i].z;
+    point.z = 0;
 
     if (!pcl_isfinite(point.x) ||
         !pcl_isfinite(point.y) ||
@@ -600,11 +564,6 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
 
 
       
-      
-      
-      std::cout << "Starting" << std::endl;
-      std::cout << middle_point.x <<  " " << middle_point.y << " " << middle_point.z << std::endl; 
-
       int seg = getSegmentValue(middle_point);
 
       auto pt = discreteMap[seg];
@@ -615,15 +574,16 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
 
       
     int count = 0;
-      //TODO pass in position inworld frame and not global frame and transform later.
-      while(getDistanceBetween(middle_point , start_point) > 2){
-        middle_point = getBestNextNode(distances , middle_point , start_point, discreteMap);
+    int stateOfPathFinding = 0;
+      while(getDistanceBetween(middle_point , start_point) > 3 && stateOfPathFinding == 0){
+        stateOfPathFinding = getBestNextNode(distances , middle_point , start_point, discreteMap);
+
+        if(stateOfPathFinding == 2)break;
+
+        if(getDistanceBetween(middle_point , start_point) <= 3){
+          terrainGraph[-1].insert(getSegmentValue(middle_point));
+        }
       
-        pcl::PointXYZ marker_point  = middle_point;
-        std::cout << "Mid";
-        std::cout << middle_point.x <<  " " << middle_point.y << " " << middle_point.z << std::endl; 
-
-
         geometry_msgs::PointStamped inputMPoint;
 
         // inputMPoint.header.stamp = ros::Time::now().toNSec();
@@ -631,6 +591,8 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
         inputMPoint.point.x = middle_point.x;
         inputMPoint.point.y = middle_point.y;
         inputMPoint.point.z = middle_point.z;
+
+        // std::cout << "MIDDLE POINT" << middle_point.x << "" << middle_point.y << "" << middle_point.z << std::endl;
 
         geometry_msgs::PointStamped stamped_out;
         
@@ -655,13 +617,27 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
 
     }
 
+    std::map<int , std::set<int>> terrainGraphConnected;
+
+    std::queue<int> frontier;
+    frontier.push(-1);
+    while(!frontier.empty()){
+      auto topVal = frontier.front();
+      frontier.pop();
+      if(terrainGraphConnected.find(topVal) != terrainGraphConnected.end())continue;
+      for(auto a: terrainGraph[topVal]){
+        terrainGraphConnected[topVal].insert(a);
+        frontier.push(a);
+      }
+    }
+
     std::map<int , int> nodeIdMapping;
     graph_msgs::GeometryGraph gg;
     gg.header.seq = globalGraphId;
     gg.header.frame_id = "world";
     gg.header.stamp = ros::Time::now();
     int point_id = 0;
-      for(auto a: terrainGraph){
+      for(auto a: terrainGraphConnected){
         if(a.first >= 0){
           if(nodeIdMapping.find(a.first) == nodeIdMapping.end()){
             auto pt = transformPointToWorld(discreteMap[a.first] , listener);
@@ -677,9 +653,9 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
         }else{
           if(nodeIdMapping.find(a.first) == nodeIdMapping.end()){
             geometry_msgs::Point tempPt;
-            tempPt.x = 0;
-            tempPt.y = 0;
-            tempPt.z = 0;
+            tempPt.x = current.x;
+            tempPt.y = current.y;
+            tempPt.z = current.z;
             gg.nodes.push_back(tempPt);
             gg.edges.push_back(graph_msgs::Edges());
             nodeIdMapping[a.first] = point_id;
@@ -699,11 +675,11 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
             point_id++;
           }
         }
-        std::cout << std::endl;
+        // std::cout << std::endl;
       }
 
     
-      for(auto a: terrainGraph){
+      for(auto a: terrainGraphConnected){
         std::cout << "Node: " <<  a.first << std::endl;
         if(nodeIdMapping.find(a.first) == nodeIdMapping.end()){
            continue;
@@ -717,6 +693,7 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
           int child_index = nodeIdMapping[b];
           gg.edges[node_index].node_ids.push_back(child_index);
         }
+        std::cout << std::endl;
       }
       pub.publish(ma);
 
