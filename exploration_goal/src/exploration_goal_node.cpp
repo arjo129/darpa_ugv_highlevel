@@ -59,14 +59,17 @@ void onStartCallback(const std_msgs::Empty e)
         ROS_INFO("Received goal status...");
 
         if(status != NULL && status->data == 0){
-            //reached goal
+            ROS_INFO("[Exploration] Reached goal node successfully...");
             global_graph.updateNewGoalSuccess();
+            global_graph_pub.publish(global_graph.toMsg());
         }else{
+            ROS_ERROR("[Exploration] Failed to reach goal node...");
             global_graph.updateNewGoalFail();
             goal = global_graph.reset();
             exploration_goal_pub.publish(goal);
+            global_graph_pub.publish(global_graph.toMsg());
+            ROS_INFO("[Exploration] Going back to parent node...");
             status = ros::topic::waitForMessage<std_msgs::Int8>(ROBOT_GOAL_STATUS, *nh, ros::Duration(10.0));
-
         }
         loop_rate.sleep();
     }

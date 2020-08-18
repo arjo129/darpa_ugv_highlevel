@@ -16,7 +16,6 @@ ros::Publisher vis_pub;
 
 visualization_msgs::Marker getEdgeMarkers(const graph_msgs::GeometryGraph graph_msg)
 {
-    ROS_INFO("[Viz] Setting Edge Markers");
     // Plot all edges
     visualization_msgs::Marker edge_marker;
     edge_marker.header.stamp = ros::Time::now();
@@ -57,7 +56,6 @@ visualization_msgs::Marker getEdgeMarkers(const graph_msgs::GeometryGraph graph_
 
 visualization_msgs::Marker getVertexMarkers(const graph_msgs::GeometryGraph graph_msg)
 {
-    ROS_INFO("[Viz] Setting Vertex Markers");
     // Plot all vertices
     visualization_msgs::Marker vertex_marker;
     vertex_marker.header.stamp = ros::Time::now();
@@ -94,6 +92,11 @@ visualization_msgs::Marker getVertexMarkers(const graph_msgs::GeometryGraph grap
         {
             color_msg.r = 0.0;color_msg.g = 1.0;color_msg.b = 0.0;color_msg.a = 1.0; // green
         }
+        else if (graph_msg.explored[vertex_idx] == GraphNodeExploredState::NODE_UNEXPLORABLE)
+        {
+            color_msg.r = 0.1;color_msg.g = 0.1;color_msg.b = 0.1;color_msg.a = 1.0; // green
+        }
+
 
         vertex_marker.colors.push_back(color_msg);
     }
