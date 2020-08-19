@@ -207,12 +207,24 @@ void naiveCornerDetector(sensor_msgs::LaserScan& scan, pcl::PointCloud<pcl::Poin
     }
 }
 
-void fastDownsample(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& out, int skip) {
+void downsampleFast(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& out, int skip) {
+    out.angle_max = scan.angle_max;
+    out.header = scan.header;
+    out.angle_increment = scan.angle_increment*skip;
+    out.angle_min = scan.angle_min;
+    out.range_max = scan.range_max;
+    out.range_min = scan.range_min;
+    out.scan_time = scan.scan_time;
+    out.time_increment = scan.time_increment;
 
+    for(int i = 0; i < scan.ranges.size(); i+= skip) {
+        out.ranges[i/skip] = scan.ranges[i];
+    }
 }
 
 void downsample(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& out, int skip) {
-    if(out.ranges.size() != 0) {
+    if(out.ranges.size() != 0 && scan.ranges.size()/out.ranges.size() == skip ) {
+        downsampleFast(scan, out, skip);
         return;
     } 
     out.angle_max = scan.angle_max;
@@ -223,6 +235,8 @@ void downsample(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& out,
     out.range_min = scan.range_min;
     out.scan_time = scan.scan_time;
     out.time_increment = scan.time_increment;
+    
+    out.ranges.clear();
 
     for(int i = 0; i < scan.ranges.size(); i+= skip) {
         out.ranges.push_back(scan.ranges.at(i));
