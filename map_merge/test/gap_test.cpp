@@ -29,7 +29,8 @@ TEST(CENTROID_CORRECTNESS, isCorrect) {
   }
 
   sensor_msgs::LaserScan other;
-  centroidNormalization(scan, other, 0.01);
+  auto res = centroidNormalization(scan, other, 0.01);
+  std::cout << res << std::endl;
   ASSERT_EQ(other.ranges.size(), scan.ranges.size());
   for(int i = 1; i < other.ranges.size(); i++) {
     ASSERT_LT(abs(other.ranges[i] - other.ranges[i-1]), 0.1) ;

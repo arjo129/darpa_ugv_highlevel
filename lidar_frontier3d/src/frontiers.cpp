@@ -7,12 +7,15 @@
 #include <map_merge/laser_operations.h>
 #include <nanoflann/nanoflann.hpp>
 #include <lidar_frontier3d/frontier_manager.h>
+#include <lidar_frontier3d/frontier_request.h>
 #include <tf/tf.h>
 
 ros::Publisher visualization_pub, centroid_pub;
 pcl::PointXYZ scanPointToPointCloud(pcl::PointXYZ point, double azimuth); //Access private API
 tf::TransformListener* listener;
 FrontierManager manager;
+FrontierStore seenPoints;
+pcl::PointCloud<pcl::PointXYZ> pcloud;
 
 void downsampleScan(const LidarScan& scan, LidarScan& out, int num) {
     for(auto ring: scan) {
@@ -22,6 +25,23 @@ void downsampleScan(const LidarScan& scan, LidarScan& out, int num) {
         if(new_ring.scan.ranges.size() == 0) continue;
         out.push_back(new_ring);
     }
+}
+
+bool getFrontiers(lidar_frontier3d::frontier_request::Request &req,
+                lidar_frontier3d::frontier_request::Response &res) {
+    
+    pcl::PointCloud<pcl::PointXYZ> cleaned;
+    for(auto point: pcloud) {
+        std::vector<size_t> neighbours;
+        seenPoints.getNeighboursWithinRadius(point, neighbours, 1);
+        if(neighbours.size() == 0) {
+            cleaned.push_back(point);
+        }
+        seenPoints.add(point);
+    }
+    sensor_msgs::PointCloud2 pc;
+    pcl::toROSMsg(cleaned, pc);
+    res.points = pc;        
 }
 
 void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_msg) {
@@ -96,6 +116,7 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
         }
     }
     centroid_pub.publish(filtered);
+    pcloud = filtered;
     visualization_pub.publish(centroid_points);
 }
 
@@ -103,6 +124,7 @@ int main(int argc, char** argv) {
     ros::init(argc, argv,"map_merge");
     ros::NodeHandle nh;
     ros::Subscriber sub = nh.subscribe("/X1/points/", 1, onPointCloudRecieved);
+    ros::ServiceServer server = nh.advertiseService("/get_frontiers", getFrontiers);
    
     visualization_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontiers", 10);
     centroid_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontiers/centroid", 10);
