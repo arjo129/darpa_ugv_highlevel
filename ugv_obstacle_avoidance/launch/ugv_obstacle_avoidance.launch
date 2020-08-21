@@ -1,10 +1,22 @@
 <launch>
-
-  
-  <node pkg="ugv_obstacle_avoidance" name="ugv_obstacle_avoidance_node" type="ugv_obstacle_avoidance_node">
+  <node pkg="ugv_obstacle_avoidance" name="traversable_map_node" output="screen" type="traversable_map_node">
     <remap from="lidar_input" to="X1/points"/>
+  </node>
+  
+  <node pkg="ugv_obstacle_avoidance" name="ugv_obstacle_avoidance_node" output="screen" type="ugv_obstacle_avoidance_node">
+    <remap from="traversable_pointcloud_input" to="X1/points2"/>
     <remap from="robot_position_pose" to="integrated_to_init"/>
     <remap from="goal_to_explore" to="clicked_point"/>
   </node>
+
+
+  <node pkg="ugv_obstacle_avoidance" name="terrain_graph_node" output="screen" type="terrain_graph_node">
+    <remap from="traversable_pointcloud_input" to="X1/points2"/>
+    <remap from="robot_position_pose" to="integrated_to_init"/>
+    <remap from="goal_to_explore" to="clicked_point"/>
+    <remap from="frontiers" to="frontiers"/>
+  </node>
+
+  
 
 </launch>
