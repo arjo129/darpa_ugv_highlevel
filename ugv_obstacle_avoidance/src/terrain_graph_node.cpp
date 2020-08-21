@@ -492,8 +492,8 @@ void processFrontiers(const sensor_msgs::PointCloud2& msg){
   tf::TransformListener* listener = new tf::TransformListener();
    tf::StampedTransform transform;
   try{
-    listener->waitForTransform("/world", msg.header.frame_id, ros::Time(0), ros::Duration(3.0));
-    listener->lookupTransform( "/world", msg.header.frame_id, ros::Time(0), transform);
+    listener->waitForTransform("/world", "/X1", ros::Time(0), ros::Duration(3.0));
+    listener->lookupTransform( "/world", "/X1", ros::Time(0), transform);
   }
    catch(tf::TransformException& ex){
     ROS_ERROR("Received an exception trying to transform a point from \"world\" to \"X1\": %s", ex.what());
