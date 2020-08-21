@@ -33,7 +33,7 @@ bool getFrontiers(lidar_frontier3d::frontier_request::Request &req,
     pcl::PointCloud<pcl::PointXYZ> cleaned;
     for(auto point: pcloud) {
         std::vector<size_t> neighbours;
-        seenPoints.getNeighboursWithinRadius(point, neighbours, 1);
+        seenPoints.getNeighboursWithinRadius(point, neighbours, 2);
         if(neighbours.size() == 0) {
             cleaned.push_back(point);
         }
@@ -41,7 +41,8 @@ bool getFrontiers(lidar_frontier3d::frontier_request::Request &req,
     }
     sensor_msgs::PointCloud2 pc;
     pcl::toROSMsg(cleaned, pc);
-    res.points = pc;        
+    res.points = pc;
+    return true;
 }
 
 void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_msg) {
