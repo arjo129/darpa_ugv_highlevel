@@ -41,7 +41,8 @@ bool getFrontiers(lidar_frontier3d::frontier_request::Request &req,
     }
     sensor_msgs::PointCloud2 pc;
     pcl::toROSMsg(cleaned, pc);
-    res.points = pc;        
+    res.points = pc;      
+    return true;  
 }
 
 void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_msg) {

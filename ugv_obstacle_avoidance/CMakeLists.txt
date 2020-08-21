@@ -18,6 +18,8 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_conversions
   tf2
   tf2_ros
+  message_generation
+  lidar_frontier3d
 )
 
 find_package(PCL REQUIRED)
@@ -67,11 +69,10 @@ link_directories(${system_lib_LIBRARY_DIRS})
 ## Generate messages in the 'msg' folder
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+#add_service_files(
+#  FILES
+#  frontier_request.srv
+#)
 
 ## Generate actions in the 'action' folder
 # add_action_files(

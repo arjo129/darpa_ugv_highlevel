@@ -176,7 +176,7 @@ float getConstraintScore(std::vector<std::tuple<float,float>> &distances){
 }
 
 float getAngularVelocity(std::vector<std::tuple<float,float>> &distances){
-std::cout << "get angular velocity" <<std::endl;
+// std::cout << "get angular velocity" <<std::endl;
   if(current_state == AWAITING_INSTRUCTION) return 0;
     
    if(std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y)) < 1){
@@ -212,7 +212,7 @@ std::cout << "get angular velocity" <<std::endl;
 }
 
 float getForwardVelocity(std::vector<std::tuple<float,float>> &distances){
-  std::cout << "getting forward velo" <<std::endl;
+  // std::cout << "getting forward velo" <<std::endl;
    
   if(current_state == VehicleState::AWAITING_INSTRUCTION) return 0;
 
@@ -489,7 +489,7 @@ void callback(const PointCloud::ConstPtr& msg){
 
   // std::cout << " " << score  << "\t" << frontSpace << "\t" << backSpace << "\t"<< frontBackSpaceScore << "\t" << scoreOverall << std::endl;
   
-  printf("\nTwist Msgs: %f\t%f\n" , v,w);
+  // printf("\nTwist Msgs: %f\t%f\n" , v,w);
   geometry_msgs::Twist t;
 
   t.linear.x = v;
