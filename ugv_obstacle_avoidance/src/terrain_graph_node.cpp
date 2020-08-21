@@ -677,9 +677,9 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
         }else{
           if(nodeIdMapping.find(a.first) == nodeIdMapping.end()){
             geometry_msgs::Point tempPt;
-            tempPt.x = 0;
-            tempPt.y = 0;
-            tempPt.z = 0;
+            tempPt.x = current.x;
+            tempPt.y = current.y;
+            tempPt.z = current.z;
             gg.nodes.push_back(tempPt);
             gg.edges.push_back(graph_msgs::Edges());
             nodeIdMapping[a.first] = point_id;
@@ -721,6 +721,8 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
       pub.publish(ma);
 
       pub2.publish(gg);
+
+      terrainGraph.clear();
 
     //TODO add logic here
 

@@ -1,0 +1,11 @@
+# A reference coordinate frame and timestamp
+Header header
+
+# 3D spacial graph
+geometry_msgs/Point[] nodes
+
+# This vector should be the same length as nodes, above, and represents all the connecting nodes
+Edges[] edges
+
+# This vector should be the same length as nodes, above, and represents explored state of each node / vertex
+uint8[] explored
