@@ -31,6 +31,7 @@ bool getFrontiers(lidar_frontier3d::frontier_request::Request &req,
                 lidar_frontier3d::frontier_request::Response &res) {
     
     pcl::PointCloud<pcl::PointXYZ> cleaned;
+    cleaned.header = pcloud.header;
     for(auto point: pcloud) {
         std::vector<size_t> neighbours;
         seenPoints.getNeighboursWithinRadius(point, neighbours, 2);
