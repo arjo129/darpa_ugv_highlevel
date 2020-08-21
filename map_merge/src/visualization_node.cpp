@@ -16,7 +16,6 @@
 #include <thread>
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
-#include <visualization_msgs/MarkerArray.h>
 #include "visualization/chartview.h"
 #include "visualization/canvas.h"
 
@@ -60,97 +59,24 @@ void retrievePointCloud(nlohmann::json& j, pcl::PointCloud<pcl::PointXYZ>& point
     }
 }
 
-Eigen::Vector3f current_pose(0,0,0), prev_pose(0,0,0);
-Eigen::Quaternionf current_orientation, prev_orientation;
-ros::Publisher centroid_viz;
 void getFeatureVector(pcl::PointCloud<pcl::PointXYZ>& pointCloud, std::vector<std::complex<double>>& d) {
-    
-    auto time = ros::Time();
-    static LidarScan msgs;
+    std::vector<sensor_msgs::LaserScan> msgs;
+    std::cout << __LINE__ <<std::endl;
     decomposeLidarScanIntoPlanes(pointCloud, msgs);
+    std::cout << __LINE__ <<std::endl;
     std::vector<sensor_msgs::LaserScan> normalized_scans;
-    Eigen::Vector2f corrected_centroid(0,0);
-
-    visualization_msgs::Marker marker;
-    marker.header.frame_id = "world";//pointCloud.header.frame_id;
-    marker.header.stamp = time;
-    marker.id - 0;
-    marker.type = visualization_msgs::Marker::SPHERE;
-    marker.action = visualization_msgs::Marker::ADD;
-
-    visualization_msgs::Marker marker2;
-    marker2.header.frame_id = pointCloud.header.frame_id;
-    marker2.header.stamp = time;
-    marker2.id = 1;
-    marker2.type = visualization_msgs::Marker::SPHERE;
-    marker2.action = visualization_msgs::Marker::ADD;
-    int count = 0;
+    std::cout << __LINE__ <<std::endl;
     for(auto& scan: msgs) {
+        std::cout << __LINE__ <<std::endl;
         sensor_msgs::LaserScan normalized_scan, downsampled_scan;
-        
-        if(abs(scan.azimuth-1.57) < 0.2) {
-            auto centroid = centroidNormalization(scan.scan, normalized_scan, 0.1);
-            count++;
-            corrected_centroid += centroid;
-              // downsample(normalized_scan, downsampled_scan, 50);
-      //  FFT1D(downsampled_scan, d);
-        }
+        std::cout << __LINE__ <<std::endl;
+        centroidNormalization(scan, normalized_scan, 0.1);
+        std::cout << __LINE__ <<std::endl;
+        downsample(normalized_scan, downsampled_scan, 50);
+        std::cout << __LINE__ <<std::endl;
+        FFT1D(downsampled_scan, d);
+        std::cout << __LINE__ <<std::endl;
     }
-    corrected_centroid/=count;
-
-    std::cout << "---" << std::endl;
-    tf::Transform trans;
-    tf::Vector3 pos(current_pose.x(), current_pose.y(), current_pose.z());
-    tf::Quaternion qt(current_orientation.x(), current_orientation.y(), current_orientation.z(), current_orientation.w());
-    trans.setOrigin(pos);
-    trans.setRotation(qt);
-    
-
-    tf::Vector3 t(corrected_centroid.x(), corrected_centroid.y(), 0);
-
-    auto r = trans*t;
-   // if((current_pose-prev_pose).norm() > 0.001) {
-        std::cout << r.x() << ", " << r.y() << ", "<< r.z() << std::endl;
-        std::cout << current_pose <<std::endl;
-        std::cout << current_orientation.x() << current_orientation.y() << current_orientation.z() <<current_orientation.w() <<std::endl;
-    //} 
-    marker.pose.position.x = r.x();
-    marker.pose.position.y = r.y();
-    marker.pose.position.z = 0;
-    marker.pose.position.z = 1;
-    marker.pose.orientation.x = 0.0;
-    marker.pose.orientation.y = 0.0;
-    marker.pose.orientation.z = 0.0;
-    marker.pose.orientation.w = 1.0;
-    marker.scale.x = 1;
-    marker.scale.y = 1;
-    marker.scale.z = 1;
-    marker.color.a = 1.0; // Don't forget to set the alpha!
-    marker.color.r = 1.0;
-    marker.color.g = 0.0;
-    marker.color.b = 0.0;
-
-
-    marker2.pose.position.x = t.x();
-    marker2.pose.position.y = t.y();
-    marker2.pose.position.z = 0;
-    marker2.pose.position.z = 1;
-    marker2.pose.orientation.x = 0.0;
-    marker2.pose.orientation.y = 0.0;
-    marker2.pose.orientation.z = 0.0;
-    marker2.pose.orientation.w = 1.0;
-    marker2.scale.x = 1;
-    marker2.scale.y = 1;
-    marker2.scale.z = 1;
-    marker2.color.a = 1.0; // Don't forget to set the alpha!
-    marker2.color.r = 0.0;
-    marker2.color.g = 1.0;
-    marker2.color.b = 0.0;
-
-    visualization_msgs::MarkerArray mk;
-    mk.markers.push_back(marker);
-    mk.markers.push_back(marker2);
-    centroid_viz.publish(mk);
 }
 
 
@@ -271,14 +197,20 @@ Canvas *canvas;
 void onRecievePointcloud(pcl::PointCloud<pcl::PointXYZ> points) {
     std::vector<double> score;
     std::vector<std::complex<double>> featureVector;
+    std::cout << __LINE__ <<std::endl;
 
     getFeatureVector(points, featureVector);
+        std::cout << __LINE__ <<std::endl;
 
-    //lookupCentroid(centroids, score, featureVector);
+    lookupCentroid(centroids, score, featureVector);
+    std::cout << __LINE__ <<std::endl;
 
     helper->setScores(score);
+    std::cout << __LINE__ <<std::endl;
 
     canvas->update();
+
+    std::cout << __LINE__ <<std::endl;
 }
 
 void onGroundTruth(geometry_msgs::TransformStamped stamp) {
@@ -286,22 +218,8 @@ void onGroundTruth(geometry_msgs::TransformStamped stamp) {
     if(stamp.header.frame_id != "simple_cave_01") return;
     
     auto x = stamp.transform.translation.x;
-    auto y = stamp.transform.translation.y;
-    auto z = stamp.transform.translation.z;
-
-    
-    prev_pose = current_pose;
-    current_pose = Eigen::Vector3f(x, y, z);
-    
+    auto y = stamp.transform.translation.z;
     helper->setLocation(x,y);
-
-    x = stamp.transform.rotation.x;
-    y = stamp.transform.rotation.y;
-    z = stamp.transform.rotation.z;
-    auto w = stamp.transform.rotation.w;
-    
-    prev_orientation = current_orientation;
-    current_orientation = Eigen::Quaternionf(w,x,y,z);
 }
 
 void applicationThread() {
@@ -313,26 +231,26 @@ int main(int argc, char *argv[])
     srand(1000);
     ros::init(argc, argv, "talker");
     ros::NodeHandle n;
-    ros::Subscriber sub = n.subscribe("/X1/points/", 1, &onRecievePointcloud);
-    ros::Subscriber positionSub = n.subscribe("/X1/pose", 1, &onGroundTruth);
-    centroid_viz = n.advertise<visualization_msgs::MarkerArray>("/centroid",1);
-
+    ros::Subscriber sub = n.subscribe("/X1/points/", 10, &onRecievePointcloud);
+    ros::Subscriber positionSub = n.subscribe("/X1/pose", 10, &onGroundTruth);
     //evaluate_test();
     
     //index(centroids);
     loadIndices("/home/arjo/Desktop/catkin_ws/index2.json", centroids);
      std::cout << centroids.size() <<std::endl; 
+        std::cout << __LINE__ <<std::endl;
 
     QApplication a(argc, argv);
     QMainWindow window;
     helper = new Helper(centroids);
     canvas = new Canvas(helper, nullptr);
 
+    std::cout << __LINE__ <<std::endl;
 
     std::thread app(applicationThread);
 
-   // window.setCentralWidget(canvas);
-    //window.resize(400, 300);
-    //window.show();
+    window.setCentralWidget(canvas);
+    window.resize(400, 300);
+    window.show();
     return a.exec();
 }

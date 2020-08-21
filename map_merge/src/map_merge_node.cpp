@@ -5,10 +5,9 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/visualization/cloud_viewer.h>
 #include <map_merge/laser_operations.h>
-#include "tf/transform_datatypes.h"
 
 ros::Publisher pub, pub2;
-//boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer("3D Viewer"));
+boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer("3D Viewer"));
 pcl::PointCloud<pcl::PointXYZ> final_cloud1, reference, transformed;
 
 void removeFloorPoints(const pcl::PointCloud<pcl::PointXYZ>& pc1, pcl::PointCloud<pcl::PointXYZ>& out, double floor=-0.3){
@@ -24,16 +23,6 @@ void removeNans(const pcl::PointCloud<pcl::PointXYZ>& pc1, pcl::PointCloud<pcl::
             out.push_back(pt);
     }
 }
-tf::Transform trans;
-void onGroundTruth(geometry_msgs::TransformStamped stamp) {
-
-    if(stamp.header.frame_id != "simple_cave_01") return;
-    
-    trans = tf::Transform( 
-        tf::Quaternion(stamp.transform.rotation.x, stamp.transform.rotation.y, stamp.transform.rotation.z, stamp.transform.rotation.w),
-        tf::Vector3(stamp.transform.translation.x, stamp.transform.translation.y, stamp.transform.translation.z));
-    
-}
 
 void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_msg) {
 
@@ -41,22 +30,6 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
     cloud.header = pcl_msg->header;
     //extractCorners(*pcl_msg, final_cloud1);
     //removeNans(*pcl_msg, final_cloud1);
-   //std::cout <<"hi" <<std::endl;
-    LidarScan scan;
-    decomposeLidarScanIntoPlanes(*pcl_msg, scan);
-    Eigen::Vector2f eg(0,0);
-    int i = 0;
-    for(auto ring: scan) {
-        //std::cout << "hi" <<std::endl;
-        i++;
-        if(i < 5) continue;
-        sensor_msgs::LaserScan sc;
-        eg = centroidNormalization(ring.scan, sc, 0.1);
-        tf::Vector3 t(eg.x(), eg.y(), 0);
-        auto r = trans*t;
-        std::cout << i << ","<< r.x() << "," << r.y() << "," << trans.getOrigin().x() << "," << trans.getOrigin().y() <<std::endl;
-        
-    }
     final_cloud1 = *pcl_msg;
 }
 
@@ -65,7 +38,13 @@ void onPointCloudRecieved2(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_m
     pcl::PointCloud<pcl::PointXYZ> cloud;
 
     cloud.header = pcl_msg->header;
-    /*if(final_cloud1.size() != 0) {
+    if(final_cloud1.size() != 0) {
+        /*pcl::PointCloud<pcl::PointXYZ> my_no_floor, reference_no_floor;
+        extractCorners(*pcl_msg, my_no_floor);
+        auto mat = ICPMatchPointToPoint(final_cloud1, my_no_floor);
+        std::cout << "Estimate" <<std::endl;
+        std::cout << mat <<std::endl;
+        pcl::transformPointCloud(final_cloud1, transformed, mat);*/
         LidarScan scanStack1, scanStack2;
         decomposeLidarScanIntoPlanes(final_cloud1, scanStack1);
         decomposeLidarScanIntoPlanes(*pcl_msg, scanStack2);
@@ -97,13 +76,13 @@ void onPointCloudRecieved2(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_m
         extractCorners(*pcl_msg, reference_corners);
         auto transform = ICPMatchPointToPoint(refined_corners, reference_corners);
         pcl::transformPointCloud(initial_guess, transformed, transform);
-    }*/
+    }
     
-    //reference.clear();
-    //for(auto pt: *pcl_msg) 
-    //if(std::isfinite(pt.x) && std::isfinite(pt.y) && std::isfinite(pt.z))reference.push_back(pt);
+    reference.clear();
+    for(auto pt: *pcl_msg) 
+    if(std::isfinite(pt.x) && std::isfinite(pt.y) && std::isfinite(pt.z))reference.push_back(pt);
 }
-/*
+
 void visualize_thread() {
     pcl::PointCloud<pcl::PointXYZ>::Ptr final_points(new pcl::PointCloud<pcl::PointXYZ>);
     *final_points = transformed;
@@ -124,21 +103,20 @@ void visualize_thread() {
     viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "reference");
     viewer->resetCamera ();
 
-}*/
+}
 
 int main(int argc, char** argv) {
     ros::init(argc, argv,"map_merge");
     ros::NodeHandle nh;
     ros::Subscriber sub = nh.subscribe("/X1/points/", 1, onPointCloudRecieved);
     ros::Subscriber sub2 = nh.subscribe("/X2/points/", 1, onPointCloudRecieved2);
-    ros::Subscriber positionSub = nh.subscribe("/X1/pose", 10, &onGroundTruth);
-    //viewer->setBackgroundColor(0,0,0);
+    viewer->setBackgroundColor(0,0,0);
     pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/corners", 10);
     pub2 = nh.advertise<sensor_msgs::LaserScan>("scan_las", 10);
     while(ros::ok()) {
         ros::spinOnce();
-        //visualize_thread();
-        //viewer->spinOnce(100);
+        visualize_thread();
+        viewer->spinOnce(100);
     }
     return 0;
 }

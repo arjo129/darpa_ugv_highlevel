@@ -3,8 +3,6 @@
 .vscode/tasks.json
 .vscode/settings.json
 
-*.weights
-
 *.swp
 *.pyc
 
