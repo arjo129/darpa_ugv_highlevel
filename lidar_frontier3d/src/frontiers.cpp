@@ -10,7 +10,7 @@
 #include <lidar_frontier3d/frontier_request.h>
 #include <tf/tf.h>
 
-ros::Publisher visualization_pub, centroid_pub;
+ros::Publisher visualization_pub, centroid_pub, local_pub;
 pcl::PointXYZ scanPointToPointCloud(pcl::PointXYZ point, double azimuth); //Access private API
 tf::TransformListener* listener;
 FrontierManager manager;
@@ -109,6 +109,7 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
     pcl::PointCloud<pcl::PointXYZ> global_frame;
     pcl_ros::transformPointCloud(centroid_points, global_frame, current_pose.inverse());
     global_frame.header.frame_id  = "world";
+    local_pub.publish(global_frame);
     
     pcl::PointCloud<pcl::PointXYZ> filtered;
     filtered.header = pcl_msg->header;
@@ -131,6 +132,7 @@ int main(int argc, char** argv) {
    
     visualization_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontiers", 10);
     centroid_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontiers/centroid", 10);
+    local_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontiers/local", 10);
     listener = new tf::TransformListener();
    
     int i = 0;
