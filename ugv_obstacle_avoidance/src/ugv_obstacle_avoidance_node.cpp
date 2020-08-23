@@ -34,7 +34,6 @@ pcl::PointCloud<pcl::PointXYZ> out;
 int global_i = 0;
 geometry_msgs::Vector3 goal;
 geometry_msgs::Vector3 current;
-
 float yaw_to_goal = 0;
 int direction = -1;
 
@@ -76,13 +75,13 @@ float getFreeSpaceScoreLRAgg(std::vector<std::tuple<float,float>> &distances){
       if(std::get<1>(a) < 3.0){
         if(std::get<0>(a) < 0){
           score -= std::pow((M_PI - std::fabs(std::get<0>(a))) , 2)*std::pow((3.0-std::get<1>(a)),3);
-          if(std::get<1>(a) < 0.8){
-            score -= 20;
+          if(std::get<1>(a) < 0.5){
+            score -= 60;
           }
         }else{
           score += std::pow((M_PI - std::fabs(std::get<0>(a))) , 2)*std::pow((3.0-std::get<1>(a)),3);
-          if(std::get<1>(a) < 0.8){
-            score += 20;
+          if(std::get<1>(a) < 0.5){
+            score += 60;
           }
         }
       }
@@ -179,7 +178,7 @@ float getAngularVelocity(std::vector<std::tuple<float,float>> &distances){
 // std::cout << "get angular velocity" <<std::endl;
   if(current_state == AWAITING_INSTRUCTION) return 0;
     
-   if(std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y)) < 1){
+   if(std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y)) < 2){
         return 0;    
    }
    
@@ -218,7 +217,7 @@ float getForwardVelocity(std::vector<std::tuple<float,float>> &distances){
 
     float distance_to_goal = std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y));
     std::cout << distance_to_goal <<std::endl;
-   if( distance_to_goal< 1){
+   if( distance_to_goal< 2){
         std_msgs::Int8 i;
         i.data = 0;
         status_pub.publish(i);
@@ -347,7 +346,20 @@ void positionCallBack(const nav_msgs::Odometry::ConstPtr& msg){
     currentPose.y = poseMsg.pose.pose.orientation.y;
     currentPose.z = poseMsg.pose.pose.orientation.z;
     currentPose.w = poseMsg.pose.pose.orientation.w;
-    
+
+
+
+    float distance_to_goal = std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y));
+    std::cout << distance_to_goal <<std::endl;
+    auto time_since_last_goal = ros::Time::now() - last_goal;
+
+   if( distance_to_goal< 2 && time_since_last_goal > ros::Duration(10)){
+        std_msgs::Int8 i;
+        i.data = 0;
+        status_pub.publish(i);
+        current_state = VehicleState::AWAITING_INSTRUCTION;  
+   }
+
     // std::cout << "Current goal" << goal.x << ", " << goal.y << "| " << current.x << ", " << current.y <<std::endl;
     
     tf2::Quaternion rotation(

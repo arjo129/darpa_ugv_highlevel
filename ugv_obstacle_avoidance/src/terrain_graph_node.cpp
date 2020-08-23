@@ -38,6 +38,8 @@ ros::Publisher pub;
 ros::Publisher pub2;
 
 
+std::deque<pcl::PointXYZ> allUsedFrontiers;
+
 int globalGraphId = 0;
 
 int global_i = 0;
@@ -73,6 +75,20 @@ float getDistanceBetween(pcl::PointXYZ p1 , pcl::PointXYZ p2){
 
 float getDistanceFromOrigin(pcl::PointXYZ p){
     return std::sqrt( (p.z) * (p.z) + (p.y) * (p.y) + (p.x) * (p.x) );
+}
+
+float getDistanceFromRobot(pcl::PointXYZ p){
+    return std::sqrt( (p.z - current.z) * (p.z - current.z) + (p.y - current.y) * (p.y - current.y) + (p.x - current.x) * (p.x - current.x) );
+}
+
+float hieuristic(pcl::PointXYZ p){
+    for(auto a :allUsedFrontiers){
+      if(getDistanceBetween(a , p) < 5.00){
+        std::cout << "Somewhere i have already been too" <<std::endl;
+        return 0;
+      }
+    }
+    return std::pow(getDistanceFromOrigin(p),2);
 }
 
 float distanceFromOrigin(float *p, bool plane){
@@ -377,9 +393,7 @@ int getBestNextNode(std::vector<std::tuple<float,float>> &distances , pcl::Point
     int segForPoint = getSegmentValue(p);
     int seg = getSegmentValue(bestPoint);
 
-     if(getDistanceFromOrigin(bestPoint) < 2.0){
-       seg = -1;
-     }
+     
     
     // std::cout << "segemnt: "<<segForPoint << std::endl;
 
@@ -387,11 +401,22 @@ int getBestNextNode(std::vector<std::tuple<float,float>> &distances , pcl::Point
 
       // std::cout << "Not Found" << std::endl; 
 
-      return 2;
+      return 1;
       //No path
 
       
     }else{
+      if(getDistanceFromOrigin(bestPoint) < 2.0){
+       seg = -1;
+      }
+
+      if(seg == segForPoint){
+        p.x = bestPoint.x;
+        p.y = bestPoint.y;
+        p.z = bestPoint.z;
+        return 0;
+
+      }
 
       terrainGraph[seg].insert(segForPoint);
       // std::cout << "Found" << std::endl; 
@@ -408,7 +433,7 @@ int getBestNextNode(std::vector<std::tuple<float,float>> &distances , pcl::Point
       p.x = pt.x;
         p.y = pt.y;
         p.z = pt.z;
-      return 1; // path alr found
+      return 0; // path alr found
       
 
     }
@@ -442,18 +467,21 @@ void positionCallBack(const nav_msgs::Odometry::ConstPtr& msg){
 void goalCallBack(const geometry_msgs::PointStamped::ConstPtr& msg){
 
   findNewFrontiers = true;
-  ros::NodeHandle n;
-  ros::ServiceClient client = n.serviceClient<lidar_frontier3d::frontier_request>("get_frontiers");
-  lidar_frontier3d::frontier_request srv;
+
+  //TO enable Filtered Frontiers use the below
+
+  // ros::NodeHandle n;
+  // ros::ServiceClient client = n.serviceClient<lidar_frontier3d::frontier_request>("get_frontiers");
+  // lidar_frontier3d::frontier_request srv;
    
-  if (client.call(srv)){
-    ROS_INFO("received frontiers");
-    auto frontiers = srv.response.points;
-    // std::cout << "Frontiers: " << frontiers.size() << std::endl;
-    processFrontiers(frontiers);
-  }else{
-    ROS_ERROR("Failed to call service add_two_ints");
-  }
+  // if (client.call(srv)){
+  //   ROS_INFO("received frontiers");
+  //   auto frontiers = srv.response.points;
+    
+  //   processFrontiers(frontiers);
+  // }else{
+  //   ROS_ERROR("Failed to call service add_two_ints");
+  // }
 
   
 }
@@ -513,15 +541,41 @@ void processFrontiers(const sensor_msgs::PointCloud2& msg){
   // pcl_ros::transformPointCloud	(*msg , out2 , transform);
 
   size_t cloudSize = out2.size();
+  std::cout << "Frontiers: " << cloudSize << std::endl;
   int count = 0;
-  // extract valid points from input cloud	
+  auto cmp = [](pcl::PointXYZ left, pcl::PointXYZ right) { return hieuristic(left) < hieuristic(right); };
 
-  
+  std::priority_queue<pcl::PointXYZ , std::deque<pcl::PointXYZ> , decltype(cmp)> allFrontiers(cmp);
+
   for (int i = 0; i < cloudSize; i++) {
 
     pcl::PointXYZ point;
     point.x = out2[i].x;
     point.y = out2[i].y;
+    point.z = out2[i].z;
+
+    if (!pcl_isfinite(point.x) ||
+        !pcl_isfinite(point.y) ||
+        !pcl_isfinite(point.z)) {
+      continue;
+    }
+
+    if (point.x * point.x + point.y * point.y + point.z * point.z < 0.0001 && point.z > 2) {
+      continue;
+    }
+    // if(point.x < 0) continue;
+
+    allFrontiers.push(point);
+
+  }
+
+  bool firstTimeHEre = true;
+  bool foundOnePoint = false;
+  std::deque<int> finalPathToFrontier;
+  while(!allFrontiers.empty()) {
+    std::cout << "F Popping" << std::endl;
+    pcl::PointXYZ point = allFrontiers.top();
+    allFrontiers.pop();
     point.z = 0;
 
     if (!pcl_isfinite(point.x) ||
@@ -536,10 +590,20 @@ void processFrontiers(const sensor_msgs::PointCloud2& msg){
 
     count ++;
 
-    marker.color.a = 1.0;
-    marker.color.r = 0.0;
+    if(firstTimeHEre){
+      firstTimeHEre = false;
+      marker.color.r = 1.0;
+       marker.color.g = 1.0;
+       marker.color.b = 1.0;
+
+    }else{
+      marker.color.r = 0.0;
        marker.color.g = 1.0;
        marker.color.b = 0.0;
+    }
+
+    marker.color.a = 1.0;
+    
        marker.pose.orientation.w = 1.0;
        marker.pose.position.x = point.x;
        marker.pose.position.y = point.y;
@@ -579,24 +643,30 @@ void processFrontiers(const sensor_msgs::PointCloud2& msg){
 
 
       
-      int seg = getSegmentValue(middle_point);
+      // int seg = getSegmentValue(middle_point);
 
-      auto pt = discreteMap[seg];
+      // auto pt = discreteMap[seg];
 
-      if(pt.x == 0 && pt.y ==0 && pt.z == 0){
-        discreteMap[seg] = middle_point;
-      }
+      // if(pt.x == 0 && pt.y ==0 && pt.z == 0){
+      //   discreteMap[seg] = middle_point;
+      // }
+
+      std::deque<int> singlePathToFrontier;
 
       
     int count = 0;
     int stateOfPathFinding = 0;
       while(getDistanceBetween(middle_point , start_point) > 3 && stateOfPathFinding == 0){
         stateOfPathFinding = getBestNextNode(distances , middle_point , start_point, discreteMap);
-
-        if(stateOfPathFinding == 2)break;
+        std::cout << stateOfPathFinding << std::endl;
+        // if(stateOfPathFinding == 2)break;
+        singlePathToFrontier.push_front(getSegmentValue(middle_point));
 
         if(getDistanceBetween(middle_point , start_point) <= 3){
           terrainGraph[-1].insert(getSegmentValue(middle_point));
+          std::cout << "Ending" <<std::endl;
+          foundOnePoint = true;
+          break;
         }
       
         geometry_msgs::PointStamped inputMPoint;
@@ -607,8 +677,8 @@ void processFrontiers(const sensor_msgs::PointCloud2& msg){
         inputMPoint.point.y = middle_point.y;
         inputMPoint.point.z = middle_point.z;
 
-        // std::cout << "MIDDLE POINT" << middle_point.x << "" << middle_point.y << "" << middle_point.z << std::endl;
-
+        std::cout << "MIDDLE POINT" << middle_point.x << "" << middle_point.y << "" << middle_point.z << std::endl;
+// 
         geometry_msgs::PointStamped stamped_out;
         
         listener->transformPoint("/world", inputMPoint , stamped_out);	
@@ -623,93 +693,91 @@ void processFrontiers(const sensor_msgs::PointCloud2& msg){
        id++;
        marker.id = id;
        ma.markers.push_back(marker);
-
         count++;
-        if(count > 20){
-            break;
-        }
+        
+      }
+
+      if(foundOnePoint){
+        finalPathToFrontier = singlePathToFrontier;
+        break;
       }
 
     }
 
-    std::map<int , std::set<int>> terrainGraphConnected;
+    std::cout << "I am here" << std::endl;
 
-    std::queue<int> frontier;
-    frontier.push(-1);
-    while(!frontier.empty()){
-      auto topVal = frontier.front();
-      frontier.pop();
-      if(terrainGraphConnected.find(topVal) != terrainGraphConnected.end())continue;
-      for(auto a: terrainGraph[topVal]){
-        terrainGraphConnected[topVal].insert(a);
-        frontier.push(a);
+    for(int a = 0; a < finalPathToFrontier.size() ; a++){
+      if(finalPathToFrontier[a] >= 0 && finalPathToFrontier[a] < 6){
+        finalPathToFrontier.erase(finalPathToFrontier.begin()+a);
       }
+     }
+    if(finalPathToFrontier[0] != -1){
+      finalPathToFrontier.push_front(-1);
     }
 
-    std::map<int , int> nodeIdMapping;
+    for(int a = 0; a < finalPathToFrontier.size() ; a++){
+      std::cout << " " << finalPathToFrontier[a] <<  " ";
+      }
+    std::cout << std::endl;
+
+    // std::map<int , std::set<int>> terrainGraphConnected;
+
+    // std::queue<int> frontier;
+    // frontier.push(-1);
+    // while(!frontier.empty()){
+    //   auto topVal = frontier.front();
+    //   frontier.pop();
+    //   if(terrainGraphConnected.find(topVal) != terrainGraphConnected.end())continue;
+    //   for(auto a: terrainGraph[topVal]){
+    //     terrainGraphConnected[topVal].insert(a);
+    //     frontier.push(a);
+    //   }
+    // }
+
+    // std::map<int , int> nodeIdMapping;
     graph_msgs::GeometryGraph gg;
     gg.header.seq = globalGraphId;
     gg.header.frame_id = "world";
     gg.header.stamp = ros::Time::now();
     int point_id = 0;
-      for(auto a: terrainGraphConnected){
-        if(a.first >= 0){
-          if(nodeIdMapping.find(a.first) == nodeIdMapping.end()){
-            auto pt = transformPointToWorld(discreteMap[a.first] , listener);
-            geometry_msgs::Point tempPt;
-            tempPt.x =pt.x;
-            tempPt.y =pt.y;
-            tempPt.z =pt.z;
-            gg.nodes.push_back(tempPt);
-            gg.edges.push_back(graph_msgs::Edges());
-            nodeIdMapping[a.first] = point_id;
-            point_id++;
-          }
-        }else{
-          if(nodeIdMapping.find(a.first) == nodeIdMapping.end()){
-            geometry_msgs::Point tempPt;
-            tempPt.x = current.x;
-            tempPt.y = current.y;
-            tempPt.z = current.z;
-            gg.nodes.push_back(tempPt);
-            gg.edges.push_back(graph_msgs::Edges());
-            nodeIdMapping[a.first] = point_id;
-            point_id++;
-          }
-        }
-        for(auto b : a.second){
-          if(nodeIdMapping.find(b) == nodeIdMapping.end()){
-            auto pt = transformPointToWorld(discreteMap[b] , listener);
-            geometry_msgs::Point tempPt;
-            tempPt.x =pt.x;
-            tempPt.y =pt.y;
-            tempPt.z =pt.z;
-            gg.nodes.push_back(tempPt);
-            gg.edges.push_back(graph_msgs::Edges());
-            nodeIdMapping[b] = point_id;
-            point_id++;
-          }
-        }
-        // std::cout << std::endl;
+    for(int a = 0; a < finalPathToFrontier.size()-1 ; a++){
+      if(finalPathToFrontier[a] == -1 ){
+        geometry_msgs::Point tempPt;
+        tempPt.x = current.x;
+        tempPt.y = current.y;
+        tempPt.z = current.z;
+        gg.nodes.push_back(tempPt);
+        gg.edges.push_back(graph_msgs::Edges());
+        gg.edges[a].node_ids.push_back(a+1);
+        
+      }else{
+        auto pt = transformPointToWorld(discreteMap[finalPathToFrontier[a]] , listener);
+        geometry_msgs::Point tempPt;
+        tempPt.x =pt.x;
+        tempPt.y =pt.y;
+        tempPt.z =pt.z;
+        gg.nodes.push_back(tempPt);
+        gg.edges.push_back(graph_msgs::Edges());
+        gg.edges[a].node_ids.push_back(a+1);
       }
+    }
 
+    auto pt = transformPointToWorld(discreteMap[finalPathToFrontier[finalPathToFrontier.size()-1]] , listener);
+    geometry_msgs::Point tempPt;
+    tempPt.x =pt.x;
+    tempPt.y =pt.y;
+    tempPt.z =pt.z;
+    gg.nodes.push_back(tempPt);
+    gg.edges.push_back(graph_msgs::Edges());
     
-      for(auto a: terrainGraphConnected){
-        std::cout << "Node: " <<  a.first << std::endl;
-        if(nodeIdMapping.find(a.first) == nodeIdMapping.end()){
-           continue;
-        }
-        int node_index = nodeIdMapping[a.first];
-        for(auto b : a.second){
-          std::cout << b << " ";
-          if(nodeIdMapping.find(b) == nodeIdMapping.end()){
-           continue;
-          }
-          int child_index = nodeIdMapping[b];
-          gg.edges[node_index].node_ids.push_back(child_index);
-        }
-        std::cout << std::endl;
-      }
+    for(auto a = 0; a < gg.nodes.size() ; a++){
+      std::cout << "Node: " << a << std::endl;
+      for(auto b: gg.edges[a].node_ids){
+        std::cout <<  b << " ";
+      } 
+      std::cout << std::endl;
+    }
+
       pub.publish(ma);
 
       pub2.publish(gg);
@@ -724,6 +792,294 @@ void processFrontiers(const sensor_msgs::PointCloud2& msg){
 
 
  
+
+}
+
+void frontierCallBack(const PointCloud::ConstPtr& msg){
+
+  pcl::PointCloud<pcl::PointXYZ> out2;
+  
+  if(findNewFrontiers){
+
+    std::cout << "Need New Frontier" << std::endl;
+    findNewFrontiers = false;
+
+
+  populateMap(discreteMap , 1000 , distances);
+
+
+  findNewFrontiers = false;
+  tf::TransformListener* listener = new tf::TransformListener();
+   tf::StampedTransform transform;
+  try{
+    listener->waitForTransform("/world", "/X1", ros::Time(0), ros::Duration(3.0));
+    listener->lookupTransform( "/world", "/X1", ros::Time(0), transform);
+  }
+   catch(tf::TransformException& ex){
+    ROS_ERROR("Received an exception trying to transform a point from \"world\" to \"X1\": %s", ex.what());
+    
+  }
+
+  geometry_msgs::Transform trans;
+  trans.translation.x = 0;
+  trans.translation.y = 0;
+  trans.translation.z = 0;
+  trans.rotation.x = 0;
+  trans.rotation.y = 0;
+  trans.rotation.z = 0;
+  trans.rotation.w = 1;
+  pcl_ros::transformPointCloud	(*msg , out2 , transform);
+
+  size_t cloudSize = out2.size();
+  std::cout << "Frontiers: " << cloudSize << std::endl;
+  int count = 0;
+  auto cmp = [](pcl::PointXYZ left, pcl::PointXYZ right) { return getDistanceFromRobot(left) < getDistanceFromRobot(right); };
+
+  std::priority_queue<pcl::PointXYZ , std::deque<pcl::PointXYZ> , decltype(cmp)> allFrontiers(cmp);
+
+  for (int i = 0; i < cloudSize; i++) {
+
+    pcl::PointXYZ point;
+    point.x = out2[i].x;
+    point.y = out2[i].y;
+    point.z = out2[i].z;
+
+    if (!pcl_isfinite(point.x) ||
+        !pcl_isfinite(point.y) ||
+        !pcl_isfinite(point.z)) {
+      continue;
+    }
+
+    if (point.x * point.x + point.y * point.y + point.z * point.z < 0.0001 && point.z > 2) {
+      continue;
+    }
+    if(point.x < 0) continue;
+
+    allFrontiers.push(point);
+
+  }
+
+  bool firstTimeHEre = true;
+  bool foundOnePoint = false;
+  std::deque<int> finalPathToFrontier;
+  while(!allFrontiers.empty()) {
+    std::cout << "F Popping" << std::endl;
+    pcl::PointXYZ point = allFrontiers.top();
+    allFrontiers.pop();
+    point.z = 0;
+
+    if (!pcl_isfinite(point.x) ||
+        !pcl_isfinite(point.y) ||
+        !pcl_isfinite(point.z)) {
+      continue;
+    }
+
+    if (point.x * point.x + point.y * point.y + point.z * point.z < 0.0001) {
+      continue;
+    }
+
+    count ++;
+
+    if(firstTimeHEre){
+      firstTimeHEre = false;
+      marker.color.r = 1.0;
+       marker.color.g = 1.0;
+       marker.color.b = 1.0;
+
+    }else{
+      marker.color.r = 0.0;
+       marker.color.g = 1.0;
+       marker.color.b = 0.0;
+    }
+
+    marker.color.a = 1.0;
+    
+       marker.pose.orientation.w = 1.0;
+       marker.pose.position.x = point.x;
+       marker.pose.position.y = point.y;
+       marker.pose.position.z = point.z;
+        marker.id = ++id;
+       ma.markers.push_back(marker);
+
+    geometry_msgs::Vector3 currentC = current;
+    geometry_msgs::Quaternion currentPoseC = currentPose;
+    geometry_msgs::Quaternion invPoseC = invPose;
+
+
+    geometry_msgs::PointStamped initial_pt; 
+    initial_pt.header.frame_id = "world";
+    initial_pt.point.x = point.x;
+    initial_pt.point.y = point.y;
+    initial_pt.point.z = point.z;
+    
+    geometry_msgs::PointStamped transformStamped;
+    listener->transformPoint("/X1", initial_pt , transformStamped);	
+     goal.x = transformStamped.point.x;
+      goal.y = transformStamped.point.y;
+      goal.z = transformStamped.point.z;
+
+
+    mColor++;
+
+
+    pcl::PointXYZ middle_point;
+    middle_point.x = goal.x;
+    middle_point.y = goal.y;
+    middle_point.z = goal.z;
+      pcl::PointXYZ start_point;
+      start_point.x = 0;
+      start_point.y = 0;
+      start_point.z = 0;
+
+
+      
+      // int seg = getSegmentValue(middle_point);
+
+      // auto pt = discreteMap[seg];
+
+      // if(pt.x == 0 && pt.y ==0 && pt.z == 0){
+      //   discreteMap[seg] = middle_point;
+      // }
+
+      std::deque<int> singlePathToFrontier;
+
+      
+    int count = 0;
+    int stateOfPathFinding = 0;
+      while(getDistanceBetween(middle_point , start_point) > 3 && stateOfPathFinding == 0){
+        stateOfPathFinding = getBestNextNode(distances , middle_point , start_point, discreteMap);
+        std::cout << stateOfPathFinding << std::endl;
+        // if(stateOfPathFinding == 2)break;
+        singlePathToFrontier.push_front(getSegmentValue(middle_point));
+
+        if(getDistanceBetween(middle_point , start_point) <= 3){
+          terrainGraph[-1].insert(getSegmentValue(middle_point));
+          std::cout << "Ending" <<std::endl;
+          foundOnePoint = true;
+          allUsedFrontiers.push_back(point);
+          break;
+        }
+      
+        geometry_msgs::PointStamped inputMPoint;
+
+        // inputMPoint.header.stamp = ros::Time::now().toNSec();
+        inputMPoint.header.frame_id = "X1";
+        inputMPoint.point.x = middle_point.x;
+        inputMPoint.point.y = middle_point.y;
+        inputMPoint.point.z = middle_point.z;
+
+        std::cout << "MIDDLE POINT" << middle_point.x << "" << middle_point.y << "" << middle_point.z << std::endl;
+// 
+        geometry_msgs::PointStamped stamped_out;
+        
+        listener->transformPoint("/world", inputMPoint , stamped_out);	
+        marker.color.r = 1.0;
+       marker.color.g = 0.0;
+       marker.color.b = 0.0;
+      marker.pose.position.x = stamped_out.point.x;
+       marker.pose.position.y = stamped_out.point.y;
+       marker.pose.position.z = stamped_out.point.z;
+             
+
+       id++;
+       marker.id = id;
+       ma.markers.push_back(marker);
+        count++;
+        
+      }
+
+      if(foundOnePoint){
+        finalPathToFrontier = singlePathToFrontier;
+        break;
+      }
+
+    }
+
+    std::cout << "I am here" << std::endl;
+
+    for(int a = 0; a < finalPathToFrontier.size() ; a++){
+      if(finalPathToFrontier[a] >= 0 && finalPathToFrontier[a] < 6){
+        finalPathToFrontier.erase(finalPathToFrontier.begin()+a);
+      }
+     }
+    if(finalPathToFrontier[0] != -1){
+      finalPathToFrontier.push_front(-1);
+    }
+
+    for(int a = 0; a < finalPathToFrontier.size() ; a++){
+      std::cout << " " << finalPathToFrontier[a] <<  " ";
+      }
+    std::cout << std::endl;
+
+    // std::map<int , std::set<int>> terrainGraphConnected;
+
+    // std::queue<int> frontier;
+    // frontier.push(-1);
+    // while(!frontier.empty()){
+    //   auto topVal = frontier.front();
+    //   frontier.pop();
+    //   if(terrainGraphConnected.find(topVal) != terrainGraphConnected.end())continue;
+    //   for(auto a: terrainGraph[topVal]){
+    //     terrainGraphConnected[topVal].insert(a);
+    //     frontier.push(a);
+    //   }
+    // }
+
+    // std::map<int , int> nodeIdMapping;
+    graph_msgs::GeometryGraph gg;
+    gg.header.seq = globalGraphId;
+    gg.header.frame_id = "world";
+    gg.header.stamp = ros::Time::now();
+    int point_id = 0;
+    for(int a = 0; a < finalPathToFrontier.size()-1 ; a++){
+      if(finalPathToFrontier[a] == -1 ){
+        geometry_msgs::Point tempPt;
+        tempPt.x = current.x;
+        tempPt.y = current.y;
+        tempPt.z = current.z;
+        gg.nodes.push_back(tempPt);
+        gg.edges.push_back(graph_msgs::Edges());
+        gg.edges[a].node_ids.push_back(a+1);
+        
+      }else{
+        auto pt = transformPointToWorld(discreteMap[finalPathToFrontier[a]] , listener);
+        geometry_msgs::Point tempPt;
+        tempPt.x =pt.x;
+        tempPt.y =pt.y;
+        tempPt.z =pt.z;
+        gg.nodes.push_back(tempPt);
+        gg.edges.push_back(graph_msgs::Edges());
+        gg.edges[a].node_ids.push_back(a+1);
+      }
+    }
+
+    auto pt = transformPointToWorld(discreteMap[finalPathToFrontier[finalPathToFrontier.size()-1]] , listener);
+    geometry_msgs::Point tempPt;
+    tempPt.x =pt.x;
+    tempPt.y =pt.y;
+    tempPt.z =pt.z;
+    gg.nodes.push_back(tempPt);
+    gg.edges.push_back(graph_msgs::Edges());
+    
+    for(auto a = 0; a < gg.nodes.size() ; a++){
+      std::cout << "Node: " << a << std::endl;
+      for(auto b: gg.edges[a].node_ids){
+        std::cout <<  b << " ";
+      } 
+      std::cout << std::endl;
+    }
+
+      pub.publish(ma);
+
+      pub2.publish(gg);
+
+      terrainGraph.clear();
+
+    //TODO add logic here
+
+    globalGraphId++;
+
+  }
 
 }
 
@@ -1044,7 +1400,7 @@ marker.type = marker.SPHERE;
   ros::Subscriber sub = nh.subscribe<PointCloud>("traversable_pointcloud_input", 1, callback);
   ros::Subscriber sub3 = nh.subscribe("robot_position_pose", 1, positionCallBack);
   ros::Subscriber sub2 = nh.subscribe("goal_to_explore", 1, goalCallBack);
-  // ros::Subscriber sub4 = nh.subscribe<PointCloud>("frontiers", 1, frontierCallBack);
+  ros::Subscriber sub4 = nh.subscribe<PointCloud>("frontiers", 1, frontierCallBack);
   pub = nh.advertise<visualization_msgs::MarkerArray> ("Path", 1);
   pub2 = nh.advertise<graph_msgs::GeometryGraph> ("graph", 1);
 

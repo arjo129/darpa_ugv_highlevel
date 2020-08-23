@@ -84,7 +84,7 @@ class FrontierGraph
 FrontierGraph::FrontierGraph() : num_nodes(0), current_node_idx(0)
 {}
 
-FrontierGraph::FrontierGraph(graph_msgs::GeometryGraph graph) : num_nodes(graph.nodes.size()), current_node_idx(0)
+FrontierGraph::FrontierGraph(graph_msgs::GeometryGraph graph) : num_nodes(graph.nodes.size()), current_node_idx(0) , upcoming_node_idx(0)
 {
     explored_state.resize(num_nodes, NODE_UNEXPLORED);
     adjacency_list.resize(num_nodes, std::set<int>{});
@@ -127,7 +127,7 @@ void FrontierGraph::setGraph(FrontierGraph temp)
     num_nodes = temp.getSize();
     current_node_idx = temp.current_node_idx;
     upcoming_node_idx = temp.upcoming_node_idx;
-
+    explored_state[current_node_idx] = GraphNodeExploredState::NODE_EXPLORED;
 }
 
 void FrontierGraph::mergeLocalGraph (FrontierGraph & local_graph){
@@ -136,7 +136,7 @@ void FrontierGraph::mergeLocalGraph (FrontierGraph & local_graph){
         setGraph(local_graph);
         return;
     }
-    
+    adjacency_list[current_node_idx].clear(); //Added to ensure only single path of exploration exist
     auto localAL = local_graph.getAL();
     for(int i = 0 ; i < localAL.size() ; i ++){
         std::set<int>temp_set;
@@ -161,19 +161,25 @@ bool FrontierGraph::isLeafNode(){
     if(adjacency_list[current_node_idx].empty()){
         return true;
     }
-    return false;
+    for(auto  &child_node: adjacency_list[current_node_idx]){
+         if(explored_state[child_node] == GraphNodeExploredState::NODE_EXPLORED || explored_state[child_node] == GraphNodeExploredState::NODE_UNEXPLORED){
+            return false;
+        }
+    }
+    return true;
 }
 
 int FrontierGraph::getNextGoalId(){
     std::cout << "next goal id. curr = " << current_node_idx << std::endl;
     if(adjacency_list[current_node_idx].empty()){
-        return getParent(current_node_idx);
+        return (current_node_idx);
     }
     
     for(auto &child_node: adjacency_list[current_node_idx]){
         if(explored_state[child_node] == GraphNodeExploredState::NODE_EXPLORED || explored_state[child_node] == GraphNodeExploredState::NODE_UNEXPLORABLE){
             continue;
         }else if(explored_state[child_node] == GraphNodeExploredState::NODE_UNEXPLORED){
+            std::cout << "next goal id. " << child_node << std::endl;
             return child_node;
         }
     }
@@ -208,6 +214,7 @@ void FrontierGraph::updateNewGoalSuccess(){
 }
 
 void FrontierGraph::updateNewGoalFail(){
+    upcoming_node_idx = current_node_idx;
     markAsUnExplorable(upcoming_node_idx);
 }
 

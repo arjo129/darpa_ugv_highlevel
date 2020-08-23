@@ -24,9 +24,11 @@ boost::shared_ptr<ros::NodeHandle> nh;
 void onStartCallback(const std_msgs::Empty e)
 {
     ros::Rate loop_rate(1);
+    bool stuck = false;
     while (ros::ok())
     {       
-        if(global_graph.getAL().size() == 0 ||global_graph.isLeafNode()){
+        if(global_graph.getAL().size() == 0 ||global_graph.isLeafNode() || stuck){
+            stuck = false;
 
             ROS_INFO("Requesting Local Graph...");
             // request for local terrain graph
@@ -54,7 +56,7 @@ void onStartCallback(const std_msgs::Empty e)
         geometry_msgs::PointStamped goal = global_graph.getNextGoal();
         exploration_goal_pub.publish(goal);
         ROS_INFO("Waiting for goal to be reached...");
-        std_msgs::Int8ConstPtr status = ros::topic::waitForMessage<std_msgs::Int8>(ROBOT_GOAL_STATUS, *nh, ros::Duration(10.0));
+        std_msgs::Int8ConstPtr status = ros::topic::waitForMessage<std_msgs::Int8>(ROBOT_GOAL_STATUS, *nh, ros::Duration(40.0));
 
         ROS_INFO("Received goal status...");
 
@@ -65,11 +67,12 @@ void onStartCallback(const std_msgs::Empty e)
         }else{
             ROS_ERROR("[Exploration] Failed to reach goal node...");
             global_graph.updateNewGoalFail();
-            goal = global_graph.reset();
-            exploration_goal_pub.publish(goal);
+            // goal = global_graph.reset();
+            // exploration_goal_pub.publish(goal);
+            stuck = true;
             global_graph_pub.publish(global_graph.toMsg());
-            ROS_INFO("[Exploration] Going back to parent node...");
-            status = ros::topic::waitForMessage<std_msgs::Int8>(ROBOT_GOAL_STATUS, *nh, ros::Duration(10.0));
+            // ROS_INFO("[Exploration] Going back to parent node...");
+            // status = ros::topic::waitForMessage<std_msgs::Int8>(ROBOT_GOAL_STATUS, *nh, ros::Duration(10.0));
         }
         loop_rate.sleep();
     }
