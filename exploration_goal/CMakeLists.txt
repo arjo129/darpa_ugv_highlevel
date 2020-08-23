@@ -78,5 +78,6 @@ if(TARGET ${PROJECT_NAME}-graph_test)
     ${catkin_LIBRARIES}
     Eigen3::Eigen
   )
+  add_dependencies(${PROJECT_NAME}-graph_test ${catkin_EXPORTED_TARGETS})
 endif()
 
