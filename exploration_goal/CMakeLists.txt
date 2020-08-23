@@ -61,7 +61,9 @@ target_link_libraries(graph_visualization
   Eigen3::Eigen
 )
 
-
+add_dependencies(global_graph_debug ${catkin_EXPORTED_TARGETS})
+add_dependencies(exploration_goal ${catkin_EXPORTED_TARGETS})
+add_dependencies(graph_visualization ${catkin_EXPORTED_TARGETS})
 
 #############
 ## Testing ##
@@ -76,5 +78,6 @@ if(TARGET ${PROJECT_NAME}-graph_test)
     ${catkin_LIBRARIES}
     Eigen3::Eigen
   )
+  add_dependencies(${PROJECT_NAME}-graph_test ${catkin_EXPORTED_TARGETS})
 endif()
 
