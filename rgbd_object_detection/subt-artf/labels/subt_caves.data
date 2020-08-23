@@ -1,4 +1,0 @@
-classes=5
-train=train.txt
-test=train.txt
-names=subt_cave.names
