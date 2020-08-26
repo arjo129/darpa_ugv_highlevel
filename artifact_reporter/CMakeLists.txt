@@ -9,23 +9,32 @@ find_package(catkin REQUIRED COMPONENTS
   object_detection
   subt_msgs
   geometry_msgs
+  subt_communication_broker
+  subt_ign
 )
 
-# add_dependencies(subt_msgs ${CATKIN_EXPORTED_TARGETS})
+find_package(Boost REQUIRED)
 
-catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES artifact_reporter
-#  CATKIN_DEPENDS roscpp rospy tf2 tf2_msgs
-#  DEPENDS system_lib
-)
+set(IGN_MATH_VER 6)
+find_package(ignition-math${IGN_MATH_VER} REQUIRED)
+set(IGN_MSGS_VER 4)
+find_package(ignition-msgs${IGN_MSGS_VER} REQUIRED)
+
+catkin_package()
 
 
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
 )
 
-# add_executable(${PROJECT_NAME}_node src/report_artifact_spam.cpp)
+add_executable(artifact_report_spam src/report_artifact_spam.cpp)
+add_dependencies(artifact_report_spam ${catkin_EXPORTED_TARGETS})
+
+target_link_libraries(artifact_report_spam
+  ${catkin_LIBRARIES}
+  ignition-math${IGN_MATH_VER}::ignition-math${IGN_MATH_VER}
+)
 
 

@@ -16,6 +16,8 @@
   <build_depend>object_detection</build_depend>
   <build_depend>subt_msgs</build_depend>
   <build_depend>geometry_msgs</build_depend>
+  <build_depend>subt_communication_broker</build_depend>
+  <build_depend>subt_ign</build_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
   <build_export_depend>tf2</build_export_depend>
@@ -23,6 +25,8 @@
   <build_export_depend>object_detection</build_export_depend>
   <build_export_depend>subt_msgs</build_export_depend>
   <build_export_depend>geometry_msgs</build_export_depend>
+  <build_export_depend>subt_communication_broker</build_export_depend>
+  <build_export_depend>subt_ign</build_export_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>tf2</exec_depend>
@@ -30,6 +34,8 @@
   <exec_depend>object_detection</exec_depend>
   <exec_depend>subt_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>subt_communication_broker</exec_depend>
+  <exec_depend>subt_ign</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
