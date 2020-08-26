@@ -13,6 +13,7 @@
             <rosparam param="graph_vis_topic">global_graph/vis</rosparam>
         </node>
 
+
     <!-- </group> -->
 
 </launch>
