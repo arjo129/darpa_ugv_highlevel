@@ -9,7 +9,7 @@ if __name__ == "__main__":
     rospy.init_node("breadcrumb_dropper")
     rospy.wait_for_service(robot_name+"/get_neighbour")
     rate = rospy.Rate(1)
-    dropper = rospy.Publisher(robot_name+"/breadcrumbs/deploy", Empty)
+    dropper = rospy.Publisher(robot_name+"/breadcrumb/deploy", Empty)
 
     try:
         get_neighbours  = rospy.ServiceProxy('X1/get_neighbour', neighbour)

@@ -31,7 +31,7 @@ tf::Transform invertTransform(subt_msgs::PoseFromArtifact & service)
 bool first = true;
 ros::ServiceClient client;
 tf::TransformListener* listener;
-ros::Publisher exploration_goal_pub;
+ros::Publisher exploration_goal_pub, start_publisher;
 
 void onFrontierAvailable(const sensor_msgs::PointCloud2::Ptr frontiers_ptr) {
     if(!first) return;
@@ -83,7 +83,7 @@ void onFrontierAvailable(const sensor_msgs::PointCloud2::Ptr frontiers_ptr) {
 void handover(std_msgs::Int8 reached) {
     ROS_INFO("Inside the cave. Handing over to explorer");
     std_msgs::Empty empty;
-    exploration_goal_pub.publish(empty);
+    start_publisher.publish(empty);
 }
 
 int main(int argc, char** argv) {
@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
     auto s = node.subscribe("/frontiers/local", 1, onFrontierAvailable);
     auto m = node.subscribe("/status", 2, handover);
     exploration_goal_pub = node.advertise<geometry_msgs::PointStamped>("goal_to_explore", 1);
-    auto start_publisher = node.advertise<std_msgs::Empty>("/start_exploration", 1);
+    start_publisher = node.advertise<std_msgs::Empty>("/start_exploration", 1);
     client = node.serviceClient<subt_msgs::PoseFromArtifact>("/subt/pose_from_artifact_origin");
     listener = new tf::TransformListener();
     ros::spin();
