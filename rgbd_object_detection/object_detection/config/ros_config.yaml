@@ -25,3 +25,12 @@ publishers:
         topic: /object_detector/detected
         queue_size: 1
 
+
+# 3D global point w.r.t to global TF frame will be published in the message 
+# assuming the transform lookup exists        
+enable_global_point_publish: True
+
+ros_transforms:
+    robot_frame: X1/base_link/camera_front
+    global_frame: artifact_origin
+    transform_timeout: 0.5
