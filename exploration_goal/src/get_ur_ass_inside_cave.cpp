@@ -82,7 +82,8 @@ void onFrontierAvailable(const sensor_msgs::PointCloud2::Ptr frontiers_ptr) {
 
 void handover(std_msgs::Int8 reached) {
     ROS_INFO("Inside the cave. Handing over to explorer");
-    exploration_goal_pub.publish(std_msgs::Empty());
+    std_msgs::Empty empty;
+    exploration_goal_pub.publish(empty);
 }
 
 int main(int argc, char** argv) {
