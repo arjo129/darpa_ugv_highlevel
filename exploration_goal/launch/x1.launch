@@ -42,4 +42,10 @@
   <node pkg="lidar_frontier3d" type="frontier" name="frontier_detector">
   </node>
 
+  <include file="$(find noroute_mesh)/launch/converter_service.launch"/>
+  <include file="$(find noroute_mesh)/launch/comms_node.launch">
+    <arg name="name" value="X1"/>
+    <arg name="id" value="1"/>
+  </include>
+
 </launch>
