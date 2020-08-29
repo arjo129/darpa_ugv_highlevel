@@ -202,7 +202,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: simple_cave_01
+    Fixed Frame: cave_qual
     Frame Rate: 30
   Name: root
   Tools:
