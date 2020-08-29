@@ -1,0 +1,4 @@
+string dest
+nav_msgs/OccupancyGrid grid
+---
+int32 response

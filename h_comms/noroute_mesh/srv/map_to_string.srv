@@ -1,0 +1,3 @@
+nav_msgs/OccupancyGrid grid
+---
+std_msgs/String str

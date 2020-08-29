@@ -1,0 +1,53 @@
+<launch>
+    <node pkg="exploration_goal" type="exploration_goal" name="exploration_goal" output="screen">
+    </node>
+    <node pkg="ugv_obstacle_avoidance" name="traversable_map_node" output="screen" type="traversable_map_node">
+    <remap from="lidar_input" to="X1/points"/>
+  </node>
+  
+  <node pkg="ugv_obstacle_avoidance" name="ugv_obstacle_avoidance_node" output="screen" type="ugv_obstacle_avoidance_node">
+    <remap from="traversable_pointcloud_input" to="X1/points2"/>
+    <remap from="robot_position_pose" to="integrated_to_init"/>
+    <remap from="goal_to_explore" to="goal_to_explore"/>
+  </node>
+
+
+  <node pkg="ugv_obstacle_avoidance" name="terrain_graph_node" output="screen" type="terrain_graph_node">
+    <remap from="traversable_pointcloud_input" to="X1/points2"/>
+    <remap from="robot_position_pose" to="integrated_to_init"/>
+    <remap from="goal_to_explore" to="req_local_graph"/>
+    <remap from="frontiers" to="frontiers"/>
+  </node>
+
+  <arg name="scanPeriod" default="0.1" />
+
+  <node pkg="loam_velodyne" type="multiScanRegistration" name="multiScanRegistration" output="screen">
+    <param name="lidar" value="VLP-16" /> <!-- options: VLP-16  HDL-32  HDL-64E -->
+    <param name="scanPeriod" value="$(arg scanPeriod)" />
+
+    <remap from="/multi_scan_points" to="/X1/points" />
+  </node>
+
+  <node pkg="loam_velodyne" type="laserOdometry" name="laserOdometry" output="screen" respawn="true">
+    <param name="scanPeriod" value="$(arg scanPeriod)" />
+  </node>
+
+  <node pkg="loam_velodyne" type="laserMapping" name="laserMapping" output="screen">
+    <param name="scanPeriod" value="$(arg scanPeriod)" />
+  </node>
+
+  <node pkg="loam_velodyne" type="transformMaintenance" name="transformMaintenance" output="screen">
+  </node>
+
+  <node pkg="lidar_frontier3d" type="frontier" name="frontier_detector">
+  </node>
+
+  <include file="$(find noroute_mesh)/launch/converter_service.launch"/>
+  <include file="$(find noroute_mesh)/launch/comms_node.launch">
+    <arg name="name" value="X1"/>
+    <arg name="id" value="1"/>
+  </include>
+
+  <node pkg="exploration_goal" type="defecate.py" name="defecation_agent"/>
+  <node pkg="exploration_goal" type="get_ur_ass_inside" name="get_ur_ass_inside"/>
+</launch>
