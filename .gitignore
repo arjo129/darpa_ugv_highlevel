@@ -10,3 +10,4 @@
 
 CATKIN_IGNORE
 realsense-ros/realsense-ros
+*.CATKIN_IGNORE
