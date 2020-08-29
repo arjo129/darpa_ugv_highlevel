@@ -59,9 +59,12 @@ public:
         } else if (artifact_type_str == "survivor") {
             artifact_type = subt::ArtifactType::TYPE_RESCUE_RANDY;
         } else {
+            ROS_ERROR("[Artifact-Report-Spam] Wrong class of artifact %s received. Discarded.", artifact_type_str.c_str());
             have_an_artifact_to_report = false;
             return;
         }
+        
+        ROS_INFO("[Artifact-Report-Spam] %s artifact received successfully from object detector", artifact_type_str.c_str());
 
         artifact_location = detection.global_point.point;
 
@@ -91,7 +94,7 @@ public:
 
         // report the artifact
         comms_client.SendTo(serializedData, subt::kBaseStationName);
-        ROS_INFO("%s artifact reported successfully at %f, %f, %f", artifact_type_str.c_str(), artifact_location.x,
+        ROS_INFO("[Artifact-Report-Spam] %s artifact reported successfully at %f, %f, %f", artifact_type_str.c_str(), artifact_location.x,
                                                                                        artifact_location.y,
                                                                                        artifact_location.z);
 
