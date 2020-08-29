@@ -6,8 +6,11 @@ from cv_bridge import CvBridge, CvBridgeError
 from std_msgs.msg import Header
 from sensor_msgs.msg import Image, PointCloud2
 from sensor_msgs import point_cloud2 as pcl2
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, PointStamped
 import message_filters
+
+import tf2_ros
+import tf2_geometry_msgs
 
 from object_detection.msg import DetectedObjectMsg, DetectedObjectsMsg
 from utils import utils
@@ -22,6 +25,7 @@ class ObjectDetector3D:
         rospy.loginfo("Waiting for ML model to load")
         self.object_detector = ObjectDetector()
         self.init_subscribers()
+        self.init_transforms()
 
         self.init_publishers()
         self.bridge = CvBridge()
@@ -31,6 +35,15 @@ class ObjectDetector3D:
         self.ros_config = utils.get_config('ros_config.yaml')
         self.subscribers = self.ros_config['subscribers']
         self.publishers = self.ros_config['publishers']
+        self.tf_robot_frame = self.ros_config['ros_transforms']['robot_frame']
+        self.publish_global_point = self.ros_config['enable_global_point_publish']
+
+        if (self.publish_global_point):
+            self.tf_global_frame = self.ros_config['ros_transforms']['global_frame']
+            self.tf_timeout = self.ros_config['ros_transforms']['transform_timeout']
+        else:
+            self.tf_global_frame = None
+            self.tf_timeout = None
 
         rospy.loginfo("ROS configs loaded successfully")
 
@@ -55,6 +68,29 @@ class ObjectDetector3D:
         if (self.ros_config['enable_debug_image']):
             self.debug_img_pub = rospy.Publisher(self.publishers['debug_image']['topic'], \
                 Image, queue_size=self.publishers['debug_image']['queue_size'])
+
+    def init_transforms(self):
+        self.tf_buffer = tf2_ros.Buffer(rospy.Duration(5.0))
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
+
+    def get_global_point(self, point_stamped_local):
+        if (not self.publish_global_point):
+            return PointStamped()
+        
+        try:
+            transform = self.tf_buffer.lookup_transform(self.tf_global_frame, # target frame
+                                                        self.tf_robot_frame, # source frame
+                                                        point_stamped_local.header.stamp, # look for TF at this time
+                                                        rospy.Duration(self.tf_timeout)) # waiting timeout
+
+            point_stamped_global = tf2_geometry_msgs.do_transform_point(point_stamped_local, transform)
+            return point_stamped_global
+        
+        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+            rospy.logerr("ROS TF lookup from {} to {} failed. Global frame 3D point will be null." \
+                                                            .format(self.tf_global_frame, self.tf_robot_frame))
+            return PointStamped()
+
 
     def image_cb(self, ros_img):
         try:
@@ -112,16 +148,18 @@ class ObjectDetector3D:
             header = Header()
 
             header.stamp = self.pointcloud_timestamp
-            header.frame_id = "detected_object"
+            header.frame_id = self.tf_robot_frame
 
             objects_msgs.header = header
 
             for detected_object in self.detected_objects:
-                point = Point()
-                point.x, point.y, point.z = detected_object.xyz_coord
+                local_point = Point()
+                local_point.x, local_point.y, local_point.z = detected_object.xyz_coord
 
                 msg = DetectedObjectMsg()
-                msg.point = point
+                msg.local_point.header = header
+                msg.local_point.point = local_point
+                msg.global_point = self.get_global_point(msg.local_point)
                 msg.confidence = detected_object.confidence
                 msg.class_name = detected_object.class_name
                 msg.bbox = detected_object.centered_bbox

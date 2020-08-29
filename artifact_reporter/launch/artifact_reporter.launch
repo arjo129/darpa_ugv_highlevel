@@ -1,0 +1,9 @@
+<launch>
+
+    <node pkg="artifact_reporter" name="artifact_origin_tf_node" type="artifact_origin_tf.py" output="screen">
+    </node>
+
+    <node pkg="artifact_reporter" name="artifact_report_spam_node" type="artifact_report_spam" output="screen">
+    </node>
+
+</launch>

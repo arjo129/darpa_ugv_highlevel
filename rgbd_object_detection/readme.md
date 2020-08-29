@@ -13,7 +13,12 @@ Objects detected will be published as a custom message to `/object_detector/dete
 Debug detection image feed is published to `/object_detector/debug/image_raw`.
 
 
+## YOLO Transfer Learning
+
+Transfer learning setup is done using the `subt_artf` folder (originally from robotika subt team). Basic scripts written to convert to yolo format and to train the model. Further docs in the `subt_artf` readme.
+
+
 ## TODO
 - Fix High Latency (Partly due to yolo-tiny and partly due to difficulty in synchronizing pointcloud and rgb data)
 - No global coordinate provided yet
-- No transfer learning done (yet) with images from simulator (refer to [robotika image set](https://github.com/robotika/subt-artf))
+- No 
