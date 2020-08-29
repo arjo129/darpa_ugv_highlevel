@@ -113,6 +113,8 @@ RUN [ "/bin/bash" , "-c" , \
 
 
 # When running a container start in the developer's home folder
-WORKDIR /home/$USERNAME
-
-CMD [ "bash" ]
+WORKDIR ${SOLUTION_WS_PATH}
+ENTRYPOINT [ "/bin/bash" , "-c" , \
+  "source devel/setup.bash \
+  && export  LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib\
+  && rosrun exploration_goal launch_selector.py" ]
