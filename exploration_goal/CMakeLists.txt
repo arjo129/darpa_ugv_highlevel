@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   pcl_ros
   pcl_conversions
+  subt_msgs
 )
 
 find_package(Boost REQUIRED)
