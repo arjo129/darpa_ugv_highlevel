@@ -53,10 +53,10 @@ namespace loam
     _ioRatio(ioRatio)
   {
     // initialize odometry and odometry tf messages
-    _laserOdometryMsg.header.frame_id = "/cave_qual";
+    _laserOdometryMsg.header.frame_id = "/world";
     _laserOdometryMsg.child_frame_id  = "/laser_odom";
 
-    _laserOdometryTrans.frame_id_       = "/cave_qual";
+    _laserOdometryTrans.frame_id_       = "/world";
     _laserOdometryTrans.child_frame_id_ = "/laser_odom";
   }
 

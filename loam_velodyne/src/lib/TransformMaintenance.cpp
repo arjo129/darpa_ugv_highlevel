@@ -38,10 +38,10 @@ namespace loam
 TransformMaintenance::TransformMaintenance()
 {
    // initialize odometry and odometry tf messages
-   _laserOdometry2.header.frame_id = "/cave_qual";
+   _laserOdometry2.header.frame_id = "/world";
    _laserOdometry2.child_frame_id = "/X1";
 
-   _laserOdometryTrans2.frame_id_ = "/cave_qual";
+   _laserOdometryTrans2.frame_id_ = "/world";
    _laserOdometryTrans2.child_frame_id_ = "/X1";
 }
 
