@@ -1,0 +1,5 @@
+<launch>
+    <arg name="name" />
+    <arg name="id" />
+    <node pkg="noroute_mesh" type="noroute_mesh_node" name="noroute_mesh_$(arg name)" output="screen" args="$(arg name) $(arg id)" />
+</launch>

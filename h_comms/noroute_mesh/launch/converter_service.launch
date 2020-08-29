@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="noroute_mesh" type="msg_converter.py" name="noroute_mesh_msg_converter" />
+</launch>
