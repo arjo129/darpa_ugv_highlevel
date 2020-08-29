@@ -5,11 +5,12 @@ add_compile_options(-std=c++17)
 find_package(catkin REQUIRED COMPONENTS
   graph_msgs
   roscpp
+  pcl_ros
+  pcl_conversions
 )
 
 find_package(Boost REQUIRED)
 find_package (Eigen3 REQUIRED)
-
 
 catkin_package(
 #  INCLUDE_DIRS include
@@ -39,6 +40,9 @@ add_executable(global_graph_debug
 add_executable(graph_visualization 
                 src/graph_visualization_node.cpp)
 
+add_executable(get_ur_ass_inside 
+                src/get_ur_ass_inside_cave.cpp)
+
 #target_link_libraries(
 #  ${catkin_LIBRARIES}
 #  #${PROJECT_NAME}
@@ -61,10 +65,14 @@ target_link_libraries(graph_visualization
   Eigen3::Eigen
 )
 
+target_link_libraries(get_ur_ass_inside 
+  ${catkin_LIBRARIES}
+  Eigen3::Eigen
+)
 add_dependencies(global_graph_debug ${catkin_EXPORTED_TARGETS})
 add_dependencies(exploration_goal ${catkin_EXPORTED_TARGETS})
 add_dependencies(graph_visualization ${catkin_EXPORTED_TARGETS})
-
+add_dependencies(get_ur_ass_inside ${catkin_EXPORTED_TARGETS})
 #############
 ## Testing ##
 #############
