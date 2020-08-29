@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   nav_msgs
   subt_ign
+  subt_msgs
   message_generation
   subt_communication_broker
   rospy_message_converter
