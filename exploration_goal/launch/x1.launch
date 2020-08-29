@@ -48,4 +48,6 @@
     <arg name="id" value="1"/>
   </include>
 
+  <node pkg="exploration_goal" type="defecate.py" name="defecation_agent"/>
+  <node pkg="exploration_goal" type="get_ur_ass_inside" name="get_ur_ass_inside"/>
 </launch>

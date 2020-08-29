@@ -79,12 +79,19 @@ void onFrontierAvailable(const sensor_msgs::PointCloud2::Ptr frontiers_ptr) {
     }
     
 }
+
+void handover(std_msgs::Int8 reached) {
+    ROS_INFO("Inside the cave. Handing over to explorer");
+    exploration_goal_pub.publish(std_msgs::Empty());
+}
+
 int main(int argc, char** argv) {
     ros::init(argc, argv, "get_ur_ass_inside");
     ros::NodeHandle node;
     
     ROS_INFO("waiting for frontier message");
     auto s = node.subscribe("/frontiers/local", 1, onFrontierAvailable);
+    auto m = node.subscribe("/status", 2, handover);
     exploration_goal_pub = node.advertise<geometry_msgs::PointStamped>("goal_to_explore", 1);
     auto start_publisher = node.advertise<std_msgs::Empty>("/start_exploration", 1);
     client = node.serviceClient<subt_msgs::PoseFromArtifact>("/subt/pose_from_artifact_origin");
