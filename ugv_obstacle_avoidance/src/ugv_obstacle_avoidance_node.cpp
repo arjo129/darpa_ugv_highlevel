@@ -216,7 +216,7 @@ float getForwardVelocity(std::vector<std::tuple<float,float>> &distances){
   if(current_state == VehicleState::AWAITING_INSTRUCTION) return 0;
 
     float distance_to_goal = std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y));
-    std::cout << distance_to_goal <<std::endl;
+    // std::cout << distance_to_goal <<std::endl;
    if( distance_to_goal< 2){
         std_msgs::Int8 i;
         i.data = 0;
@@ -350,7 +350,7 @@ void positionCallBack(const nav_msgs::Odometry::ConstPtr& msg){
 
 
     float distance_to_goal = std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y));
-    std::cout << distance_to_goal <<std::endl;
+    // std::cout << distance_to_goal <<std::endl;
     auto time_since_last_goal = ros::Time::now() - last_goal;
 
    if( distance_to_goal< 2 && time_since_last_goal > ros::Duration(10)){
@@ -479,6 +479,8 @@ void callback(const PointCloud::ConstPtr& msg){
   //TODO Remove the below comments
   float v = getForwardVelocity(distances);
   float w = getAngularVelocity(distances);
+
+  v = v*1.5;
 
   if(v > 1.5){
     v = 1.5;

@@ -10,6 +10,8 @@ Panels:
         - /PointCloud21
         - /Odometry2
         - /PointCloud22
+        - /PointCloud23
+        - /PointCloud24
       Splitter Ratio: 0.5
     Tree Height: 728
   - Class: rviz/Selection
@@ -30,7 +32,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: PointCloud2
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -61,13 +63,64 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
+        X1:
+          Value: true
+        X1/base_link:
+          Value: true
+        X1/base_link/camera_front:
+          Value: true
+        X1/base_link/front_cliff_laser:
+          Value: true
+        X1/base_link/front_laser:
+          Value: true
+        X1/base_link/imu_sensor:
+          Value: true
+        X1/front_left_wheel_link:
+          Value: true
+        X1/front_right_wheel_link:
+          Value: true
+        X1/rear_left_wheel_link:
+          Value: true
+        X1/rear_right_wheel_link:
+          Value: true
+        aft_mapped:
+          Value: true
+        cave_qual:
+          Value: true
+        laser_odom:
+          Value: true
+        world:
+          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        {}
+        world:
+          cave_qual:
+            X1:
+              X1/base_link:
+                X1/base_link/camera_front:
+                  {}
+                X1/base_link/front_cliff_laser:
+                  {}
+                X1/base_link/front_laser:
+                  {}
+                X1/base_link/imu_sensor:
+                  {}
+              X1/front_left_wheel_link:
+                {}
+              X1/front_right_wheel_link:
+                {}
+              X1/rear_left_wheel_link:
+                {}
+              X1/rear_right_wheel_link:
+                {}
+            aft_mapped:
+              {}
+            laser_odom:
+              {}
       Update Interval: 0
       Value: true
     - Angle Tolerance: 0.10000000149011612
@@ -87,7 +140,7 @@ Visualization Manager:
           Scale: 1
           Value: true
         Value: true
-      Enabled: true
+      Enabled: false
       Keep: 100
       Name: Odometry
       Position Tolerance: 0.10000000149011612
@@ -103,7 +156,7 @@ Visualization Manager:
         Value: Arrow
       Topic: /integrated_to_init
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -198,11 +251,80 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /global_graph/vis
+      Name: MarkerArray
+      Namespaces:
+        edges: true
+        vertices: true
+      Queue Size: 100
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.4000000059604645
+      Style: Flat Squares
+      Topic: /frontiers
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.10000000149011612
+      Style: Flat Squares
+      Topic: /X1/points2
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: simple_cave_01
+    Fixed Frame: cave_qual
     Frame Rate: 30
   Name: root
   Tools:
@@ -226,25 +348,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 34.733394622802734
+      Distance: 15.55992317199707
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: -1.772568702697754
+        Y: -2.4278481006622314
+        Z: 4.365319909993559e-6
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.080202341079712
+      Pitch: 1.2497966289520264
       Target Frame: aft_mapped
       Value: ThirdPersonFollower (rviz)
-      Yaw: 3.1622002124786377
+      Yaw: 4.347683906555176
     Saved: ~
 Window Geometry:
   Displays:

@@ -38,6 +38,7 @@ ros::Publisher pub;
 ros::Publisher pub2;
 
 std::deque<pcl::PointXYZ> allUsedFrontiers;
+std::deque<pcl::PointXYZ> globalMap;
 
 int globalGraphId = 0;
 
@@ -80,14 +81,26 @@ float getDistanceFromRobot(pcl::PointXYZ p){
     return std::sqrt( (p.z - current.z) * (p.z - current.z) + (p.y - current.y) * (p.y - current.y) + (p.x - current.x) * (p.x - current.x) );
 }
 
-float hieuristic(pcl::PointXYZ p){
-    for(auto a :allUsedFrontiers){
-      if(getDistanceBetween(a , p) < 5.00){
+bool visitedFrontiers(pcl::PointXYZ p){
+  for(auto a :allUsedFrontiers){
+      if(getDistanceBetween(a , p) < 7.50){
         std::cout << "Somewhere i have already been too" <<std::endl;
-        return 0;
+        return true;
+      }
+  }
+
+  return false;
+}
+
+float hieuristic(pcl::PointXYZ p){
+    float minDistance = INT16_MAX;
+    for(auto a :allUsedFrontiers){
+      float tempDist = getDistanceBetween(a , p);
+      if(tempDist < minDistance){
+        minDistance = tempDist;
       }
     }
-    return std::pow(getDistanceFromOrigin(p),2);
+    return getDistanceFromOrigin(p);
 }
 
 
@@ -579,6 +592,97 @@ bool Compare(pcl::PointXYZ left, pcl::PointXYZ right)
 }
 
 
+bool getPath(pcl::PointXYZ &point , tf::TransformListener* listener , std::deque<int> &singlePathToFrontier ){
+
+
+    geometry_msgs::Vector3 currentC = current;
+    geometry_msgs::Quaternion currentPoseC = currentPose;
+    geometry_msgs::Quaternion invPoseC = invPose;
+
+
+    geometry_msgs::PointStamped initial_pt; 
+    initial_pt.header.frame_id = "world";
+    initial_pt.point.x = point.x;
+    initial_pt.point.y = point.y;
+    initial_pt.point.z = point.z;
+    
+    geometry_msgs::PointStamped transformStamped;
+    listener->transformPoint("/X1", initial_pt , transformStamped);	
+     goal.x = transformStamped.point.x;
+      goal.y = transformStamped.point.y;
+      goal.z = transformStamped.point.z;
+
+
+    mColor++;
+
+
+    pcl::PointXYZ middle_point;
+    middle_point.x = goal.x;
+    middle_point.y = goal.y;
+    middle_point.z = goal.z;
+      pcl::PointXYZ start_point;
+      start_point.x = 0;
+      start_point.y = 0;
+      start_point.z = 0;
+
+
+
+
+     
+
+      
+    int countPath = 0;
+    int stateOfPathFinding = 0;
+      while(getDistanceBetween(middle_point , start_point) > 3 && stateOfPathFinding == 0){
+        stateOfPathFinding = getBestNextNode(distances , middle_point , start_point, discreteMap);
+        std::cout << stateOfPathFinding << std::endl;
+        // if(stateOfPathFinding == 2)break;
+        singlePathToFrontier.push_front(getSegmentValue(middle_point));
+
+        if(getDistanceBetween(middle_point , start_point) <= 3){
+          terrainGraph[-1].insert(getSegmentValue(middle_point));
+          std::cout << "Ending" <<std::endl;
+          
+          allUsedFrontiers.push_back(point);
+          globalMap.push_back(point);
+          // foundOnePoint = true;
+          return true;
+          break;
+        }
+      
+        geometry_msgs::PointStamped inputMPoint;
+
+        // inputMPoint.header.stamp = ros::Time::now().toNSec();
+        inputMPoint.header.frame_id = "X1";
+        inputMPoint.point.x = middle_point.x;
+        inputMPoint.point.y = middle_point.y;
+        inputMPoint.point.z = middle_point.z;
+
+        std::cout << "MIDDLE POINT" << middle_point.x << "" << middle_point.y << "" << middle_point.z << std::endl;
+// 
+        geometry_msgs::PointStamped stamped_out;
+        
+        listener->transformPoint("/world", inputMPoint , stamped_out);	
+        marker.color.r = 1.0;
+       marker.color.g = 0.0;
+       marker.color.b = 0.0;
+      marker.pose.position.x = stamped_out.point.x;
+       marker.pose.position.y = stamped_out.point.y;
+       marker.pose.position.z = stamped_out.point.z;
+             
+
+       id++;
+       marker.id = id;
+       ma.markers.push_back(marker);
+        countPath++;
+        if(countPath > 50)break;
+      }
+
+      return false;
+
+}
+
+
 
 template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontier , tf::TransformListener* listener , T& allFrontiers){
 
@@ -621,85 +725,90 @@ template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontie
         marker.id = ++id;
        ma.markers.push_back(marker);
 
-    geometry_msgs::Vector3 currentC = current;
-    geometry_msgs::Quaternion currentPoseC = currentPose;
-    geometry_msgs::Quaternion invPoseC = invPose;
+        std::deque<int> singlePathToFrontier;
+
+       foundOnePoint = getPath(point , listener ,singlePathToFrontier );
+
+//     geometry_msgs::Vector3 currentC = current;
+//     geometry_msgs::Quaternion currentPoseC = currentPose;
+//     geometry_msgs::Quaternion invPoseC = invPose;
 
 
-    geometry_msgs::PointStamped initial_pt; 
-    initial_pt.header.frame_id = "world";
-    initial_pt.point.x = point.x;
-    initial_pt.point.y = point.y;
-    initial_pt.point.z = point.z;
+//     geometry_msgs::PointStamped initial_pt; 
+//     initial_pt.header.frame_id = "world";
+//     initial_pt.point.x = point.x;
+//     initial_pt.point.y = point.y;
+//     initial_pt.point.z = point.z;
     
-    geometry_msgs::PointStamped transformStamped;
-    listener->transformPoint("/X1", initial_pt , transformStamped);	
-     goal.x = transformStamped.point.x;
-      goal.y = transformStamped.point.y;
-      goal.z = transformStamped.point.z;
+//     geometry_msgs::PointStamped transformStamped;
+//     listener->transformPoint("/X1", initial_pt , transformStamped);	
+//      goal.x = transformStamped.point.x;
+//       goal.y = transformStamped.point.y;
+//       goal.z = transformStamped.point.z;
 
 
-    mColor++;
+//     mColor++;
 
 
-    pcl::PointXYZ middle_point;
-    middle_point.x = goal.x;
-    middle_point.y = goal.y;
-    middle_point.z = goal.z;
-      pcl::PointXYZ start_point;
-      start_point.x = 0;
-      start_point.y = 0;
-      start_point.z = 0;
+//     pcl::PointXYZ middle_point;
+//     middle_point.x = goal.x;
+//     middle_point.y = goal.y;
+//     middle_point.z = goal.z;
+//       pcl::PointXYZ start_point;
+//       start_point.x = 0;
+//       start_point.y = 0;
+//       start_point.z = 0;
 
 
 
 
-      std::deque<int> singlePathToFrontier;
+//       std::deque<int> singlePathToFrontier;
 
       
-    int countPath = 0;
-    int stateOfPathFinding = 0;
-      while(getDistanceBetween(middle_point , start_point) > 3 && stateOfPathFinding == 0){
-        stateOfPathFinding = getBestNextNode(distances , middle_point , start_point, discreteMap);
-        std::cout << stateOfPathFinding << std::endl;
-        // if(stateOfPathFinding == 2)break;
-        singlePathToFrontier.push_front(getSegmentValue(middle_point));
+//     int countPath = 0;
+//     int stateOfPathFinding = 0;
+//       while(getDistanceBetween(middle_point , start_point) > 3 && stateOfPathFinding == 0){
+//         stateOfPathFinding = getBestNextNode(distances , middle_point , start_point, discreteMap);
+//         std::cout << stateOfPathFinding << std::endl;
+//         // if(stateOfPathFinding == 2)break;
+//         singlePathToFrontier.push_front(getSegmentValue(middle_point));
 
-        if(getDistanceBetween(middle_point , start_point) <= 3){
-          terrainGraph[-1].insert(getSegmentValue(middle_point));
-          std::cout << "Ending" <<std::endl;
-          foundOnePoint = true;
-          allUsedFrontiers.push_back(point);
-          break;
-        }
+//         if(getDistanceBetween(middle_point , start_point) <= 3){
+//           terrainGraph[-1].insert(getSegmentValue(middle_point));
+//           std::cout << "Ending" <<std::endl;
+//           foundOnePoint = true;
+//           allUsedFrontiers.push_back(point);
+//           globalMap.push_back(point);
+//           break;
+//         }
       
-        geometry_msgs::PointStamped inputMPoint;
+//         geometry_msgs::PointStamped inputMPoint;
 
-        // inputMPoint.header.stamp = ros::Time::now().toNSec();
-        inputMPoint.header.frame_id = "X1";
-        inputMPoint.point.x = middle_point.x;
-        inputMPoint.point.y = middle_point.y;
-        inputMPoint.point.z = middle_point.z;
+//         // inputMPoint.header.stamp = ros::Time::now().toNSec();
+//         inputMPoint.header.frame_id = "X1";
+//         inputMPoint.point.x = middle_point.x;
+//         inputMPoint.point.y = middle_point.y;
+//         inputMPoint.point.z = middle_point.z;
 
-        std::cout << "MIDDLE POINT" << middle_point.x << "" << middle_point.y << "" << middle_point.z << std::endl;
-// 
-        geometry_msgs::PointStamped stamped_out;
+//         std::cout << "MIDDLE POINT" << middle_point.x << "" << middle_point.y << "" << middle_point.z << std::endl;
+// // 
+//         geometry_msgs::PointStamped stamped_out;
         
-        listener->transformPoint("/world", inputMPoint , stamped_out);	
-        marker.color.r = 1.0;
-       marker.color.g = 0.0;
-       marker.color.b = 0.0;
-      marker.pose.position.x = stamped_out.point.x;
-       marker.pose.position.y = stamped_out.point.y;
-       marker.pose.position.z = stamped_out.point.z;
+//         listener->transformPoint("/world", inputMPoint , stamped_out);	
+//         marker.color.r = 1.0;
+//        marker.color.g = 0.0;
+//        marker.color.b = 0.0;
+//       marker.pose.position.x = stamped_out.point.x;
+//        marker.pose.position.y = stamped_out.point.y;
+//        marker.pose.position.z = stamped_out.point.z;
              
 
-       id++;
-       marker.id = id;
-       ma.markers.push_back(marker);
-        countPath++;
-        if(countPath > 30)break;
-      }
+//        id++;
+//        marker.id = id;
+//        ma.markers.push_back(marker);
+//         countPath++;
+//         if(countPath > 50)break;
+//       }
 
       if(foundOnePoint){
         finalPathToFrontier = singlePathToFrontier;
@@ -707,6 +816,17 @@ template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontie
       }
 
     }
+
+    while(!foundOnePoint && !globalMap.empty()){
+      std::cout << "AIYO SAD , GO HOME" <<std::endl;
+      globalMap.pop_back();
+      pcl::PointXYZ point = globalMap[globalMap.size()-1];
+      std::deque<int> singlePathToBackToWhereYouCameFrom;
+       foundOnePoint = getPath(point ,listener , singlePathToBackToWhereYouCameFrom );
+       finalPathToFrontier = singlePathToBackToWhereYouCameFrom ;
+    }
+
+    
 
 
 }
@@ -736,10 +856,13 @@ void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::Transfo
       continue;
     }
 
-    if (point.x * point.x + point.y * point.y + point.z * point.z < 0.0001 && point.z > 2) {
+    if (point.x * point.x + point.y * point.y + point.z * point.z < 0.0001) {
       continue;
     }
-    if(point.x < 0) continue;
+    if(point.x < 0 && point.y < 40 && point.y > -40) continue;
+    if(visitedFrontiers(point)){
+      continue;
+    }
 
     allFrontiers.push(point);
 
@@ -758,8 +881,11 @@ void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::Transfo
       finalPathToFrontier.push_front(-1);
     }
 
+    finalPathToFrontier.pop_back();
+
     for(int a = 0; a < finalPathToFrontier.size() ; a++){
       std::cout << " " << finalPathToFrontier[a] <<  " ";
+     
       }
     std::cout << std::endl;
 
@@ -799,6 +925,9 @@ void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::Transfo
         tempPt.x =pt.x;
         tempPt.y =pt.y;
         tempPt.z =pt.z;
+         if(a %3 == 2){
+          allUsedFrontiers.push_back(pt);
+        }
         gg.nodes.push_back(tempPt);
         gg.edges.push_back(graph_msgs::Edges());
         gg.edges[a].node_ids.push_back(a+1);
@@ -815,6 +944,7 @@ void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::Transfo
     
     for(auto a = 0; a < gg.nodes.size() ; a++){
       std::cout << "Node: " << a << std::endl;
+      std::cout << gg.nodes[a].x << "\t"  << gg.nodes[a].y << "\t"<< std::endl;
       for(auto b: gg.edges[a].node_ids){
         std::cout <<  b << " ";
       } 
