@@ -4,16 +4,13 @@
 #include "boost/ref.hpp"
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/PoseStamped.h"
-#include "ignition/msgs.hh"
-#include "subt_communication_broker/subt_communication_client.h"
-#include "subt_ign/CommonTypes.hh"
-#include "subt_ign/protobuf/artifact.pb.h"
 
 #include "object_detection/DetectedObjectMsg.h"
 #include "object_detection/DetectedObjectsMsg.h"
+#include "noroute_mesh/send_artifact.h"
 
-#define ROBOT_NAME "X1"
 #define DETECTIONS_TOPIC "/object_detector/detected"
+#define ARTIFACT_SRV_NAME "/X1/send_artifact"
 
 class ArtifactReport {
 
@@ -21,20 +18,22 @@ private:
     ros::NodeHandle nh;
     ros::Subscriber detection_sub;
     ros::Timer timer;
-    subt::CommsClient comms_client;
+    ros::ServiceClient artifact_srv_client;
     geometry_msgs::Point artifact_location;
-    subt::ArtifactType artifact_type;
     std::string artifact_type_str;
     bool have_an_artifact_to_report;
 public:
 
-    ArtifactReport(ros::NodeHandle nh_) : nh(nh_), comms_client(ROBOT_NAME), have_an_artifact_to_report(false)
+    ArtifactReport(ros::NodeHandle nh_) : nh(nh_), have_an_artifact_to_report(false)
     {
         // found artifacts will be attempted to be sent periodically through a timer
         timer = nh.createTimer(ros::Duration(1.0), &ArtifactReport::reportArtifacts, this);
 
-        // set up communications with the base station for artifact reporting
-        // comms_client.Bind(&BaseStationCallback, ROBOT_NAME);
+        // wait for h_comms ros service to start reporting
+        ROS_WARN("[Artifact-Report-Spam] Waiting for %s to load....", ARTIFACT_SRV_NAME);
+        artifact_srv_client = nh.serviceClient<noroute_mesh::send_artifact>(ARTIFACT_SRV_NAME);
+        ROS_INFO("[Artifact-Report-Spam] %s ROS service has loaded successfully, ready to send "
+                                        "artifact reports", ARTIFACT_SRV_NAME);
 
         detection_sub = nh.subscribe(DETECTIONS_TOPIC, 1, &ArtifactReport::objectDetectionCb, this);
     }
@@ -46,18 +45,17 @@ public:
         // for now only care about first detection
         auto detection = msg.detected_objects_msgs[0];
         std::string temp(detection.class_name.c_str());
-        artifact_type_str = temp;
 
-        if (artifact_type_str == "backpack") {
-            artifact_type = subt::ArtifactType::TYPE_BACKPACK;
-        } else if (artifact_type_str == "rope") {
-            artifact_type = subt::ArtifactType::TYPE_ROPE;
-        } else if (artifact_type_str == "helmet") {
-            artifact_type = subt::ArtifactType::TYPE_HELMET;
-        } else if (artifact_type_str == "phone") {
-            artifact_type = subt::ArtifactType::TYPE_PHONE;
-        } else if (artifact_type_str == "survivor") {
-            artifact_type = subt::ArtifactType::TYPE_RESCUE_RANDY;
+        if (temp == "backpack") {
+            artifact_type_str = "TYPE_BACKPACK";
+        } else if (temp == "rope") {
+            artifact_type_str = "TYPE_ROPE";
+        } else if (temp == "helmet") {
+            artifact_type_str = "TYPE_HELMET";
+        } else if (temp == "phone") {
+            artifact_type_str = "TYPE_PHONE";
+        } else if (temp == "survivor") {
+            artifact_type_str = "TYPE_RESCUE_RANDY";
         } else {
             ROS_ERROR("[Artifact-Report-Spam] Wrong class of artifact %s received. Discarded.", artifact_type_str.c_str());
             have_an_artifact_to_report = false;
@@ -76,27 +74,24 @@ public:
             return;
         }
 
-        ignition::msgs::Pose pose;
-        pose.mutable_position()->set_x(artifact_location.x);
-        pose.mutable_position()->set_y(artifact_location.y);
-        pose.mutable_position()->set_z(artifact_location.z);
+        noroute_mesh::send_artifact srv;
 
-        // fill the type and pose
-        subt::msgs::Artifact artifact;
-        artifact.set_type(static_cast<uint32_t>(artifact_type));
-        artifact.mutable_pose()->CopyFrom(pose);
-
-        // serialize the artifact
-        std::string serializedData;
-        if (!artifact.SerializeToString(&serializedData)) {
-            ROS_ERROR_STREAM("ArtifactReporter::ReportArtifact(): Error serializing message\n" << artifact.DebugString());
-        }
+        srv.request.type = artifact_type_str;
+        srv.request.x = artifact_location.x;
+        srv.request.y = artifact_location.y;
+        srv.request.z = artifact_location.z;
 
         // report the artifact
-        comms_client.SendTo(serializedData, subt::kBaseStationName);
-        ROS_INFO("[Artifact-Report-Spam] %s artifact reported successfully at %f, %f, %f", artifact_type_str.c_str(), artifact_location.x,
+        if (artifact_srv_client.call(srv)) {
+            ROS_INFO("[Artifact-Report-Spam] %s artifact reported successfully at %f, %f, %f", artifact_type_str.c_str(), artifact_location.x,
                                                                                        artifact_location.y,
                                                                                        artifact_location.z);
+        }
+        else {
+            ROS_ERROR("[Artifact-Report-Spam] One of 3 issues occurred while sending artifact report:\n"
+                            "1. Unknown Artifact Type Provided\n2. Error in serializing message\n3. Error sending report to base_station");
+        }
+        
 
         have_an_artifact_to_report = false;
     }
