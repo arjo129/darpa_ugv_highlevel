@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import rospy
 import json
 from rospy_message_converter import json_message_converter
@@ -19,23 +19,23 @@ def map2string(req):
     message = req.grid
     json_str = json_message_converter.convert_ros_message_to_json(message)
     r = String()
-    print(json.dumps(json_str))
+    print (json.dumps(json_str))
     r.data = "1" + json.dumps(json_str)
-    print("Converting Map to String")
+    print ("Converting Map to String")
     return r
 
 def string2map(req):
     d = json.loads(req.str.data[1:])
-    print(d)
+    print (d)
     message =  json_message_converter.convert_json_to_ros_message('nav_msgs/OccupancyGrid', d)
     res = string_to_mapResponse()
     res.grid = message
-    print("Converting String to Map")
+    print ("Converting String to Map")
     return res
 
 if __name__ == "__main__":
     rospy.init_node('ros_message_converter')
     m = rospy.Service('map_to_string', map_to_string, map2string)
     s = rospy.Service('string_to_map', string_to_map, string2map)
-    print("READY")
+    print ("READY")
     rospy.spin()

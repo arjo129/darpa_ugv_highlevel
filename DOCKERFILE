@@ -116,5 +116,5 @@ RUN [ "/bin/bash" , "-c" , \
 WORKDIR ${SOLUTION_WS_PATH}
 ENTRYPOINT [ "/bin/bash" , "-c" , \
   "source devel/setup.bash \
-  && export  LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib\
+  && export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH\
   && rosrun exploration_goal launch_selector.py" ]
