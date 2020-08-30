@@ -50,4 +50,7 @@
 
   <node pkg="exploration_goal" type="defecate.py" name="defecation_agent"/>
   <node pkg="exploration_goal" type="get_ur_ass_inside" name="get_ur_ass_inside"/>
+
+  <include file="$(find object_detection)/launch/object_detection.launch"/>
+  <include file="$(find artifact_reporter)/launch/artifact_reporter.launch"/>
 </launch>

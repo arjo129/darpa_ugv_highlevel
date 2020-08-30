@@ -1136,7 +1136,7 @@ void callback(const PointCloud::ConstPtr& msg){
 int main(int argc, char** argv)
 {
 
-  marker.header.frame_id = "simple_cave_01";
+  marker.header.frame_id = "cave_qual";
 marker.type = marker.SPHERE;
   marker.action = marker.ADD;
   marker.scale.x = 0.2;

@@ -107,12 +107,14 @@ WORKDIR ${SOLUTION_WS_PATH}
 RUN [ "/bin/bash" , "-c" , \
   "source /opt/ros/melodic/setup.bash \
   && sudo apt-get -qq update \
-  && catkin_make \
+  && catkin_make -DCMAKE_BUILD_TYPE=release \
   && sudo rm -rf /var/lib/apt/lists/* \
   && sudo apt-get -qq clean" ]
 
 
 # When running a container start in the developer's home folder
-WORKDIR /home/$USERNAME
-
-CMD [ "bash" ]
+WORKDIR ${SOLUTION_WS_PATH}
+ENTRYPOINT [ "/bin/bash" , "-c" , \
+  "source devel/setup.bash \
+  && export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH\
+  && rosrun exploration_goal launch_selector.py" ]

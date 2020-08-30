@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 import rospy
 from noroute_mesh.srv import neighbour
 from std_msgs.msg import Empty
@@ -9,7 +9,7 @@ if __name__ == "__main__":
     rospy.init_node("breadcrumb_dropper")
     rospy.wait_for_service(robot_name+"/get_neighbour")
     rate = rospy.Rate(1)
-    dropper = rospy.Publisher(robot_name+"/breadcrumbs/deploy", Empty)
+    dropper = rospy.Publisher(robot_name+"/breadcrumb/deploy", Empty)
 
     try:
         get_neighbours  = rospy.ServiceProxy('X1/get_neighbour', neighbour)
@@ -27,11 +27,11 @@ if __name__ == "__main__":
                 if num_of_drops < len(drop_points) and rssi < drop_points[num_of_drops]:
                     num_of_drops += 1
                     dropper.publish(Empty())
-                    print("dropping %f".format(num_of_drops))
+                    print ("dropping ", num_of_drops)
             else:
-                print("LOST CONTACT")
+                print ("LOST CONTACT")
 
             rate.sleep()
     except:
-        print("oops")
+        print ("oops")
         
