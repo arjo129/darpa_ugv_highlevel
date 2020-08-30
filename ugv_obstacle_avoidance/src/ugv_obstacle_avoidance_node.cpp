@@ -444,9 +444,24 @@ void callback(const PointCloud::ConstPtr& msg){
   std::vector<std::tuple<float,float>>distances;
    size_t cloudSize = out.size();
   int count = 0;
-  // extract valid points from input cloud
+  
+  //This is for timing out if a goal is unreachable
+  if(current_state != VehicleState::MOVING) {
+    geometry_msgs::Twist t;
+    t.linear.x = 0;
+    t.angular.z = 0;
+    pub_vel.publish(t);
+  }
+
+  if(ros::Time::now() - last_goal > ros::Duration(30.0)){
+    current_state  = VehicleState::AWAITING_INSTRUCTION;
+    std_msgs::Int8 in;
+    in.data = -1;
+    status_pub.publish(in);
+  } 
 
 
+// extract valid points from input cloud
   for (int i = 0; i < cloudSize; i++) {
 
     pcl::PointXYZ point;
