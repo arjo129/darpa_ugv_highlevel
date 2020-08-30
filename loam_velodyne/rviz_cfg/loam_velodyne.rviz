@@ -7,14 +7,12 @@ Panels:
         - /Global Options1
         - /Status1
         - /TF1
-        - /TF1/Status1
         - /Odometry1
         - /PointCloud21
         - /Odometry2
         - /PointCloud22
         - /PointCloud23
         - /PointCloud24
-        - /PointCloud24/Status1
       Splitter Ratio: 0.5
     Tree Height: 728
   - Class: rviz/Selection
@@ -101,29 +99,30 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
+          X1:
+            X1/base_link:
+              X1/base_link/camera_front:
+                {}
+              X1/base_link/front_cliff_laser:
+                {}
+              X1/base_link/front_laser:
+                {}
+              X1/base_link/imu_sensor:
+                {}
+            X1/front_left_wheel_link:
+              {}
+            X1/front_right_wheel_link:
+              {}
+            X1/rear_left_wheel_link:
+              {}
+            X1/rear_right_wheel_link:
+              {}
+          aft_mapped:
+            {}
           cave_qual:
-            X1:
-              X1/base_link:
-                X1/base_link/camera_front:
-                  {}
-                X1/base_link/front_cliff_laser:
-                  {}
-                X1/base_link/front_laser:
-                  {}
-                X1/base_link/imu_sensor:
-                  {}
-              X1/front_left_wheel_link:
-                {}
-              X1/front_right_wheel_link:
-                {}
-              X1/rear_left_wheel_link:
-                {}
-              X1/rear_right_wheel_link:
-                {}
-            aft_mapped:
-              {}
-            laser_odom:
-              {}
+            {}
+          laser_odom:
+            {}
       Update Interval: 0
       Value: true
     - Angle Tolerance: 0.10000000149011612
@@ -259,7 +258,8 @@ Visualization Manager:
       Marker Topic: /global_graph/vis
       Name: MarkerArray
       Namespaces:
-        {}
+        edges: true
+        vertices: true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -287,7 +287,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.4000000059604645
       Style: Flat Squares
-      Topic: /frontiers/centroid
+      Topic: /frontiers/local
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -350,7 +350,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 38.11061096191406
+      Distance: 59.96778106689453
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1

@@ -82,8 +82,8 @@ float getDistanceFromRobot(pcl::PointXYZ p){
 }
 
 bool visitedFrontiers(pcl::PointXYZ p){
-  for(auto a :allUsedFrontiers){
-      if(getDistanceBetween(a , p) < 7.50){
+  for(auto a :globalMap){
+      if(getDistanceBetween(a , p) < 5){
         std::cout << "Somewhere i have already been too" <<std::endl;
         return true;
       }
@@ -93,12 +93,16 @@ bool visitedFrontiers(pcl::PointXYZ p){
 }
 
 float hieuristic(pcl::PointXYZ p){
-    float minDistance = INT16_MAX;
+    float Distance = 0;
+    float minDist = 99999;
     for(auto a :allUsedFrontiers){
       float tempDist = getDistanceBetween(a , p);
-      if(tempDist < minDistance){
-        minDistance = tempDist;
-      }
+      Distance += tempDist;
+
+      if(tempDist < minDist)minDist = tempDist;
+    }
+    if(allUsedFrontiers.size() != 0){
+      Distance/=allUsedFrontiers.size();
     }
     return getDistanceFromOrigin(p);
 }
@@ -170,7 +174,7 @@ int getSegmentValue(pcl::PointXYZ &point){
     int numSegmentsInSemi = ((semiCircle+1) * 2 + 1)*2;
     int arcSegment = getArcSegmentFromYaw(getYaw(point) , numSegmentsInSemi );
     
-    // std::cout << semiCircle << " " << numSegmentsInSemi << " " << arcSegment << std::endl;  
+    std::cout << semiCircle << " " << numSegmentsInSemi << " " << arcSegment << std::endl;  
     
     return 2*(semiCircle+1)*(semiCircle+1) - 2 + arcSegment;
 }
@@ -262,11 +266,11 @@ float getSectionFreenessScore(std::vector<std::tuple<float,float>> &distances , 
     
     v_p.x = p.x - origin.x;
     v_p.y = p.y - origin.y;
-    v_p.z = p.z - origin.z;
+    v_p.z = 0;
 
     float v_p_mag = getMagnitude(v_p);
     
-    tf2::Vector3 v_p_unit(v_p.x / v_p_mag, v_p.y / v_p_mag,v_p.z / v_p_mag);
+    tf2::Vector3 v_p_unit(v_p.x / v_p_mag, v_p.y / v_p_mag,0);
 
 
 
@@ -286,11 +290,11 @@ float getSectionFreenessScore(std::vector<std::tuple<float,float>> &distances , 
     
     ccw_corner.x = left_vector.x() + v_p.x;
     ccw_corner.y = left_vector.y() + v_p.y;
-    ccw_corner.z = left_vector.z() + v_p.z;
+    ccw_corner.z = 0;
 
     cw_corner.x = right_vector.x() + v_p.x;
     cw_corner.y = right_vector.y() + v_p.y;
-    cw_corner.z = right_vector.z() + v_p.z;
+    cw_corner.z = 0;
     
     float lower_bound_angle = getYaw(ccw_corner);
     float upper_bound_angle = getYaw(cw_corner);
@@ -346,11 +350,12 @@ int getBestNextNode(std::vector<std::tuple<float,float>> &distances , pcl::Point
     
     v_p.x = p.x - origin.x;
     v_p.y = p.y - origin.y;
-    v_p.z = p.z - origin.z;
+    // v_p.z = p.z - origin.z;
+
 
     float v_p_mag = getMagnitude(v_p);
     
-    tf2::Vector3 v_p_unit(v_p.x / v_p_mag, v_p.y / v_p_mag, v_p.z / v_p_mag);
+    tf2::Vector3 v_p_unit(v_p.x / v_p_mag, v_p.y / v_p_mag, 0);
 
     tf2::Quaternion rot1;
     tf2::Quaternion rot2;
@@ -366,14 +371,15 @@ int getBestNextNode(std::vector<std::tuple<float,float>> &distances , pcl::Point
         tf2::Vector3 CCW_vec = tf2::quatRotate(rot1, v_p_unit);
         tf2::Vector3 CW_vec = tf2::quatRotate(rot2, v_p_unit);
         
-        pcl::PointXYZ v_intermediate_CCW(p.x - NODE_DIST * CCW_vec.x() , p.y - NODE_DIST * CCW_vec.y() , p.z - NODE_DIST * CCW_vec.z());
-        pcl::PointXYZ v_intermediate_CW(p.x - NODE_DIST * CW_vec.x() , p.y - NODE_DIST * CW_vec.y() , p.z - NODE_DIST * CW_vec.z());
+        pcl::PointXYZ v_intermediate_CCW(p.x - NODE_DIST * CCW_vec.x() , p.y - NODE_DIST * CCW_vec.y() , 0);
+        pcl::PointXYZ v_intermediate_CW(p.x - NODE_DIST * CW_vec.x() , p.y - NODE_DIST * CW_vec.y() , 0);
         
         
         //std::cout << "Score " << score << " " << total <<std::endl;
+        pcl::PointXYZ zeroPoint;
         
-        float score1 = getSectionFreenessScore(distances , v_intermediate_CCW , origin);
-        float score2 = getSectionFreenessScore(distances , v_intermediate_CW , origin);
+        float score1 = getSectionFreenessScore(distances , v_intermediate_CCW , zeroPoint);
+        float score2 = getSectionFreenessScore(distances , v_intermediate_CW , zeroPoint);
         // std::cout << i <<  score1<< score2 << std::endl;
         //std::cout << CW_vec.x() <<  " " << CW_vec.y() << " " << score1 << std::endl; 
         //std::cout << CCW_vec.x() <<  " " << CCW_vec.y() << " " << score2 << std::endl; 
@@ -399,17 +405,26 @@ int getBestNextNode(std::vector<std::tuple<float,float>> &distances , pcl::Point
         }
     
     }
-    // std::cout << bestPoint.x << " " << bestPoint.y << " " << bestPoint.z << " " << bestScore << std::endl;
+    // std::cout <<"BEst Point" << bestPoint.x << " " << bestPoint.y << " " << bestPoint.z << " " << bestScore << std::endl;
     // if(bestScore < 0.4){
     //   return pcl::PointXYZ(0,0,0);
     // }
 
-    int segForPoint = getSegmentValue(p);
+    if(bestPoint.x == 0 && bestPoint.y == 0 && bestPoint.z == 0)return 1;
+    if(bestScore < 0.5)return 1;
+    int segForPoint= -1;
+    if(p.x == 0 && p.y == 0 && p.z == 0){
+       segForPoint = -1;
+    }else{
+        segForPoint = getSegmentValue(p);
+    }
+
+    
     int seg = getSegmentValue(bestPoint);
 
-     
     
-    // std::cout << "segemnt: "<<segForPoint << std::endl;
+    
+    std::cout << "segemnt: "<<seg << std::endl;
 
     if(discreteSegmentMap.find(seg) == discreteSegmentMap.end()){
 
@@ -427,7 +442,7 @@ int getBestNextNode(std::vector<std::tuple<float,float>> &distances , pcl::Point
       if(seg == segForPoint){
         p.x = bestPoint.x;
         p.y = bestPoint.y;
-        p.z = bestPoint.z;
+        p.z = 0;
         return 0;
 
       }
@@ -440,13 +455,13 @@ int getBestNextNode(std::vector<std::tuple<float,float>> &distances , pcl::Point
         discreteSegmentMap[seg] = bestPoint;
         p.x = bestPoint.x;
         p.y = bestPoint.y;
-        p.z = bestPoint.z;
+        p.z = 0;
         return 0;
         //continue finding to startpoint
       }
       p.x = pt.x;
         p.y = pt.y;
-        p.z = pt.z;
+        p.z = 0;
       return 0; // path alr found
       
 
@@ -527,23 +542,23 @@ void processFrontiers(const sensor_msgs::PointCloud2& msg){
   
   // if(findNewFrontiers){
 
-  populateMap(discreteMap , 1000 , distances);
+  populateMap(discreteMap , 5000 , distances);
 
 
-  findNewFrontiers = false;
-  tf::TransformListener* listener = new tf::TransformListener();
-   tf::StampedTransform transform;
-  try{
-    listener->waitForTransform("/world", "/X1", ros::Time(0), ros::Duration(3.0));
-    listener->lookupTransform( "/world", "/X1", ros::Time(0), transform);
-  }
-   catch(tf::TransformException& ex){
-    ROS_ERROR("Received an exception trying to transform a point from \"world\" to \"X1\": %s", ex.what());
+  // findNewFrontiers = false;
+  // tf::TransformListener* listener = new tf::TransformListener();
+  //  tf::StampedTransform transform;
+  // try{
+  //   listener->waitForTransform("/world", "/X1", ros::Time(0), ros::Duration(3.0));
+  //   listener->lookupTransform( "/world", "/X1", ros::Time(0), transform);
+  // }
+  //  catch(tf::TransformException& ex){
+  //   ROS_ERROR("Received an exception trying to transform a point from \"world\" to \"X1\": %s", ex.what());
     
-  }
+  // }
 
-  pcl::fromROSMsg(msg, out2);
-  processFrontierPointCloud(out2, listener); 
+  // pcl::fromROSMsg(msg, out2);
+  // processFrontierPointCloud(out2, listener); 
 
 }
 
@@ -557,7 +572,7 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
     findNewFrontiers = false;
 
 
-  populateMap(discreteMap , 1000 , distances);
+  populateMap(discreteMap , 5000 , distances);
 
 
   findNewFrontiers = false;
@@ -594,6 +609,8 @@ bool Compare(pcl::PointXYZ left, pcl::PointXYZ right)
 
 bool getPath(pcl::PointXYZ &point , tf::TransformListener* listener , std::deque<int> &singlePathToFrontier ){
 
+  std::cout <<"Current Frontier Global" << point.x << " " << point.y << " " << point.z  << std::endl;
+
 
     geometry_msgs::Vector3 currentC = current;
     geometry_msgs::Quaternion currentPoseC = currentPose;
@@ -616,16 +633,24 @@ bool getPath(pcl::PointXYZ &point , tf::TransformListener* listener , std::deque
     mColor++;
 
 
-    pcl::PointXYZ middle_point;
-    middle_point.x = goal.x;
-    middle_point.y = goal.y;
-    middle_point.z = goal.z;
+    // pcl::PointXYZ middle_point;
+    // middle_point.x = goal.x;
+    // middle_point.y = goal.y;
+    // middle_point.z = goal.z;
+    //   pcl::PointXYZ start_point;
+    //   start_point.x = 0;
+    //   start_point.y = 0;
+    //   start_point.z = 0;
+
+pcl::PointXYZ local_origin;
+ pcl::PointXYZ middle_point;
+    middle_point.x = 0;
+    middle_point.y = 0;
+    middle_point.z = 0;
       pcl::PointXYZ start_point;
-      start_point.x = 0;
-      start_point.y = 0;
-      start_point.z = 0;
-
-
+      start_point.x = goal.x;
+      start_point.y = goal.x;
+      start_point.z = goal.x;
 
 
      
@@ -637,10 +662,12 @@ bool getPath(pcl::PointXYZ &point , tf::TransformListener* listener , std::deque
         stateOfPathFinding = getBestNextNode(distances , middle_point , start_point, discreteMap);
         std::cout << stateOfPathFinding << std::endl;
         // if(stateOfPathFinding == 2)break;
-        singlePathToFrontier.push_front(getSegmentValue(middle_point));
 
-        if(getDistanceBetween(middle_point , start_point) <= 3){
-          terrainGraph[-1].insert(getSegmentValue(middle_point));
+        singlePathToFrontier.push_back(getSegmentValue(middle_point));
+        // singlePathToFrontier.push_front(getSegmentValue(middle_point));
+
+        if(getDistanceBetween(middle_point , start_point) <= 3 || getDistanceBetween(middle_point , local_origin )  > getDistanceBetween(start_point , local_origin)){
+          // terrainGraph[-1].insert(getSegmentValue(middle_point));
           std::cout << "Ending" <<std::endl;
           
           allUsedFrontiers.push_back(point);
@@ -675,11 +702,44 @@ bool getPath(pcl::PointXYZ &point , tf::TransformListener* listener , std::deque
        marker.id = id;
        ma.markers.push_back(marker);
         countPath++;
-        if(countPath > 50)break;
+        if(countPath > 20)break;
+
+        std::cout << getDistanceBetween(middle_point , start_point) << "\t" << stateOfPathFinding << std::endl;
       }
 
-      return false;
+      return true;
 
+}
+
+void removeOscillations(std::deque<int> &finalPathToFrontier){
+  std::cout  << "FRONTIER MAPP BODOH" << std::endl;
+  std::set<int> temp;
+  for(auto a: finalPathToFrontier){
+    temp.insert(a);
+  }
+  // std::deque<int> tempDeque;
+  // for(auto a: temp){
+  //   tempDeque.push_back(a);
+  // }
+  finalPathToFrontier.clear();
+  int i  = 0;
+  // finalPathToFrontier.push_back(*(temp.begin()));
+  for(auto a:temp){
+    // auto pt = discreteMap[a];
+    //   auto pt2 = discreteMap[finalPathToFrontier[finalPathToFrontier.size()-1]];
+    //  if(getDistanceBetween(pt,pt2) < 3)continue;
+    //  else{
+      finalPathToFrontier.push_back(a);
+    //  }
+        
+    i++;
+  }
+  for(int a = 0; a < finalPathToFrontier.size() ; a ++){
+     
+   
+    std::cout << finalPathToFrontier[a] << " ";
+  }
+  std::cout << std::endl;
 }
 
 
@@ -817,14 +877,17 @@ template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontie
 
     }
 
-    while(!foundOnePoint && !globalMap.empty()){
-      std::cout << "AIYO SAD , GO HOME" <<std::endl;
-      globalMap.pop_back();
-      pcl::PointXYZ point = globalMap[globalMap.size()-1];
-      std::deque<int> singlePathToBackToWhereYouCameFrom;
-       foundOnePoint = getPath(point ,listener , singlePathToBackToWhereYouCameFrom );
-       finalPathToFrontier = singlePathToBackToWhereYouCameFrom ;
-    }
+    // while(!foundOnePoint && !globalMap.empty()){
+    //   std::cout << "AIYO SAD , GO HOME" <<std::endl;
+    //   globalMap.pop_back();
+    //   pcl::PointXYZ point = globalMap[globalMap.size()-1];
+    //   std::deque<int> singlePathToBackToWhereYouCameFrom;
+    //    foundOnePoint = getPath(point ,listener , singlePathToBackToWhereYouCameFrom );
+    //    finalPathToFrontier = singlePathToBackToWhereYouCameFrom ;
+    // }
+
+
+    removeOscillations(finalPathToFrontier);
 
     
 
@@ -881,9 +944,9 @@ void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::Transfo
       finalPathToFrontier.push_front(-1);
     }
 
-    finalPathToFrontier.pop_back();
+    // finalPathToFrontier.pop_back();
 
-    for(int a = 0; a < finalPathToFrontier.size() ; a++){
+    for(int a = 1; a < finalPathToFrontier.size() ; a++){
       std::cout << " " << finalPathToFrontier[a] <<  " ";
      
       }
@@ -914,7 +977,7 @@ void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::Transfo
         geometry_msgs::Point tempPt;
         tempPt.x = current.x;
         tempPt.y = current.y;
-        tempPt.z = current.z;
+        tempPt.z = 0;
         gg.nodes.push_back(tempPt);
         gg.edges.push_back(graph_msgs::Edges());
         gg.edges[a].node_ids.push_back(a+1);
@@ -924,7 +987,7 @@ void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::Transfo
         geometry_msgs::Point tempPt;
         tempPt.x =pt.x;
         tempPt.y =pt.y;
-        tempPt.z =pt.z;
+        tempPt.z =0;
          if(a %3 == 2){
           allUsedFrontiers.push_back(pt);
         }
@@ -938,7 +1001,7 @@ void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::Transfo
     geometry_msgs::Point tempPt;
     tempPt.x =pt.x;
     tempPt.y =pt.y;
-    tempPt.z =pt.z;
+    tempPt.z =0;
     gg.nodes.push_back(tempPt);
     gg.edges.push_back(graph_msgs::Edges());
     
@@ -962,6 +1025,25 @@ void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::Transfo
     globalGraphId++;
 }
 
+// pcl::PointXYZ transformPointToLocal(pcl::PointXYZ point , tf::TransformListener* listener){
+
+//   geometry_msgs::PointStamped initial_pt; 
+//   initial_pt.header.frame_id = "world";
+//   initial_pt.point.x = point.x;
+//   initial_pt.point.y = point.y;
+//   initial_pt.point.z = point.z;
+  
+//   geometry_msgs::PointStamped transformStamped;
+//   pcl::PointXYZ transformedPoint;
+//   listener->transformPoint("/X1", initial_pt , transformStamped);	
+//   transformedPoint.x = transformStamped.point.x;
+//   transformedPoint.y = transformStamped.point.y;
+//   transformedPoint.z = transformStamped.point.z;
+
+//   return transformedPoint;
+
+// }
+
 
 void callback(const PointCloud::ConstPtr& msg){
   geometry_msgs::Transform trans;
@@ -977,9 +1059,48 @@ void callback(const PointCloud::ConstPtr& msg){
    size_t cloudSize = out.size();
   int count = 0;
   // extract valid points from input cloud
-  distances.clear();		
+  distances.clear();	
 
-  for (int i = 0; i < cloudSize; i++) {
+
+  //  tf::TransformListener* listener2 = new tf::TransformListener();
+  //  tf::StampedTransform transform2;
+  // try{
+  //   listener2->waitForTransform("/world", "/X1", ros::Time(0), ros::Duration(3.0));
+  //   listener2->lookupTransform( "/world", "/X1", ros::Time(0), transform2);
+  // }
+  //  catch(tf::TransformException& ex){
+  //   ROS_ERROR("Received an exception trying to transform a point from \"world\" to \"X1\": %s", ex.what());
+    
+  // }	
+  // pcl::PointCloud<pcl::PointXYZ> out2;
+
+
+  // for (int i = 0; i < cloudSize; i++) {
+
+  //   pcl::PointXYZ point;
+  //   point.x = out[i].x;
+  //   point.y = out[i].y;
+  //   point.z = out[i].z;
+
+  //   if (!pcl_isfinite(point.x) ||
+  //       !pcl_isfinite(point.y) ||
+  //       !pcl_isfinite(point.z)) {
+  //     continue;
+  //   }
+
+  //   if (point.x * point.x + point.y * point.y + point.z * point.z < 0.0001) {
+  //     continue;
+  
+  //   }
+
+  //   auto pt2= transformPointToLocal(point , listener2);
+
+  //   out2.push_back(pt2);
+
+  // }
+
+
+  for (int i = 0; i < out.size(); i++) {
 
     pcl::PointXYZ point;
     point.x = out[i].x;
