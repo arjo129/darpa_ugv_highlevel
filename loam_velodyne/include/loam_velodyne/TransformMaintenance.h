@@ -69,6 +69,7 @@ public:
   void odomAftMappedHandler(const nav_msgs::Odometry::ConstPtr& odomAftMapped);
 
 private:
+  std::string robot_name;
   nav_msgs::Odometry _laserOdometry2;         ///< latest integrated laser odometry message
   tf::StampedTransform _laserOdometryTrans2;  ///< latest integrated laser odometry transformation
 

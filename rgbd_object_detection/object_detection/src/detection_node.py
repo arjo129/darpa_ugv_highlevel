@@ -35,12 +35,12 @@ class ObjectDetector3D:
         self.ros_config = utils.get_config('ros_config.yaml')
         self.subscribers = self.ros_config['subscribers']
         self.publishers = self.ros_config['publishers']
-        self.tf_robot_frame = self.ros_config['ros_transforms']['robot_frame']
+        self.tf_robot_frame = rospy.get_param("~robot_tf_frame")
         self.publish_global_point = self.ros_config['enable_global_point_publish']
 
         if (self.publish_global_point):
-            self.tf_global_frame = self.ros_config['ros_transforms']['global_frame']
-            self.tf_timeout = self.ros_config['ros_transforms']['transform_timeout']
+            self.tf_global_frame = rospy.get_param("~global_tf_frame")
+            self.tf_timeout = rospy.get_param("~transform_tolerance")
         else:
             self.tf_global_frame = None
             self.tf_timeout = None

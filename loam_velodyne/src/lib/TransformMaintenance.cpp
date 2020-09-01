@@ -36,27 +36,29 @@ namespace loam
 {
 
 TransformMaintenance::TransformMaintenance()
-{
-   // initialize odometry and odometry tf messages
-   _laserOdometry2.header.frame_id = "/world";
-   _laserOdometry2.child_frame_id = "/X1";
-
-   _laserOdometryTrans2.frame_id_ = "/world";
-   _laserOdometryTrans2.child_frame_id_ = "/X1";
-}
+{}
 
 
 bool TransformMaintenance::setup(ros::NodeHandle &node, ros::NodeHandle &privateNode)
 {
+   privateNode.getParam("robot_name", robot_name);
+
    // advertise integrated laser odometry topic
-   _pubLaserOdometry2 = node.advertise<nav_msgs::Odometry>("/integrated_to_init", 5);
+   _pubLaserOdometry2 = node.advertise<nav_msgs::Odometry>("integrated_to_init", 5);
 
    // subscribe to laser odometry and mapping odometry topics
    _subLaserOdometry = node.subscribe<nav_msgs::Odometry>
-      ("/laser_odom_to_init", 5, &TransformMaintenance::laserOdometryHandler, this);
+      ("laser_odom_to_init", 5, &TransformMaintenance::laserOdometryHandler, this);
 
    _subOdomAftMapped = node.subscribe<nav_msgs::Odometry>
-      ("/aft_mapped_to_init", 5, &TransformMaintenance::odomAftMappedHandler, this);
+      ("aft_mapped_to_init", 5, &TransformMaintenance::odomAftMappedHandler, this);
+
+   // initialize odometry and odometry tf messages
+   _laserOdometry2.header.frame_id = robot_name + "/world";
+   _laserOdometry2.child_frame_id = robot_name;
+
+   _laserOdometryTrans2.frame_id_ = robot_name + "/world";
+   _laserOdometryTrans2.child_frame_id_ = robot_name;
 
    return true;
 }

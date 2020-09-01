@@ -9,8 +9,8 @@
 #include "object_detection/DetectedObjectsMsg.h"
 #include "noroute_mesh/send_artifact.h"
 
-#define DETECTIONS_TOPIC "/object_detector/detected"
-#define ARTIFACT_SRV_NAME "/X1/send_artifact"
+#define DETECTIONS_TOPIC "object_detector/detected"
+#define ARTIFACT_SRV_NAME "send_artifact"
 
 class ArtifactReport {
 
