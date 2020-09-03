@@ -120,6 +120,7 @@ namespace loam
     void publishResult();
 
   private:
+    std::string robot_name;
     uint16_t _ioRatio;       ///< ratio of input to output frames
 
     ros::Time _timeCornerPointsSharp;      ///< time of current sharp corner cloud
