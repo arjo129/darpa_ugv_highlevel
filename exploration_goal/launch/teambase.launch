@@ -1,5 +1,5 @@
 <launch> 
- <!--<include file="$(find noroute_mesh)/launch/converter_service.launch"/>-->
+  <include file="$(find noroute_mesh)/launch/converter_service.launch"/>
   <include file="$(find noroute_mesh)/launch/comms_node.launch">
     <arg name="name" value="teambase"/>
     <arg name="id" value="0"/>
