@@ -1,6 +1,7 @@
 <launch>
     <arg name="robot_name" value="X2" />
 
+    <include file="$(find noroute_mesh)/launch/converter_service.launch"/>
     <include file="$(find noroute_mesh)/launch/comms_node.launch">
         <arg name="name" value="$(arg robot_name)"/>
         <arg name="id" value="2"/>
