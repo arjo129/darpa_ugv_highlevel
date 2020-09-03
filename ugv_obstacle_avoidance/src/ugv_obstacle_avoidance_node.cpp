@@ -609,8 +609,8 @@ int main(int argc, char** argv)
   ros::Subscriber sub3 = nh.subscribe("robot_position_pose", 1, positionCallBack);
   ros::Subscriber sub2 = nh.subscribe("goal_to_explore", 1, goalCallBack);
   std::printf("subscriebrs ");
-  pub_vel = nh.advertise<geometry_msgs::Twist> ("X1/cmd_vel", 1);
-  status_pub = nh.advertise<std_msgs::Int8> ("/status", 1);
+  pub_vel = nh.advertise<geometry_msgs::Twist> ("cmd_vel", 1);
+  status_pub = nh.advertise<std_msgs::Int8> ("status", 1);
   ros::spin();
 }
 

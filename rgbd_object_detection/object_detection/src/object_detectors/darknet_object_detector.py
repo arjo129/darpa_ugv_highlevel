@@ -22,7 +22,7 @@ class DarknetObjectDetector:
         self.bridge = CvBridge()
         self.detected_objects = []
 
-        self.yolo_client = SimpleActionClient('/darknet_ros/check_for_objects', CheckForObjectsAction)
+        self.yolo_client = SimpleActionClient('darknet_ros/check_for_objects', CheckForObjectsAction)
         rospy.logwarn("Waiting for darket_ros server...")
         self.yolo_client.wait_for_server()
         rospy.loginfo("darknet_ros server is up and running...")

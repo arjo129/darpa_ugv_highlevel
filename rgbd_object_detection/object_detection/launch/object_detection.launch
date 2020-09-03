@@ -1,7 +1,13 @@
 <launch>
+  <arg name="robot_name" default="X2"/>
+
 	<node pkg="object_detection" type="detection_node.py" name="object_detection_node" output="screen">
+		<param name="robot_tf_frame" value="$(arg robot_name)/base_link/camera_front" />
+		<param name="global_tf_frame" value="artifact_origin" />
+		<param name="transform_tolerance" value="0.5" />
 	</node>
 
 	<!-- Start darknet and ros wrapper -->
-    <include file="$(find darknet_ros)/launch/darknet_ros.launch" />
+    <include file="$(find darknet_ros)/launch/darknet_ros.launch">
+	</include>
 </launch>

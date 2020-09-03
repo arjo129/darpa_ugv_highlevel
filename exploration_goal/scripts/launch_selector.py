@@ -16,6 +16,7 @@ SUBT_START_SRV_NAME = "/subt/start"
 CURR_PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 TEAMBASE_LAUNCH_URI = CURR_PATH + "/launch/teambase.launch"
 X1_LAUNCH_URI = CURR_PATH + "/launch/x1.launch"
+X2_LAUNCH_URI = CURR_PATH + "/launch/x2.launch"
 launch = None
 
 def main():
@@ -40,8 +41,8 @@ def main():
         rospy.loginfo("[Launch-Selector] Subt Scoring server started")
 
         ## Start X1 launch
-        launch = roslaunch.parent.ROSLaunchParent(uuid, [X1_LAUNCH_URI])
-        rospy.loginfo("[Launch-Selector] Launching X1....")
+        launch = roslaunch.parent.ROSLaunchParent(uuid, [X1_LAUNCH_URI, X2_LAUNCH_URI])
+        rospy.loginfo("[Launch-Selector] Launching X1 and X2....")
 
     except ROSException:
         # Could not find X1 topic, so it is likely teambase docker. using Teambase launch file

@@ -83,6 +83,7 @@ namespace loam
     bool parseParams(const ros::NodeHandle& nh, RegistrationParams& config_out);
 
   private:
+    std::string robot_name;
     ros::Subscriber _subImu;                    ///< IMU message subscriber
     ros::Publisher _pubLaserCloud;              ///< full resolution cloud message publisher
     ros::Publisher _pubCornerPointsSharp;       ///< sharp corner cloud message publisher

@@ -46,6 +46,8 @@ bool ScanRegistration::parseParams(const ros::NodeHandle& nh, RegistrationParams
   int iParam = 0;
   float fParam = 0;
 
+  nh.getParam("robot_name", robot_name);
+
   if (nh.getParam("scanPeriod", fParam)) {
     if (fParam <= 0) {
       ROS_ERROR("Invalid scanPeriod parameter: %f (expected > 0)", fParam);
@@ -146,15 +148,15 @@ bool ScanRegistration::setupROS(ros::NodeHandle& node, ros::NodeHandle& privateN
     return false;
 
   // subscribe to IMU topic
-  _subImu = node.subscribe<sensor_msgs::Imu>("/imu/data", 50, &ScanRegistration::handleIMUMessage, this);
+  _subImu = node.subscribe<sensor_msgs::Imu>("imu/data", 50, &ScanRegistration::handleIMUMessage, this);
 
   // advertise scan registration topics
-  _pubLaserCloud            = node.advertise<sensor_msgs::PointCloud2>("/velodyne_cloud_2", 2);
-  _pubCornerPointsSharp     = node.advertise<sensor_msgs::PointCloud2>("/laser_cloud_sharp", 2);
-  _pubCornerPointsLessSharp = node.advertise<sensor_msgs::PointCloud2>("/laser_cloud_less_sharp", 2);
-  _pubSurfPointsFlat        = node.advertise<sensor_msgs::PointCloud2>("/laser_cloud_flat", 2);
-  _pubSurfPointsLessFlat    = node.advertise<sensor_msgs::PointCloud2>("/laser_cloud_less_flat", 2);
-  _pubImuTrans              = node.advertise<sensor_msgs::PointCloud2>("/imu_trans", 5);
+  _pubLaserCloud            = node.advertise<sensor_msgs::PointCloud2>("velodyne_cloud_2", 2);
+  _pubCornerPointsSharp     = node.advertise<sensor_msgs::PointCloud2>("laser_cloud_sharp", 2);
+  _pubCornerPointsLessSharp = node.advertise<sensor_msgs::PointCloud2>("laser_cloud_less_sharp", 2);
+  _pubSurfPointsFlat        = node.advertise<sensor_msgs::PointCloud2>("laser_cloud_flat", 2);
+  _pubSurfPointsLessFlat    = node.advertise<sensor_msgs::PointCloud2>("laser_cloud_less_flat", 2);
+  _pubImuTrans              = node.advertise<sensor_msgs::PointCloud2>("imu_trans", 5);
 
   // _pubGroundDeep            = node.advertise<sensor_msgs::PointCloud2>("/ground_data_Deep", 2);
 
@@ -190,17 +192,17 @@ void ScanRegistration::publishResult()
 {
   auto sweepStartTime = toROSTime(sweepStart());
   // publish full resolution and feature point clouds
-  publishCloudMsg(_pubLaserCloud, laserCloud(), sweepStartTime, "/X1");
-  publishCloudMsg(_pubCornerPointsSharp, cornerPointsSharp(), sweepStartTime, "/X1");
-  publishCloudMsg(_pubCornerPointsLessSharp, cornerPointsLessSharp(), sweepStartTime, "/X1");
-  publishCloudMsg(_pubSurfPointsFlat, surfacePointsFlat(), sweepStartTime, "/X1");
-  publishCloudMsg(_pubSurfPointsLessFlat, surfacePointsLessFlat(), sweepStartTime, "/X1");
+  publishCloudMsg(_pubLaserCloud, laserCloud(), sweepStartTime, robot_name);
+  publishCloudMsg(_pubCornerPointsSharp, cornerPointsSharp(), sweepStartTime, robot_name);
+  publishCloudMsg(_pubCornerPointsLessSharp, cornerPointsLessSharp(), sweepStartTime, robot_name);
+  publishCloudMsg(_pubSurfPointsFlat, surfacePointsFlat(), sweepStartTime, robot_name);
+  publishCloudMsg(_pubSurfPointsLessFlat, surfacePointsLessFlat(), sweepStartTime, robot_name);
 
   // publish corresponding IMU transformation information
-  publishCloudMsg(_pubImuTrans, imuTransform(), sweepStartTime, "/X1");
+  publishCloudMsg(_pubImuTrans, imuTransform(), sweepStartTime, robot_name);
 
 
-  // publishCloudMsg(_pubGroundDeep, laserCloudGroundScansDeep(), sweepStartTime, "/X1");
+  // publishCloudMsg(_pubGroundDeep, laserCloudGroundScansDeep(), sweepStartTime, robot_name);
 }
 
 } // end namespace loam

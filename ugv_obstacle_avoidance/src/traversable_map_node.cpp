@@ -272,7 +272,7 @@ int main(int argc, char** argv)
   // ros::Subscriber sub3 = nh.subscribe("robot_position_pose", 1, positionCallBack);
   // ros::Subscriber sub2 = nh.subscribe("goal_to_explore", 1, goalCallBack);
   std::printf("subscriebrs ");
-  pub = nh.advertise<PointCloud> ("X1/points2", 1);
+  pub = nh.advertise<PointCloud> ("points2", 1);
   // pub2 = nh.advertise<PointCloud> ("X1/points3", 1);
   // pub_vel = nh.advertise<geometry_msgs::Twist> ("X1/cmd_vel", 1);
   ros::spin();

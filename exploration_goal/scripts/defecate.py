@@ -5,15 +5,15 @@ from std_msgs.msg import Empty
 
 if __name__ == "__main__":
     drop_points = [-55, -60, -65,  -70, -75, -78, -80, -82, -84, -85, -86]
-    robot_name = "X1"
     rospy.init_node("breadcrumb_dropper")
     rospy.loginfo("Starting Node")
+    robot_name = rospy.get_param("~robot_name")
     rospy.wait_for_service(robot_name+"/get_neighbour")
     rate = rospy.Rate(10)
     dropper = rospy.Publisher(robot_name+"/breadcrumb/deploy", Empty)
     rospy.loginfo("Got comms service")
     try:
-        get_neighbours  = rospy.ServiceProxy('X1/get_neighbour', neighbour)
+        get_neighbours  = rospy.ServiceProxy(robot_name+'/get_neighbour', neighbour)
         num_of_drops = 0
         while not rospy.is_shutdown():
             res = get_neighbours()

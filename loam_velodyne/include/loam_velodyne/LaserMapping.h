@@ -111,6 +111,7 @@ protected:
    void publishResult();
 
 private:
+   std::string robot_name;
    ros::Time _timeLaserCloudCornerLast;   ///< time of current last corner cloud
    ros::Time _timeLaserCloudSurfLast;     ///< time of current last surface cloud
    ros::Time _timeLaserCloudFullRes;      ///< time of current full resolution cloud
