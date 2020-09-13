@@ -8,6 +8,8 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   pcl_conversions
   subt_msgs
+  amapper
+  map_merge
 )
 
 find_package(Boost REQUIRED)
@@ -35,6 +37,10 @@ include_directories(
 add_executable(exploration_goal
                 src/exploration_goal_node.cpp)
 
+
+add_executable(amapper_based_exploration
+                src/amapper_based_explorer.cpp)
+
 add_executable(global_graph_debug 
                 src/global_graph_node.cpp)
 
@@ -49,6 +55,11 @@ add_executable(get_ur_ass_inside
 #  #${PROJECT_NAME}
 #  Eigen3::Eigen
 #)
+
+target_link_libraries(amapper_based_exploration
+  ${catkin_LIBRARIES}
+  Eigen3::Eigen
+)
 
 target_link_libraries(global_graph_debug
   ${catkin_LIBRARIES}
