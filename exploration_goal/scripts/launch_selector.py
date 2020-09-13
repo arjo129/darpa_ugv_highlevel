@@ -22,7 +22,6 @@ launch = None
 def main():
     rospy.init_node('LaunchSelectorNode', anonymous=True)
     rospy.logwarn("[Launch-Selector] Waiting for /subt/start service to start scoring...")
-    
     rospy.wait_for_service(SUBT_START_SRV_NAME)
     
     # Start the scoring server
@@ -32,7 +31,7 @@ def main():
     subt_start_srv(start_req)
     rospy.loginfo("[Launch-Selector] Subt Scoring server started")
     uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
-    
+
 
     #Get all publishe topics, map them to a corresponding launch file
     # /X1/some_topic gets mapped to x1.launch
