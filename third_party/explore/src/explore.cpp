@@ -190,6 +190,7 @@ void Explore::makePlan()
 
   if (frontiers.empty()) {
     stop();
+    ROS_ERROR("Explored whole place");
     return;
   }
 
