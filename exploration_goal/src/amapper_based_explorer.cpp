@@ -55,7 +55,7 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
             auto norm = sqrt(gradient.x()*gradient.x() + gradient.y()*gradient.y());
             auto angle = abs(atan2(gradient.z(), norm));
 
-            if(angle > 0.61) {
+            if(angle > 0.67) {
                 steep_paths[j] = std::min(scan[i].scan.ranges[j], scan[i+1].scan.ranges[j]); 
             }
         }
@@ -83,14 +83,13 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
     debug_occupancy_topic.publish(grid->toOccupancyGrid());
 }
 
-
 int main(int argc, char** argv) {
     ros::init(argc, argv, "amapperexplorer");
     ros::NodeHandle nh;
-    debug_occupancy_topic = nh.advertise<nav_msgs::OccupancyGrid>("/X1/steepness_grid", 1);
+    debug_occupancy_topic = nh.advertise<nav_msgs::OccupancyGrid>("steepness_grid", 1);
     ros::Subscriber sub = nh.subscribe("/X1/points", 1, onRecievePointCloud);
     listener = new tf::TransformListener();
-    grid = new AMapper::Grid(0,0,5000,5000,1);
+    grid = new AMapper::Grid(0,0,15000,15000,0.3);
     grid->setFrameId("X1/world");
     ros::spin();
 }

@@ -36,8 +36,9 @@
  *********************************************************************/
 
 #include <explore/explore.h>
-
 #include <thread>
+#include <geometry_msgs/PointStamped.h>
+#define SELECTED_GOAL_TOPIC "goal_to_explore"
 
 inline static bool operator==(const geometry_msgs::Point& one,
                               const geometry_msgs::Point& two)
@@ -54,7 +55,6 @@ Explore::Explore()
   : private_nh_("~")
   , tf_listener_(ros::Duration(10.0))
   , costmap_client_(private_nh_, relative_nh_, &tf_listener_)
-  , move_base_client_("move_base")
   , prev_distance_(0)
   , last_markers_count_(0)
 {
@@ -78,13 +78,14 @@ Explore::Explore()
         private_nh_.advertise<visualization_msgs::MarkerArray>("frontiers", 10);
   }
 
-  ROS_INFO("Waiting to connect to move_base server");
-  move_base_client_.waitForServer();
-  ROS_INFO("Connected to move_base server");
 
   exploring_timer_ =
       relative_nh_.createTimer(ros::Duration(1. / planner_frequency_),
-                               [this](const ros::TimerEvent&) { makePlan(); });
+                               [this](const ros::TimerEvent&) {
+                                 ROS_DEBUG("Creating plan");
+                                 makePlan(); 
+                              });
+  exploration_goal_pub = private_nh_.advertise<geometry_msgs::PointStamped>(SELECTED_GOAL_TOPIC, 1);
 }
 
 Explore::~Explore()
@@ -231,17 +232,11 @@ void Explore::makePlan()
   }
 
   // send goal to move_base if we have something new to pursue
-  move_base_msgs::MoveBaseGoal goal;
-  goal.target_pose.pose.position = target_position;
-  goal.target_pose.pose.orientation.w = 1.;
-  goal.target_pose.header.frame_id = costmap_client_.getGlobalFrameID();
-  goal.target_pose.header.stamp = ros::Time::now();
-  move_base_client_.sendGoal(
-      goal, [this, target_position](
-                const actionlib::SimpleClientGoalState& status,
-                const move_base_msgs::MoveBaseResultConstPtr& result) {
-        reachedGoal(status, result, target_position);
-      });
+  geometry_msgs::PointStamped goal;
+  goal.header.frame_id = costmap_client_.getGlobalFrameID();
+  goal.header.stamp = ros::Time::now();
+  goal.point = target_position;
+  exploration_goal_pub.publish(goal);
 }
 
 bool Explore::goalOnBlacklist(const geometry_msgs::Point& goal)
@@ -261,15 +256,13 @@ bool Explore::goalOnBlacklist(const geometry_msgs::Point& goal)
   return false;
 }
 
-void Explore::reachedGoal(const actionlib::SimpleClientGoalState& status,
-                          const move_base_msgs::MoveBaseResultConstPtr&,
-                          const geometry_msgs::Point& frontier_goal)
+void Explore::reachedGoal()
 {
-  ROS_DEBUG("Reached goal with status: %s", status.toString().c_str());
+  /*ROS_DEBUG("Reached goal with status: %s", status.toString().c_str());
   if (status == actionlib::SimpleClientGoalState::ABORTED) {
     frontier_blacklist_.push_back(frontier_goal);
     ROS_DEBUG("Adding current goal to black list");
-  }
+  }*/
 
   // find new goal immediatelly regardless of planning frequency.
   // execute via timer to prevent dead lock in move_base_client (this is
@@ -287,7 +280,7 @@ void Explore::start()
 
 void Explore::stop()
 {
-  move_base_client_.cancelAllGoals();
+  //move_base_client_.cancelAllGoals();
   exploring_timer_.stop();
   ROS_INFO("Exploration stopped.");
 }
@@ -302,6 +295,7 @@ int main(int argc, char** argv)
     ros::console::notifyLoggerLevelsChanged();
   }
   explore::Explore explore;
+  explore.start();
   ros::spin();
 
   return 0;
