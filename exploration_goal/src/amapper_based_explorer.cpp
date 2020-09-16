@@ -15,7 +15,7 @@ ros::Publisher debug_occupancy_topic;
 pcl::PointXYZ scanPointToPointCloud(sensor_msgs::LaserScan& scan, int index, double azimuth);
 
 void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
-    
+    ROS_INFO("Recieved scan");
     //Find current robot pose
     tf::StampedTransform robot_pose;
     try {
@@ -79,7 +79,14 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
         if(!grid->isWithinGridCellMap(x, y)) continue;
         if(steep_paths[i] != 0)grid->data[y][x] = 255;
     }
-    
+
+    for(int i = -200; i < 200; i++) {
+        auto y = grid->toYIndex(i);
+        auto x = grid->toXIndex(-5);
+        grid->data[y][x] = 100; // Don't go exploring the staging area you peice of shit
+    }
+
+    ROS_INFO("Updated costmap");
 }
 
 int main(int argc, char** argv) {
@@ -88,7 +95,7 @@ int main(int argc, char** argv) {
     debug_occupancy_topic = nh.advertise<nav_msgs::OccupancyGrid>("steepness_grid", 1);
     ros::Subscriber sub = nh.subscribe("/X1/points", 1, onRecievePointCloud);
     listener = new tf::TransformListener();
-    grid = new AMapper::Grid(0,0,15000,15000,0.3);
+    grid = new AMapper::Grid(0,0,5000,5000,1);
     grid->setFrameId("X1/world");
     ros::Rate r(10);
     while(ros::ok()) {

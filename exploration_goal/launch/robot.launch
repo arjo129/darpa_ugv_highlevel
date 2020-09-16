@@ -24,8 +24,8 @@
             <param name="costmap_topic" value="steepness_grid"/>
             <param name="costmap_updates_topic" value="$(arg robot_name)/map_updates"/>
             <param name="visualize" value="true"/>
-            <param name="planner_frequency" value="0.05"/>
-            <param name="progress_timeout" value="120.0"/>
+            <param name="planner_frequency" value="0.02"/>
+            <param name="progress_timeout" value="30.0"/>
             <param name="potential_scale" value="3.0"/>
             <param name="orientation_scale" value="0.0"/>
             <param name="gain_scale" value="1.0"/>
@@ -52,9 +52,9 @@
             <arg name="robot_name" value="$(arg robot_name)" />
         </include>
 
-        <include file="$(find global_planner)/launch/ugv.launch">
+        <!--<include file="$(find global_planner)/launch/ugv.launch">
             <arg name="robot_name" value="$(arg robot_name)" />
-        </include>
+        </include>-->
     </group>
 
 </launch>

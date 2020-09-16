@@ -10,7 +10,7 @@ AMapper::Grid* grid;
 tf::TransformListener* listener;
 std::vector<geometry_msgs::PointStamped> path;
 ros::Publisher local_planner;
-
+nav_msgs::OccupancyGrid latest_occupancy_map;
 struct CellDetail {
     int prev_idx_x, prev_idx_y;
     double g = INFINITY, h=INFINITY;
@@ -74,16 +74,17 @@ void planRoute(size_t start_x, size_t start_y, size_t goal_x, size_t goal_y) {
     size_t final_x, final_y;
     bool solution_found = false;
     auto start_plan = ros::Time::now();
-    
-    while(!open_list.empty() && ros::Time::now()-start_plan > ros::Duration(30)) {
+
+    while(!open_list.empty() && ros::Time::now()-start_plan < ros::Duration(30)) {
         auto current = *open_list.begin();
         auto x = current.second.first;
         auto y = current.second.second;
         open_list.erase(open_list.begin());
         closed_set.emplace(y, x);
+        ROS_DEBUG("Exploring %d %d", x,y);
         //closed_set.erase(std::make_pair(y,x));
-        if(euclideanDistance(x,y, goal_x, goal_y) < 5) {
-            ROS_INFO("Reached %d %d", x,y);
+        if(euclideanDistance(x,y, goal_x, goal_y) < 3) {
+            ROS_DEBUG("Reached %d %d", x,y);
 
             final_x = x;
             final_y = y;
@@ -91,30 +92,30 @@ void planRoute(size_t start_x, size_t start_y, size_t goal_x, size_t goal_y) {
             open_list.clear();
             break; 
         }
-        for(int i = -1; i <= 1; i++) {
-            for(int j = -1; j <= 1; j++) {
-                auto curr_x = x + i, curr_y = y + j;
+        int dir[][2] = {{0,1},{1,0},{-1,0},{0,-1}, {1,1} ,{-1,-1}, {1,-1}, {-1,1}};
+        for(auto movement: dir) {
+           
+            auto curr_x = x + movement[0], curr_y = y + movement[1];
 
-                if(!isValid(curr_y, curr_x) || (i ==0 && j == 0)) {
-                    continue;
-                }
-                if(closed_set.count(std::make_pair(curr_y,curr_x))>0) continue;
-                if(grid->data[curr_y][curr_x] != 0) {
-                    closed_set.emplace(curr_y,curr_x);
-                    continue; //TODO check surrounding area also
-                }
-                auto tentative_score = cells[y][x].g + 1; 
-                if(cells[curr_y][curr_x].g >= tentative_score && cells[curr_y][curr_x].init) continue;
-                cells[curr_y][curr_x].prev_idx_x = x;
-                cells[curr_y][curr_x].prev_idx_y = y;
-                cells[curr_y][curr_x].g = tentative_score;
-                cells[curr_y][curr_x].h = euclideanDistance(curr_x, curr_y, goal_x, goal_y);
-                cells[curr_y][curr_x].init = true;
-
-                
-                open_list.insert(std::make_pair(cells[curr_y][curr_x].get_f(),std::make_pair(curr_x, curr_y)));
-                
+            if(!isValid(curr_y, curr_x)) {
+                continue;
             }
+            if(closed_set.count(std::make_pair(curr_y,curr_x))>0) continue;
+            if(grid->data[curr_y][curr_x] != 0) {
+                closed_set.emplace(curr_y,curr_x);
+                ROS_DEBUG("Obstacle at %d %d", curr_x, curr_y);
+                continue; //TODO check surrounding area also
+            }
+            auto tentative_score = cells[y][x].g + 1; 
+            if(cells[curr_y][curr_x].g >= tentative_score && cells[curr_y][curr_x].init) continue;
+            cells[curr_y][curr_x].prev_idx_x = x;
+            cells[curr_y][curr_x].prev_idx_y = y;
+            cells[curr_y][curr_x].g = tentative_score;
+            cells[curr_y][curr_x].h = euclideanDistance(curr_x, curr_y, goal_x, goal_y);
+            cells[curr_y][curr_x].init = true;
+
+            open_list.insert(std::make_pair(cells[curr_y][curr_x].get_f(),std::make_pair(curr_x, curr_y)));
+
         }
     }
 
@@ -166,6 +167,13 @@ void executeRoute() {
     path.pop_back();
 }
 
+void debugPath() {
+
+    for(auto p: path){
+        std::cout << p <<std::endl;
+    }
+}
+
 void onRecieveNewPoint(geometry_msgs::PointStamped goal) {
     
     //Acquire robot pose
@@ -192,6 +200,7 @@ void onRecieveNewPoint(geometry_msgs::PointStamped goal) {
     ROS_INFO("Attempting to plan route");
     planRoute(start_x, start_y, goal_x, goal_y);
     executeRoute();
+    debugPath();
 }
 
 void onRecieveMap(nav_msgs::OccupancyGrid occupancy_map){
@@ -218,18 +227,28 @@ int main(int argc, char** argv) {
     ros::Subscriber map_sub = nh.subscribe("global_map", 1, onRecieveMap);
     ros::Subscriber feedback_sub = nh.subscribe("feedback", 1, onReachDestination);
     local_planner = nh.advertise<geometry_msgs::PointStamped>("local_plan", 1);
-
+    ros::Rate r(10.0);
     while(ros::ok()) {
         ros::spinOnce();
+        r.sleep();
     }
 }
 
 /*
 int main(int argc, char** argv) {
+    ros::init(argc, argv, "global_planner_test");
+    ros::NodeHandle nh;
     grid = new AMapper::Grid(0,0,20,20,1);
     for(int i =0;i < 20; i++){
         for(int j=0; j <20;j++)
         grid->data[i][j] = 0;
     }
-    planRoute(0, 0, 9, 9);
+     for(int j=1; j <20;j++) {
+         grid->data[10][j] = 100;
+     }
+    planRoute(0, 0, 19, 19);
+
+    for(auto p: path){
+        std::cout << p <<std::endl;
+    }
 }*/
