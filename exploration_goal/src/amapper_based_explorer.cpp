@@ -79,8 +79,7 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
         if(!grid->isWithinGridCellMap(x, y)) continue;
         if(steep_paths[i] != 0)grid->data[y][x] = 255;
     }
-
-    debug_occupancy_topic.publish(grid->toOccupancyGrid());
+    
 }
 
 int main(int argc, char** argv) {
@@ -91,5 +90,10 @@ int main(int argc, char** argv) {
     listener = new tf::TransformListener();
     grid = new AMapper::Grid(0,0,15000,15000,0.3);
     grid->setFrameId("X1/world");
-    ros::spin();
+    ros::Rate r(10);
+    while(ros::ok()) {
+        ros::spinOnce();
+        r.sleep();
+        debug_occupancy_topic.publish(grid->toOccupancyGrid());
+    }
 }

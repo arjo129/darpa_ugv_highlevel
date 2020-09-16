@@ -51,6 +51,10 @@
         <include file="$(find ugv_obstacle_avoidance)/launch/ugv_obstacle_avoidance.launch">
             <arg name="robot_name" value="$(arg robot_name)" />
         </include>
+
+        <include file="$(find global_planner)/launch/ugv.launch">
+            <arg name="robot_name" value="$(arg robot_name)" />
+        </include>
     </group>
 
 </launch>
