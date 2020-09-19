@@ -5,11 +5,11 @@
 #include <std_msgs/Int8.h>
 #include <set>
 #include <unordered_set>
-
+#include <std_msgs/Empty.h>
 AMapper::Grid* grid;
 tf::TransformListener* listener;
 std::vector<geometry_msgs::PointStamped> path;
-ros::Publisher local_planner;
+ros::Publisher local_planner, next_location_req;
 nav_msgs::OccupancyGrid latest_occupancy_map;
 struct CellDetail {
     int prev_idx_x, prev_idx_y;
@@ -121,6 +121,10 @@ void planRoute(size_t start_x, size_t start_y, size_t goal_x, size_t goal_y) {
 
     if(!solution_found) {
         ROS_ERROR("A* could not find a solution!!");
+        ROS_ERROR("Reasons: ");
+        ROS_ERROR("Destination color: %d", (int)grid->data[goal_y][goal_x]);
+        ROS_ERROR("Current color: %d", (int)grid->data[start_y][start_x]);
+        ROS_ERROR("Time out: %f", (ros::Time::now()-start_plan).toSec());
         //Clean up
         for(int i =0;i < grid->gridHeight;i++) {
             delete cells[i];
@@ -159,6 +163,8 @@ void planRoute(size_t start_x, size_t start_y, size_t goal_x, size_t goal_y) {
 
 void executeRoute() {
     if(path.size() == 0) {
+        std_msgs::Empty e;
+        next_location_req.publish(e);
         ROS_ERROR("No path to execute");
         return;
     }
@@ -227,6 +233,7 @@ int main(int argc, char** argv) {
     ros::Subscriber map_sub = nh.subscribe("global_map", 1, onRecieveMap);
     ros::Subscriber feedback_sub = nh.subscribe("feedback", 1, onReachDestination);
     local_planner = nh.advertise<geometry_msgs::PointStamped>("local_plan", 1);
+    next_location_req = nh.advertise<std_msgs::Empty>("explore/request", 1);
     ros::Rate r(10.0);
     while(ros::ok()) {
         ros::spinOnce();
