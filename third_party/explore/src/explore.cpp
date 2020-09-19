@@ -86,11 +86,17 @@ Explore::Explore()
                                  makePlan(); 
                               });
   exploration_goal_pub = private_nh_.advertise<geometry_msgs::PointStamped>(SELECTED_GOAL_TOPIC, 1);
+  planner_status = private_nh_.subscribe("request", 1, &Explore::requestGoal, this);
 }
 
 Explore::~Explore()
 {
   stop();
+}
+
+void Explore::requestGoal(std_msgs::Empty empty) {
+  ROS_DEBUG("Requesting goal");
+  reachedGoal();
 }
 
 void Explore::visualizeFrontiers(
@@ -188,8 +194,9 @@ void Explore::makePlan()
     ROS_DEBUG("frontier %zd cost: %f", i, frontiers[i].cost);
   }
 
+  ROS_DEBUG("Checking if frontier available");
   if (frontiers.empty()) {
-    stop();
+    //stop();
     ROS_ERROR("Explored whole place");
     return;
   }
@@ -200,11 +207,12 @@ void Explore::makePlan()
   }
 
   // find non blacklisted frontier
-  auto frontier =
-      std::find_if_not(frontiers.begin(), frontiers.end(),
+  ROS_DEBUG("Checking if blacklisted");
+  auto frontier = frontiers.begin();
+      /*std::find_if_not(frontiers.begin(), frontiers.end(),
                        [this](const frontier_exploration::Frontier& f) {
                          return goalOnBlacklist(f.centroid);
-                       });
+                       });*/
   if (frontier == frontiers.end()) {
     stop();
     return;
@@ -221,9 +229,9 @@ void Explore::makePlan()
   }
   // black list if we've made no progress for a long time
   if (ros::Time::now() - last_progress_ > progress_timeout_) {
-    frontier_blacklist_.push_back(target_position);
-    ROS_DEBUG("Adding current goal to black list");
-    makePlan();
+    //frontier_blacklist_.push_back(target_position);
+    //ROS_DEBUG("Adding current goal to black list");
+    //makePlan();
     return;
   }
 
@@ -272,6 +280,7 @@ void Explore::reachedGoal()
   oneshot_ = relative_nh_.createTimer(
       ros::Duration(0, 0), [this](const ros::TimerEvent&) { makePlan(); },
       true);
+  oneshot_.start();
 }
 
 void Explore::start()

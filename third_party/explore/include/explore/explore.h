@@ -45,6 +45,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <move_base_msgs/MoveBaseAction.h>
+#include <std_msgs/Empty.h>
 #include <ros/ros.h>
 #include <visualization_msgs/MarkerArray.h>
 
@@ -81,12 +82,15 @@ private:
 
   void reachedGoal();
 
+  void requestGoal(std_msgs::Empty empty);
+
   bool goalOnBlacklist(const geometry_msgs::Point& goal);
 
   ros::NodeHandle private_nh_;
   ros::NodeHandle relative_nh_;
   ros::Publisher marker_array_publisher_;
   ros::Publisher exploration_goal_pub;
+  ros::Subscriber planner_status;
   tf::TransformListener tf_listener_;
 
   Costmap2DClient costmap_client_;
