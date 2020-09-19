@@ -52,9 +52,9 @@
             <arg name="robot_name" value="$(arg robot_name)" />
         </include>
 
-        <!--<include file="$(find global_planner)/launch/ugv.launch">
+        <include file="$(find global_planner)/launch/ugv.launch">
             <arg name="robot_name" value="$(arg robot_name)" />
-        </include>-->
+        </include>
     </group>
 
 </launch>
