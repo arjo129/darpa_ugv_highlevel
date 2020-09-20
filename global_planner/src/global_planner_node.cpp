@@ -238,7 +238,6 @@ void onRecieveNewPoint(geometry_msgs::PointStamped goal) {
 void onRecieveMap(nav_msgs::OccupancyGrid occupancy_map){
     delete grid;
     grid = new AMapper::Grid(occupancy_map);
-    ROS_INFO("Recieved occupancy grid");
 }
 
 void onReachDestination(std_msgs::Int8 status) {

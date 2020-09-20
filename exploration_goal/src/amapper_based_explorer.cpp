@@ -80,13 +80,12 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
         if(steep_paths[i] != 0)grid->data[y][x] = 255;
     }
 
-    for(int i = -200; i < 200; i++) {
+    for(float i = -50; i < 50; i+= grid->getResolution()){
         auto y = grid->toYIndex(i);
-        auto x = grid->toXIndex(-5);
+        auto x = grid->toXIndex(-1);
         grid->data[y][x] = 100; // Don't go exploring the staging area you peice of shit
     }
 
-    ROS_INFO("Updated costmap");
 }
 
 int main(int argc, char** argv) {
@@ -95,7 +94,7 @@ int main(int argc, char** argv) {
     debug_occupancy_topic = nh.advertise<nav_msgs::OccupancyGrid>("steepness_grid", 1);
     ros::Subscriber sub = nh.subscribe("/X1/points", 1, onRecievePointCloud);
     listener = new tf::TransformListener();
-    grid = new AMapper::Grid(0,0,5000,5000,1);
+    grid = new AMapper::Grid(0,0,5000,5000,0.6);
     grid->setFrameId("X1/world");
     ros::Rate r(10);
     while(ros::ok()) {
