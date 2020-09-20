@@ -208,13 +208,12 @@ void Explore::makePlan()
 
   // find non blacklisted frontier
   ROS_DEBUG("Checking if blacklisted");
-  auto frontier = frontiers.begin();
-      /*std::find_if_not(frontiers.begin(), frontiers.end(),
+  auto frontier = std::find_if_not(frontiers.begin(), frontiers.end(),
                        [this](const frontier_exploration::Frontier& f) {
                          return goalOnBlacklist(f.centroid);
-                       });*/
+                       });
   if (frontier == frontiers.end()) {
-    stop();
+    //stop();
     return;
   }
   geometry_msgs::Point target_position = frontier->centroid;
@@ -229,9 +228,9 @@ void Explore::makePlan()
   }
   // black list if we've made no progress for a long time
   if (ros::Time::now() - last_progress_ > progress_timeout_) {
-    //frontier_blacklist_.push_back(target_position);
-    //ROS_DEBUG("Adding current goal to black list");
-    //makePlan();
+    frontier_blacklist_.push_back(target_position);
+    ROS_DEBUG("Adding current goal to black list");
+    makePlan();
     return;
   }
 

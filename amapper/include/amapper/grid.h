@@ -52,6 +52,10 @@ namespace AMapper {
         std::string getFrameId();
         
         /**
+         * Get the resolution of the grid
+         */
+        float getResolution(); 
+        /**
          * Convert to occupancy grid
          */ 
         nav_msgs::OccupancyGrid toOccupancyGrid();

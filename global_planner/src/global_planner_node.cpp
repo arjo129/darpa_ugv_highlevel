@@ -5,6 +5,7 @@
 #include <std_msgs/Int8.h>
 #include <set>
 #include <unordered_set>
+#include <queue>
 #include <std_msgs/Empty.h>
 AMapper::Grid* grid;
 tf::TransformListener* listener;
@@ -50,6 +51,29 @@ double euclideanDistance(int start_x, int start_y, int goal_x, int goal_y) {
 double euclideanDistance(geometry_msgs::PointStamped pt1, geometry_msgs::PointStamped pt2) {
     double r = (pt1.point.x - pt2.point.x)*(pt1.point.x - pt2.point.x) + (pt1.point.y - pt2.point.y)*(pt1.point.y - pt2.point.y);
     return sqrt(r);
+}
+
+std::pair<size_t, size_t> findNearestEmptyPoint(size_t goal_x, size_t goal_y) {
+    int dir[][2] = {{0,1},{1,0},{-1,0},{0,-1}, {1,1} ,{-1,-1}, {1,-1}, {-1,1}};
+    std::queue<std::pair<size_t, size_t> > q;
+    q.emplace(goal_x, goal_y);
+    std::pair<size_t,size_t> target;
+    while(!q.empty()) {
+        auto x = q.front();
+        q.pop();
+        
+        if(grid->data[x.second][x.first] == 0) {
+            target = x;
+            break;
+        }
+        
+        for(auto d: dir) {
+            std::pair<size_t, size_t> next(x.first+d[0], x.second+d[1]);
+            if(!isValid(next.first, next.second)) continue;
+            q.push(next);
+        }
+    }
+    return target;
 }
 
 void planRoute(size_t start_x, size_t start_y, size_t goal_x, size_t goal_y) {
@@ -181,12 +205,12 @@ void debugPath() {
 }
 
 void onRecieveNewPoint(geometry_msgs::PointStamped goal) {
-    
+    ROS_INFO("Recieved new goal");
     //Acquire robot pose
     tf::StampedTransform robot_pose;
     try {
-        listener->waitForTransform("X1/base_link", grid->getFrameId(), goal.header.stamp, ros::Duration(1.0));
-        listener->lookupTransform("X1/base_link", grid->getFrameId(), goal.header.stamp, robot_pose);
+        listener->waitForTransform(grid->getFrameId(), "X1/base_link", goal.header.stamp, ros::Duration(1.0));
+        listener->lookupTransform(grid->getFrameId(), "X1/base_link", goal.header.stamp, robot_pose);
     } catch (tf::TransformException ex) {
         ROS_ERROR("Failed to transform node %s", ex.what());
         return;
@@ -196,15 +220,17 @@ void onRecieveNewPoint(geometry_msgs::PointStamped goal) {
         ROS_ERROR("Please pass the goal in %s frame for now", grid->getFrameId().c_str());
         return;
     }
-
+    ROS_INFO("Current Robot Pose %f %f", robot_pose.getOrigin().x(), robot_pose.getOrigin().y());
     auto start_x = grid->toXIndex(robot_pose.getOrigin().x());
-    auto start_y = grid->toYIndex(robot_pose.getOrigin().x());
+    auto start_y = grid->toYIndex(robot_pose.getOrigin().y());
 
     auto goal_x = grid->toXIndex(goal.point.x);
     auto goal_y = grid->toYIndex(goal.point.y);
 
     ROS_INFO("Attempting to plan route");
-    planRoute(start_x, start_y, goal_x, goal_y);
+    auto safest_spot = findNearestEmptyPoint(goal_x, goal_y);
+    auto safest_start = findNearestEmptyPoint(start_x, start_y);
+    planRoute(safest_start.first, safest_start.second, safest_spot.first, safest_spot.second);
     executeRoute();
     debugPath();
 }
@@ -217,6 +243,8 @@ void onRecieveMap(nav_msgs::OccupancyGrid occupancy_map){
 
 void onReachDestination(std_msgs::Int8 status) {
     if(path.size() == 0) {
+        std_msgs::Empty e;
+        next_location_req.publish(e);
         ROS_ERROR("No path to execute");
         return;
     }

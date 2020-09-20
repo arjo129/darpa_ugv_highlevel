@@ -94,6 +94,10 @@ void Grid::clear() {
     }
 }
 
+float Grid::getResolution() {
+    return resolution;
+}
+
 Grid::~Grid() {
     for(int i =0;i < this->gridHeight;i++) {
         delete this->data[i];
