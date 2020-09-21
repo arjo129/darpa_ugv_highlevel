@@ -232,6 +232,11 @@ float getForwardVelocity(std::vector<std::tuple<float,float>> &distances){
         i.data = -1;
         status_pub.publish(i);
         current_state = VehicleState::AWAITING_INSTRUCTION; 
+      ROS_ERROR("Time out");
+       geometry_msgs::Twist t;
+    t.linear.x = 0;
+    t.angular.z = 0;
+    pub_vel.publish(t);
      return 0;
    }
 

@@ -247,6 +247,14 @@ void onReachDestination(std_msgs::Int8 status) {
         ROS_ERROR("No path to execute");
         return;
     }
+    if(status.data < 0) {
+        ROS_ERROR("Error on local planner");
+        auto goal = path[0];
+        //path.clear();
+        goal.header.stamp = ros::Time::now();
+        onRecieveNewPoint(goal);
+        return;
+    }
     local_planner.publish(path[path.size()-1]);
     path.pop_back();
 }

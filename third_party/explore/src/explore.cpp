@@ -198,7 +198,6 @@ void Explore::makePlan()
     ROS_DEBUG("frontier %zd cost: %f", i, frontiers[i].cost);
   }
 
-  ROS_DEBUG("Checking if frontier available");
   if (frontiers.empty()) {
     //stop();
     ROS_ERROR("Explored whole place");
@@ -297,10 +296,11 @@ void Explore::reachedGoal()
   // execute via timer to prevent dead lock in move_base_client (this is
   // callback for sendGoal, which is called in makePlan). the timer must live
   // until callback is executed.
-  oneshot_ = relative_nh_.createTimer(
+  /*oneshot_ = relative_nh_.createTimer(
       ros::Duration(0, 0), [this](const ros::TimerEvent&) { makePlan(); },
       true);
-  oneshot_.start();
+  oneshot_.start();*/
+  makePlan();
 }
 
 void Explore::start()
