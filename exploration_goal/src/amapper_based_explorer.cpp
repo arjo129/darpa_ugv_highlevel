@@ -1,18 +1,51 @@
 #include <ros/ros.h>
 #include <map_merge/laser_operations.h>
 #include <amapper/grid.h>
-#include <amapper/raytracers/NoClearingRaytracer.h> //TODO Implement custom raytracer
+#include <amapper/raytracers/NaiveRaytracer.h> //TODO Implement custom raytracer
+#include <amapper/RayTracer.h>
 #include <tf/transform_listener.h>
 #include <tf2/exceptions.h>
 #include <pcl/point_cloud.h>
 #include <pcl_ros/point_cloud.h>
 #include <pcl_conversions/pcl_conversions.h>
-
+#include <unordered_set>
 AMapper::Grid* grid;
 tf::TransformListener* listener;
 ros::Publisher debug_occupancy_topic;
 //Private API inside laser_operations
 pcl::PointXYZ scanPointToPointCloud(sensor_msgs::LaserScan& scan, int index, double azimuth);
+struct pair_hash
+{
+	template <class T1, class T2>
+	std::size_t operator () (std::pair<T1, T2> const &pair) const
+	{
+		std::size_t h1 = std::hash<T1>()(pair.first);
+		std::size_t h2 = std::hash<T2>()(pair.second);
+
+		return h1 ^ h2;
+	}
+};
+
+class MultiLayerRaytracer : public AMapper::RayTracer {
+    private:
+    std::unordered_set<std::pair<int,int>, pair_hash> current_scan;
+    /**
+     * @param occupancy grid
+     * @param centroid Current robot position
+     * @param X, Y - Target coordinates
+     */ 
+    void plotFreeSpace(AMapper::Grid& grid, Eigen::Vector2i centroid, int x, int y) override {
+        auto exists = current_scan.find(std::make_pair(x,y));
+        if(exists == current_scan.end()){
+            if(grid.data[y][x] <= 0)
+                grid.data[y][x] = 0;
+            else
+                grid.data[y][x] -= 5;
+
+        }
+        current_scan.emplace(x,y);
+    }    
+};
 
 void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
     ROS_INFO("Recieved scan");
@@ -62,7 +95,7 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
     }
 
     //Raytracer 
-    AMapper::NoClearingRaytracer raytracer;
+    MultiLayerRaytracer raytracer;
     float curr_angle = start_ang;
     auto origin = robot_pose.getOrigin();
     auto rotation = robot_pose.getRotation();
@@ -94,7 +127,7 @@ int main(int argc, char** argv) {
     debug_occupancy_topic = nh.advertise<nav_msgs::OccupancyGrid>("steepness_grid", 1);
     ros::Subscriber sub = nh.subscribe("/X1/points", 1, onRecievePointCloud);
     listener = new tf::TransformListener();
-    grid = new AMapper::Grid(0,0,5000,5000,0.6);
+    grid = new AMapper::Grid(0,0,5000,5000,0.3);
     grid->setFrameId("X1/world");
     ros::Rate r(10);
     while(ros::ok()) {
