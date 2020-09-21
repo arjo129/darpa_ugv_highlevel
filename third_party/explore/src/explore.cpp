@@ -87,6 +87,10 @@ Explore::Explore()
                               });
   exploration_goal_pub = private_nh_.advertise<geometry_msgs::PointStamped>(SELECTED_GOAL_TOPIC, 1);
   planner_status = private_nh_.subscribe("request", 1, &Explore::requestGoal, this);
+
+  last_position_.setX(0);
+  last_position_.setY(0);
+  last_position_.setZ(0);
 }
 
 Explore::~Explore()
@@ -214,6 +218,7 @@ void Explore::makePlan()
                        });
   if (frontier == frontiers.end()) {
     //stop();
+    ROS_ERROR("No new frontiers found");
     return;
   }
   geometry_msgs::Point target_position = frontier->centroid;
@@ -245,6 +250,8 @@ void Explore::makePlan()
   goal.header.stamp = ros::Time::now();
   goal.point = target_position;
   exploration_goal_pub.publish(goal);
+
+  //current_goal_.setOrigin(target_position.x, target_position.y, target_position.z);  
 }
 
 bool Explore::goalOnBlacklist(const geometry_msgs::Point& goal)
@@ -271,6 +278,20 @@ void Explore::reachedGoal()
     frontier_blacklist_.push_back(frontier_goal);
     ROS_DEBUG("Adding current goal to black list");
   }*/
+  tf::StampedTransform robot_pose;
+  try {
+    auto now = ros::Time::now();
+    tf_listener_.waitForTransform(costmap_client_.getGlobalFrameID(), "X1/base_link", now, ros::Duration(1.0));
+    tf_listener_.lookupTransform(costmap_client_.getGlobalFrameID(), "X1/base_link", now, robot_pose);
+  } catch (tf::TransformException ex) {
+    ROS_ERROR("Failed to transform node %s", ex.what());
+  }
+  auto position = robot_pose.getOrigin();
+  if(position.distance(last_position_) < 5) {
+    frontier_blacklist_.push_back(prev_goal_);
+    ROS_WARN("Adding current goal to black list due to unreachability");
+  }
+  last_position_ = position;
 
   // find new goal immediatelly regardless of planning frequency.
   // execute via timer to prevent dead lock in move_base_client (this is

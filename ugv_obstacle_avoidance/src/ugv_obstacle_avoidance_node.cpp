@@ -23,7 +23,7 @@
 #define _lowerBound -15.0
 #define _upperBound 15.0
 #define nScanRings 16
-#define MAX_TIME  30
+#define MAX_TIME  15
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
  tf::TransformListener* listener;
@@ -363,7 +363,6 @@ void positionCallBack(const nav_msgs::Odometry::ConstPtr& msg){
         i.data = 0;
         status_pub.publish(i);
         current_state = VehicleState::AWAITING_INSTRUCTION;  
-        ROS_INFO("Already there bro\n");
    }
 
     // std::cout << "Current goal" << goal.x << ", " << goal.y << "| " << current.x << ", " << current.y <<std::endl;

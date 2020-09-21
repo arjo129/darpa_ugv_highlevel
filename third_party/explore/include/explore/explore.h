@@ -48,6 +48,7 @@
 #include <std_msgs/Empty.h>
 #include <ros/ros.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <tf/transform_listener.h>
 
 #include <explore/costmap_client.h>
 #include <explore/frontier_search.h>
@@ -109,6 +110,9 @@ private:
   double potential_scale_, orientation_scale_, gain_scale_;
   ros::Duration progress_timeout_;
   bool visualize_;
+
+  //Stuck detector
+  tf::Vector3 last_position_;
 };
 }
 
