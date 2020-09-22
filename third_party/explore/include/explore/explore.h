@@ -109,6 +109,7 @@ private:
   double planner_frequency_;
   double potential_scale_, orientation_scale_, gain_scale_;
   ros::Duration progress_timeout_;
+  ros::Time last_request_;
   bool visualize_;
 
   //Stuck detector

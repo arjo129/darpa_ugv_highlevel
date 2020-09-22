@@ -91,6 +91,8 @@ Explore::Explore()
   last_position_.setX(0);
   last_position_.setY(0);
   last_position_.setZ(0);
+
+  last_request_ = ros::Time::now();
 }
 
 Explore::~Explore()
@@ -100,6 +102,7 @@ Explore::~Explore()
 
 void Explore::requestGoal(std_msgs::Empty empty) {
   ROS_DEBUG("Requesting goal");
+  
   reachedGoal();
 }
 
@@ -189,6 +192,12 @@ void Explore::visualizeFrontiers(
 
 void Explore::makePlan()
 {
+  auto now =ros::Time::now();
+  if(now - last_request_ < ros::Duration(1.5)) {
+    ROS_ERROR("Too many goal requests. Rate limiting.");
+    return;
+  }
+  last_request_ = now;
   // find frontiers
   auto pose = costmap_client_.getRobotPose();
   // get frontiers sorted according to cost
@@ -325,7 +334,7 @@ int main(int argc, char** argv)
     ros::console::notifyLoggerLevelsChanged();
   }
   explore::Explore explore;
-  explore.start();
+  //explore.start();
   ros::spin();
 
   return 0;

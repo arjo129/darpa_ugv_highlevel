@@ -85,14 +85,23 @@ void planRoute(size_t start_x, size_t start_y, size_t goal_x, size_t goal_y) {
         cells[i] = new CellDetail[grid->gridWidth];
     }
 
+    bool** closed_set = new bool*[grid->gridHeight];
+    for(int i = 0; i < grid->gridHeight; i++) {
+        closed_set[i] = new bool[grid->gridWidth];
+        for(int j = 0 ; j < grid->gridWidth; j++){
+            closed_set[i][j] = false;
+        }
+    }
+
+
     //A* Algorithm
     ROS_INFO("Began Search for goal %d, %d", goal_x, goal_y);
     std::set<GridPoint> open_list;
-    std::unordered_set<std::pair<size_t, size_t>, pair_hash> closed_set;
+    //std::unordered_set<std::pair<size_t, size_t>, pair_hash> closed_set;
     cells[start_y][start_x].g = 0;
     cells[start_y][start_x].h = euclideanDistance(start_x, start_y, goal_x, goal_y);
     cells[start_y][start_x].init = true;
-    closed_set.emplace(start_y, start_x);
+    closed_set[start_y][start_x] = true;
     open_list.insert(std::make_pair(cells[start_y][start_x].get_f(), std::make_pair(start_x, start_y)));
     
     size_t final_x, final_y;
@@ -104,7 +113,7 @@ void planRoute(size_t start_x, size_t start_y, size_t goal_x, size_t goal_y) {
         auto x = current.second.first;
         auto y = current.second.second;
         open_list.erase(open_list.begin());
-        closed_set.emplace(y, x);
+        closed_set[y][x] = true;
         ROS_DEBUG("Exploring %d %d", x,y);
         //closed_set.erase(std::make_pair(y,x));
         if(euclideanDistance(x,y, goal_x, goal_y) < 3) {
@@ -124,9 +133,9 @@ void planRoute(size_t start_x, size_t start_y, size_t goal_x, size_t goal_y) {
             if(!isValid(curr_y, curr_x)) {
                 continue;
             }
-            if(closed_set.count(std::make_pair(curr_y,curr_x))>0) continue;
+            if(closed_set[curr_y][curr_x]) continue;
             if(grid->data[curr_y][curr_x] != 0) {
-                closed_set.emplace(curr_y,curr_x);
+                closed_set[curr_y][curr_x] = true;
                 ROS_DEBUG("Obstacle at %d %d", curr_x, curr_y);
                 continue; //TODO check surrounding area also
             }
@@ -169,7 +178,7 @@ void planRoute(size_t start_x, size_t start_y, size_t goal_x, size_t goal_y) {
         if(path.size() == 0) {
             path.push_back(pt);
         }
-        else if(euclideanDistance(path[path.size()-1], pt) > 3) {
+        else if(euclideanDistance(path[path.size()-1], pt) > 1.5) {
             path.push_back(pt);
         }
         auto next_x = cells[curr_y][curr_x].prev_idx_x;
@@ -183,6 +192,10 @@ void planRoute(size_t start_x, size_t start_y, size_t goal_x, size_t goal_y) {
         delete cells[i];
     }
     delete cells;
+    for(int i =0;i < grid->gridHeight;i++) {
+        delete closed_set[i];
+    }
+    delete closed_set;
 }
 
 void executeRoute() {
