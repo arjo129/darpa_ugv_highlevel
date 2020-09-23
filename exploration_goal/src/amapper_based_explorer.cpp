@@ -88,7 +88,7 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
             auto norm = sqrt(gradient.x()*gradient.x() + gradient.y()*gradient.y());
             auto angle = abs(atan2(gradient.z(), norm));
 
-            if(angle > 0.67) {
+            if(angle > 0.8) {
                 steep_paths[j] = std::min(scan[i].scan.ranges[j], scan[i+1].scan.ranges[j]); 
             }
         }
@@ -115,7 +115,7 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
 
     for(float i = -50; i < 50; i+= grid->getResolution()){
         auto y = grid->toYIndex(i);
-        auto x = grid->toXIndex(-1);
+        auto x = grid->toXIndex(-0.5);
         grid->data[y][x] = 100; // Don't go exploring the staging area you peice of shit
     }
 
