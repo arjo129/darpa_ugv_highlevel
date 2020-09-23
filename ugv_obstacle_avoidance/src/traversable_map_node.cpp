@@ -31,6 +31,9 @@ pcl::PointCloud<pcl::PointXYZ> out;
 ros::Publisher pub2;
 pcl::PointCloud<pcl::PointXYZ> out2;
 
+tf::StampedTransform robot_pose;
+tf::TransformListener* listener;
+
 float getDistanceBetween(pcl::PointXYZ p1 , pcl::PointXYZ p2){
     // std::cout << p1.x << " " << p1.y << " " << p1.z <<std::endl;
     // std::cout << p2.x << " " << p2.y << " " << p2.z <<std::endl;
@@ -48,10 +51,17 @@ float distanceFromOrigin(float *p, bool plane){
 }
 
 bool steep(float *p1 , float *p2){
-  float angle = std::atan(  std::fabs(p2[2]- p1[2]) / std::sqrt((p2[1]- p1[1]) * (p2[1]- p1[1]) + (p2[0]- p1[0]) * (p2[0]- p1[0]) )  );
+
+  tf::Vector3 p1_global, p2_global;
+  tf::Vector3 p1_local(p1[0], p1[1], p1[2]), p2_local(p2[0], p2[1], p2[2]);
+
+  p1_global = robot_pose*p1_local;
+  p2_global = robot_pose*p2_local;
+  
+  float angle = std::atan(  std::fabs(p2_global.z()- p1_global.z()) / std::sqrt((p2_global.y()- p1_global.y()) * (p2_global.y()- p1_global.y()) + (p2_global.x()- p1_global.x()) * (p2_global.x() - p1_global.x()) )  );
 
 
-  if(angle > 0.80 || distanceFromOrigin(p2 , true) < distanceFromOrigin(p1 ,true)){
+  if(angle > 0.70 || distanceFromOrigin(p2 , true) < distanceFromOrigin(p1 ,true)){
     return true;
   }else{
     return false;
@@ -126,6 +136,18 @@ void callback(const PointCloud::ConstPtr& msg){
   trans.rotation.z = 0;
   trans.rotation.w = 1;
   pcl_ros::transformPointCloud	(*msg , out , trans);
+
+   try {
+      ros::Time time = pcl_conversions::fromPCL(msg->header.stamp);
+      listener->waitForTransform("X1/world", "X1/base_link", time, ros::Duration(1.0));
+      listener->lookupTransform("X1/world", "X1/base_link", time, robot_pose);
+  }catch(tf::LookupException ex){
+      ROS_ERROR("Failed to lookup %s", ex.what());
+      return;
+  }catch(tf2::TransformException ex ){
+      ROS_ERROR("Failed to lookup %s", ex.what());
+      return;
+  } 
 
    size_t cloudSize = out.size();
   int count = 0;
@@ -266,6 +288,7 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "sub_pcl");
   ros::NodeHandle nh;
 
+  listener = new tf::TransformListener();
 
   std::printf("subscriebrs ");
   ros::Subscriber sub = nh.subscribe<PointCloud>("lidar_input", 1, callback);
