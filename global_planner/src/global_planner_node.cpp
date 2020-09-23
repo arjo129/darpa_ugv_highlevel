@@ -7,6 +7,10 @@
 #include <unordered_set>
 #include <queue>
 #include <std_msgs/Empty.h>
+#include <chrono>
+#include <sys/time.h>
+#include <sys/resource.h>
+
 AMapper::Grid* grid;
 tf::TransformListener* listener;
 std::vector<geometry_msgs::PointStamped> path;
@@ -106,9 +110,12 @@ void planRoute(size_t start_x, size_t start_y, size_t goal_x, size_t goal_y) {
     
     size_t final_x, final_y;
     bool solution_found = false;
-    auto start_plan = ros::Time::now();
 
-    while(!open_list.empty() && ros::Time::now()-start_plan < ros::Duration(30)) {
+    //Time out using system clock as ros clock uses sim time which may depend on resources
+    auto start_plan = std::chrono::system_clock::now();
+    std::chrono::seconds time_limit(10);
+
+    while(!open_list.empty() && std::chrono::system_clock::now()-start_plan < time_limit) {
         auto current = *open_list.begin();
         auto x = current.second.first;
         auto y = current.second.second;
@@ -157,7 +164,7 @@ void planRoute(size_t start_x, size_t start_y, size_t goal_x, size_t goal_y) {
         ROS_ERROR("Reasons: ");
         ROS_ERROR("Destination color: %d", (int)grid->data[goal_y][goal_x]);
         ROS_ERROR("Current color: %d", (int)grid->data[start_y][start_x]);
-        ROS_ERROR("Time out: %f", (ros::Time::now()-start_plan).toSec());
+        //ROS_ERROR("Time out: %f", );
         //Clean up
         for(int i =0;i < grid->gridHeight;i++) {
             delete cells[i];
@@ -274,6 +281,7 @@ void onReachDestination(std_msgs::Int8 status) {
 
 int main(int argc, char** argv) {
     ros::init(argc, argv, "global_planner");
+    //getrlimit();
     ros::NodeHandle nh;
     listener = new tf::TransformListener;
     grid = new AMapper::Grid(0,0,20,20,1);
