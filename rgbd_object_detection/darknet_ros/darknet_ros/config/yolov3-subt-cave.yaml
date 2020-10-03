@@ -1,9 +1,9 @@
 yolo_model:
 
   config_file:
-    name: yolov3-subt-cave.cfg
+    name: yolov3-tiny-subt-cave.cfg
   weight_file:
-    name: 23082020-yolov3-subt-cave.weights
+    name: 20200929-yolov3-tiny-subt-cave.weights
   threshold:
     value: 0.1
   detection_classes:
