@@ -1,11 +1,12 @@
 <launch>
   <arg name="robot_name" default="X1"/>
- 
+  <group ns="$(arg robot_name)">
   <node pkg="global_planner" name="global_planner_node" output="screen" type="global_planner_node" respawn="true" launch-prefix="gdb -ex run --args"> 
     <remap from="goal" to="explore/goal_to_explore"/>
     <remap from="global_map" to="steepness_grid"/>
     <remap from="feedback" to="status"/>
     <remap from="local_plan" to="local/goal_to_explore"/>
   </node>
+  </group>
 
 </launch>

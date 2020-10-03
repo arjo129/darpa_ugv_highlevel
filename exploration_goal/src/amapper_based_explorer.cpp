@@ -1,3 +1,6 @@
+#define ANGLE 0.2 //Radians
+#define DECAY_RATE 1 // Between 0 -100. 100 should be amultiple of the number
+#define DISTANCE_TO_CLEAR 10//
 #include <ros/ros.h>
 #include <map_merge/laser_operations.h>
 #include <amapper/grid.h>
@@ -9,7 +12,7 @@
 #include <pcl_ros/point_cloud.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <unordered_set>
-AMapper::Grid* grid;
+AMapper::Grid* grid, last_sent_grid;
 tf::TransformListener* listener;
 ros::Publisher debug_occupancy_topic;
 //Private API inside laser_operations
@@ -36,11 +39,12 @@ class MultiLayerRaytracer : public AMapper::RayTracer {
      */ 
     void plotFreeSpace(AMapper::Grid& grid, Eigen::Vector2i centroid, int x, int y) override {
         auto exists = current_scan.find(std::make_pair(x,y));
+        Eigen::Vector2i v(x,y);
         if(exists == current_scan.end()){
-            if(grid.data[y][x] <= 0)
+            if(grid.data[y][x] <= 0 && (centroid -v).norm()*grid.getResolution() < DISTANCE_TO_CLEAR)
                 grid.data[y][x] = 0;
-            else
-                grid.data[y][x] -= 5;
+            else if(grid.data[y][x] > 0 && (centroid -v).norm()*grid.getResolution() > 3)
+                grid.data[y][x] -= DECAY_RATE;
 
         }
         current_scan.emplace(x,y);
@@ -64,7 +68,7 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
     } 
 
     //Look for steep points on LiDAR
-    static LidarScan scan; //Static is used to preserve the lidar settings so next time we don't need to realliocate memory
+    static LidarScan scan; //Static is used to preserve the lidar settings so next time we don't need to reallocate memory
     decomposeLidarScanIntoPlanes(pcloud, scan);
     std::reverse(scan.begin(), scan.end());    
     float start_ang = scan[0].scan.angle_min, increment = scan[0].scan.angle_increment; 
@@ -88,9 +92,18 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
             auto norm = sqrt(gradient.x()*gradient.x() + gradient.y()*gradient.y());
             auto angle = abs(atan2(gradient.z(), norm));
 
-            if(angle > 0.8) {
-                steep_paths[j] = std::min(scan[i].scan.ranges[j], scan[i+1].scan.ranges[j]); 
+            auto p1_dist_sq = p1.x*p1.x + p1.y*p1.y;
+            auto p2_dist_sq = p2.x*p2.x + p2.y*p2.y; 
+
+            if(angle > ANGLE) {
+                if (steep_paths[j] != 0){
+                    steep_paths[j] = std::min(std::min(scan[i].scan.ranges[j], scan[i+1].scan.ranges[j]), steep_paths[j]);
+                }
+                else {
+                    steep_paths[j] = std::min(scan[i].scan.ranges[j], scan[i+1].scan.ranges[j]);
+                }
             }
+
         }
     }
 
@@ -119,6 +132,10 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
         grid->data[y][x] = 100; // Don't go exploring the staging area you peice of shit
     }
 
+}
+
+void onRecieveUpdate(nav_msgs::OccupancyGrid grid) {
+    
 }
 
 int main(int argc, char** argv) {

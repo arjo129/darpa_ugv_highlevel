@@ -72,12 +72,18 @@ namespace AMapper {
             return isWithin(x, xAnchor - gridMetricWidth / 2.0, xAnchor + gridMetricWidth / 2.0) && 
                 isWithin(y, yAnchor - gridMetricHeight / 2.0, yAnchor + gridMetricHeight / 2.0);
         }
-
+        
+        /**
+         * 
+         */ 
         inline bool isWithinGridCellMap(int x_idx, int y_idx) {
             return isWithin(x_idx, 0, gridWidth - 1) && 
                    isWithin(y_idx, 0, gridHeight - 1);
         }
 
+        /**
+         * Converts world coordinmate in y axis to map y axis
+         */ 
         inline int toYIndex(float yValue) {
             return this->gridHeight/2 + (int)round((yValue-yAnchor)/resolution);
         }

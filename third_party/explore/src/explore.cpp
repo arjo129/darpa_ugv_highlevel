@@ -38,6 +38,7 @@
 #include <explore/explore.h>
 #include <thread>
 #include <geometry_msgs/PointStamped.h>
+#include <tf/tf.h>
 #define SELECTED_GOAL_TOPIC "goal_to_explore"
 
 inline static bool operator==(const geometry_msgs::Point& one,
@@ -71,7 +72,7 @@ Explore::Explore()
 
   search_ = frontier_exploration::FrontierSearch(costmap_client_.getCostmap(),
                                                  potential_scale_, gain_scale_,
-                                                 min_frontier_size);
+                                                 min_frontier_size, orientation_scale_);
 
   if (visualize_) {
     marker_array_publisher_ =
@@ -201,7 +202,7 @@ void Explore::makePlan()
   // find frontiers
   auto pose = costmap_client_.getRobotPose();
   // get frontiers sorted according to cost
-  auto frontiers = search_.searchFrom(pose.position);
+  auto frontiers = search_.searchFrom(pose.position, pose.orientation);
   ROS_DEBUG("found %lu frontiers", frontiers.size());
   for (size_t i = 0; i < frontiers.size(); ++i) {
     ROS_DEBUG("frontier %zd cost: %f", i, frontiers[i].cost);

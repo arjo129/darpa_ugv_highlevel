@@ -16,6 +16,8 @@ tf::TransformListener* listener;
 std::vector<geometry_msgs::PointStamped> path;
 ros::Publisher local_planner, next_location_req;
 nav_msgs::OccupancyGrid latest_occupancy_map;
+
+
 struct CellDetail {
     int prev_idx_x, prev_idx_y;
     double g = INFINITY, h=INFINITY;
@@ -27,6 +29,12 @@ struct CellDetail {
     }
 };
 
+class InvalidLocationException: std::exception {
+public:
+    const char * what () const throw () {
+      return "Target was too far from known map";
+   }
+};
 typedef std::pair<double, std::pair<int, int>> GridPoint;
 
 struct pair_hash
@@ -69,6 +77,10 @@ std::pair<size_t, size_t> findNearestEmptyPoint(size_t goal_x, size_t goal_y) {
         if(grid->data[x.second][x.first] == 0) {
             target = x;
             break;
+        }
+
+        if(euclideanDistance(x.first, x.second, goal_x, goal_y) > 5) {
+            throw InvalidLocationException();
         }
         
         for(auto d: dir) {
@@ -248,11 +260,17 @@ void onRecieveNewPoint(geometry_msgs::PointStamped goal) {
     auto goal_y = grid->toYIndex(goal.point.y);
 
     ROS_INFO("Attempting to plan route");
-    auto safest_spot = findNearestEmptyPoint(goal_x, goal_y);
-    auto safest_start = findNearestEmptyPoint(start_x, start_y);
-    planRoute(safest_start.first, safest_start.second, safest_spot.first, safest_spot.second);
-    executeRoute();
-    debugPath();
+    try{
+        auto safest_spot = findNearestEmptyPoint(goal_x, goal_y);
+        auto safest_start = findNearestEmptyPoint(start_x, start_y);
+        planRoute(safest_start.first, safest_start.second, safest_spot.first, safest_spot.second);
+        executeRoute();
+        debugPath();
+    } catch (InvalidLocationException il) {
+        ROS_ERROR("Goal set is unreachable... Requesting new goal");
+        std_msgs::Empty e;
+        next_location_req.publish(e);
+    }
 }
 
 void onRecieveMap(nav_msgs::OccupancyGrid occupancy_map){

@@ -5,6 +5,7 @@
 #include <costmap_2d/cost_values.h>
 #include <costmap_2d/costmap_2d.h>
 #include <geometry_msgs/Point.h>
+#include <tf/tf.h>
 
 #include <explore/costmap_tools.h>
 
@@ -16,17 +17,20 @@ using costmap_2d::FREE_SPACE;
 
 FrontierSearch::FrontierSearch(costmap_2d::Costmap2D* costmap,
                                double potential_scale, double gain_scale,
-                               double min_frontier_size)
+                               double min_frontier_size, double orientation_scale)
   : costmap_(costmap)
   , potential_scale_(potential_scale)
   , gain_scale_(gain_scale)
   , min_frontier_size_(min_frontier_size)
+  , orientation_scale_(orientation_scale)
 {
 }
 
-std::vector<Frontier> FrontierSearch::searchFrom(geometry_msgs::Point position)
+std::vector<Frontier> FrontierSearch::searchFrom(geometry_msgs::Point position, geometry_msgs::Quaternion qt)
 {
   std::vector<Frontier> frontier_list;
+  robot_orientation_ = qt;
+  robot_position_ = position;
 
   // Sanity check that robot is inside costmap bounds before searching
   unsigned int mx, my;
@@ -190,8 +194,22 @@ bool FrontierSearch::isNewFrontierCell(unsigned int idx,
 
 double FrontierSearch::frontierCost(const Frontier& frontier)
 {
+  tf::Quaternion qt(robot_orientation_.x, robot_orientation_.y, robot_orientation_.z, robot_orientation_.w);
+  tf::Matrix3x3 m(qt);
+  double roll, pitch, yaw;
+  m.getRPY(roll, pitch, yaw);
+
+  tf::Vector3 frontier_centroid(frontier.centroid.x, frontier.centroid.y, 0);
+  //TODO Transform centroid to robot local frame
+  tf::Vector3 robot_position(robot_position_.x, robot_position_.y, 0);
+  auto frontier_in_local_frame = (frontier_centroid - robot_position).normalize();
+  
+  tf::Vector3 axis(cos(yaw), sin(yaw), 0);
+  auto orientation = frontier_in_local_frame.dot(axis);
+
   return (potential_scale_ * frontier.min_distance *
           costmap_->getResolution()) -
-         (gain_scale_ * frontier.size * costmap_->getResolution());
+          gain_scale_ * frontier.size * costmap_->getResolution()
+          + orientation * orientation_scale_;
 }
 }
