@@ -37,7 +37,7 @@
 	<node pkg="aerial_obstacle_avoidance" type="apf_planner" name="apf_planner" output="screen">
 		<param name="cmd_vel_topic_" value="/$(arg robot_name)/cmd_vel" />
 		<param name="base_link_" value="/$(arg robot_name)/base_link" />
-		<param name="goal_sub_topic_" value="/clicked_point" />
+		<param name="goal_sub_topic_" value="/$(arg robot_name)/local/goal_to_explore" />
 		<param name="obs_sub_topic_" value="octomap_full" />
 		<param name="rate" value="10" />
 	</node>

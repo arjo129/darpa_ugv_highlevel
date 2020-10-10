@@ -160,7 +160,7 @@ int main(int argc, char** argv) {
     listener = new tf::TransformListener();
     grid = new AMapper::Grid(0,0,5000,5000,0.3);
     grid->setFrameId("X1/world");
-    ros::Duration start_delay(30);
+    ros::Duration start_delay(10);
     start_delay.sleep();
     ros::Rate r(2);
     while(ros::ok()) {
