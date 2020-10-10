@@ -227,7 +227,9 @@ void Explore::makePlan()
                        });
   if (frontier == frontiers.end()) {
     //stop();
-    ROS_ERROR("No new frontiers found");
+    ROS_ERROR("No new frontiers found.. Clearing blacklists for luck");
+    frontier_blacklist_.clear();
+    makePlan();
     return;
   }
   geometry_msgs::Point target_position = frontier->centroid;
@@ -243,7 +245,7 @@ void Explore::makePlan()
   // black list if we've made no progress for a long time
   if (ros::Time::now() - last_progress_ > progress_timeout_) {
     frontier_blacklist_.push_back(target_position);
-    ROS_DEBUG("Adding current goal to black list");
+    ROS_DEBUG("Adding current goal to black list due to timeout.");
     makePlan();
     return;
   }
@@ -296,7 +298,7 @@ void Explore::reachedGoal()
     ROS_ERROR("Failed to transform node %s", ex.what());
   }
   auto position = robot_pose.getOrigin();
-  if(position.distance(last_position_) < 5) {
+  if(position.distance(last_position_) < 1) {
     frontier_blacklist_.push_back(prev_goal_);
     ROS_WARN("Adding current goal to black list due to unreachability");
   }

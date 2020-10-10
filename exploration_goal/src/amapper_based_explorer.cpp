@@ -1,5 +1,5 @@
-#define ANGLE 0.2 //Radians
-#define DECAY_RATE 1 // Between 0 -100. 100 should be amultiple of the number
+#define ANGLE 0.6 //Radians
+#define DECAY_RATE 5 // Between 0 -100. 100 should be amultiple of the number
 #define DISTANCE_TO_CLEAR 10//
 #include <ros/ros.h>
 #include <map_merge/laser_operations.h>
@@ -30,6 +30,10 @@ struct pair_hash
 };
 
 class MultiLayerRaytracer : public AMapper::RayTracer {
+    public:
+    void reset(){
+        current_scan.clear();
+    }
     private:
     std::unordered_set<std::pair<int,int>, pair_hash> current_scan;
     /**
@@ -38,19 +42,22 @@ class MultiLayerRaytracer : public AMapper::RayTracer {
      * @param X, Y - Target coordinates
      */ 
     void plotFreeSpace(AMapper::Grid& grid, Eigen::Vector2i centroid, int x, int y) override {
+        
         auto exists = current_scan.find(std::make_pair(x,y));
+        
         Eigen::Vector2i v(x,y);
+        
         if(exists == current_scan.end()){
             if(grid.data[y][x] <= 0 && (centroid -v).norm()*grid.getResolution() < DISTANCE_TO_CLEAR)
                 grid.data[y][x] = 0;
-            else if(grid.data[y][x] > 0 && (centroid -v).norm()*grid.getResolution() > 3)
+            else if(grid.data[y][x] > 0 && (centroid -v).norm()*grid.getResolution() > 3 && (centroid -v).norm()*grid.getResolution() < DISTANCE_TO_CLEAR)
                 grid.data[y][x] -= DECAY_RATE;
-
         }
-        current_scan.emplace(x,y);
+
+        current_scan.insert(std::make_pair(x,y));
     }    
 };
-
+MultiLayerRaytracer raytracer;
 void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
     ROS_INFO("Recieved scan");
     //Find current robot pose
@@ -68,15 +75,16 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
     } 
 
     //Look for steep points on LiDAR
-    static LidarScan scan; //Static is used to preserve the lidar settings so next time we don't need to reallocate memory
+    LidarScan scan; //Static is used to preserve the lidar settings so next time we don't need to reallocate memory
     decomposeLidarScanIntoPlanes(pcloud, scan);
     std::reverse(scan.begin(), scan.end());    
     float start_ang = scan[0].scan.angle_min, increment = scan[0].scan.angle_increment; 
     std::vector<float> steep_paths(scan[0].scan.ranges.size(), 0);
-    
     for(int i = 0; i < scan.size() -1; i++){
         for(int j = 0; j < scan[i].scan.ranges.size(); j++){
-            if(!std::isfinite(scan[i].scan.ranges[j]) || !std::isfinite(scan[i+1].scan.ranges[j])) continue;
+            if(!std::isfinite(scan[i].scan.ranges[j]) || !std::isfinite(scan[i+1].scan.ranges[j]) || 
+            scan[i].scan.ranges[j] > 120 || scan[i+1].scan.ranges[j] > 120 
+            || scan[i].scan.ranges[j] < 0 || scan[i+1].scan.ranges[j] < 0 ) continue;
             
             auto p1 = scanPointToPointCloud(scan[i].scan, j, scan[i].azimuth);
             auto p2 = scanPointToPointCloud(scan[i+1].scan, j, scan[i+1].azimuth);
@@ -108,14 +116,14 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
     }
 
     //Raytracer 
-    MultiLayerRaytracer raytracer;
+    
     float curr_angle = start_ang;
     auto origin = robot_pose.getOrigin();
     auto rotation = robot_pose.getRotation();
     auto robot_rotation= tf::getYaw(rotation);
     Eigen::Vector2f center(origin.x(), origin.y());
     for(int i = 0; i < steep_paths.size(); i++) {
-
+        std::cout << steep_paths.at(i)<< std::endl;
         Eigen::Vector2f end(origin.x() + steep_paths.at(i)*cos(robot_rotation+curr_angle), origin.y() + steep_paths.at(i)*sin(robot_rotation+curr_angle));
         auto y = grid->toYIndex(end.y());
         auto x = grid->toXIndex(end.x());
@@ -123,14 +131,15 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
         curr_angle += increment;
         raytracer.rayTrace(*grid, center, end);
         if(!grid->isWithinGridCellMap(x, y)) continue;
-        if(steep_paths[i] != 0)grid->data[y][x] = 255;
+        if(steep_paths[i] != 0 && (center - end).norm() < DISTANCE_TO_CLEAR*1.3)grid->data[y][x] = 255;
     }
 
     for(float i = -50; i < 50; i+= grid->getResolution()){
         auto y = grid->toYIndex(i);
-        auto x = grid->toXIndex(-0.5);
+        auto x = grid->toXIndex(-0.3);
         grid->data[y][x] = 100; // Don't go exploring the staging area you peice of shit
     }
+    raytracer.reset();
 
 }
 

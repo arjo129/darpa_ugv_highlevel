@@ -16,8 +16,9 @@ tf::TransformListener* listener;
 std::vector<geometry_msgs::PointStamped> path;
 ros::Publisher local_planner, next_location_req;
 nav_msgs::OccupancyGrid latest_occupancy_map;
+ros::Timer request_timeout;
 
-
+bool requested_lock = false;
 struct CellDetail {
     int prev_idx_x, prev_idx_y;
     double g = INFINITY, h=INFINITY;
@@ -64,6 +65,27 @@ double euclideanDistance(geometry_msgs::PointStamped pt1, geometry_msgs::PointSt
     double r = (pt1.point.x - pt2.point.x)*(pt1.point.x - pt2.point.x) + (pt1.point.y - pt2.point.y)*(pt1.point.y - pt2.point.y);
     return sqrt(r);
 }
+
+void requestGoal() {
+    static ros::Time time_of_last_request = ros::Time::now();
+    
+    if(!requested_lock) {
+        requested_lock = true;
+        std_msgs::Empty e;
+        next_location_req.publish(e);
+        time_of_last_request = ros::Time::now();
+        request_timeout.stop();
+        request_timeout.start();
+        ROS_INFO("Requesting goal");
+    }
+    else {
+        if(ros::Time::now() - time_of_last_request > ros::Duration(30)){
+            ROS_INFO("Time of last request exceeded wait time. Removing lock and trying again");
+        }
+        ROS_INFO("Requests locked");
+    }
+}
+
 
 std::pair<size_t, size_t> findNearestEmptyPoint(size_t goal_x, size_t goal_y) {
     int dir[][2] = {{0,1},{1,0},{-1,0},{0,-1}, {1,1} ,{-1,-1}, {1,-1}, {-1,1}};
@@ -218,10 +240,8 @@ void planRoute(size_t start_x, size_t start_y, size_t goal_x, size_t goal_y) {
 }
 
 void executeRoute() {
-    if(path.size() == 0) {
-        std_msgs::Empty e;
-        next_location_req.publish(e);
-        ROS_ERROR("No path to execute");
+    if(path.size() == 0 && !requested_lock) {
+        requestGoal();
         return;
     }
     ROS_INFO("Executing path");
@@ -236,8 +256,11 @@ void debugPath() {
     }
 }
 
+
 void onRecieveNewPoint(geometry_msgs::PointStamped goal) {
     ROS_INFO("Recieved new goal");
+    requested_lock = false;
+    request_timeout.stop();
     //Acquire robot pose
     tf::StampedTransform robot_pose;
     try {
@@ -268,10 +291,10 @@ void onRecieveNewPoint(geometry_msgs::PointStamped goal) {
         debugPath();
     } catch (InvalidLocationException il) {
         ROS_ERROR("Goal set is unreachable... Requesting new goal");
-        std_msgs::Empty e;
-        next_location_req.publish(e);
+        requestGoal();
     }
 }
+
 
 void onRecieveMap(nav_msgs::OccupancyGrid occupancy_map){
     delete grid;
@@ -279,10 +302,9 @@ void onRecieveMap(nav_msgs::OccupancyGrid occupancy_map){
 }
 
 void onReachDestination(std_msgs::Int8 status) {
-    if(path.size() == 0) {
-        std_msgs::Empty e;
-        next_location_req.publish(e);
-        ROS_ERROR("No path to execute");
+    if(path.size() == 0 && !requested_lock ) {
+        ROS_INFO("Requesting goal...");
+        requestGoal();
         return;
     }
     if(status.data < 0) {
@@ -293,8 +315,10 @@ void onReachDestination(std_msgs::Int8 status) {
         onRecieveNewPoint(goal);
         return;
     }
-    local_planner.publish(path[path.size()-1]);
-    path.pop_back();
+    if(path.size() > 0){
+        local_planner.publish(path[path.size()-1]);
+        path.pop_back();
+    }
 }
 
 int main(int argc, char** argv) {
@@ -308,6 +332,15 @@ int main(int argc, char** argv) {
     ros::Subscriber feedback_sub = nh.subscribe("feedback", 1, onReachDestination);
     local_planner = nh.advertise<geometry_msgs::PointStamped>("local_plan", 1);
     next_location_req = nh.advertise<std_msgs::Empty>("explore/request", 1);
+
+    request_timeout = nh.createTimer(ros::Duration(10), [](const ros::TimerEvent& evt) {
+        ROS_INFO("Timeout check");
+        if(requested_lock) {
+            ROS_INFO("Timed out");
+            requested_lock = false;
+            requestGoal();
+        }
+    }, true);
     ros::Rate r(10.0);
     while(ros::ok()) {
         ros::spinOnce();

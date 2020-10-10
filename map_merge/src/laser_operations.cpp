@@ -15,6 +15,37 @@ struct point_sorter {
     }
 };
 
+sensor_msgs::LaserScan getScanParameters(pcl::PointCloud<pcl::PointXYZ>& pc) {
+    sensor_msgs::LaserScan scan;
+    scan.header.frame_id = pc.header.frame_id;
+    scan.header.stamp = ros::Time(pc.header.stamp);
+    double min_diff = INFINITY;
+
+    std::sort(pc.begin(), pc.end(), point_sorter());
+    pcl::PointXYZ prev_pt = pc[pc.size()-1];
+    double max_range = 0;
+    for(int i = 0; i < pc.size(); i++) {
+        Eigen::Vector3f v1(prev_pt.x , prev_pt.y, prev_pt.z);
+        Eigen::Vector3f v2(pc[i].x, pc[i].y, pc[i].z);
+        auto angle = acos(v1.dot(v2)/(v1.norm()*v2.norm()));
+        if(angle < min_diff && angle > 0) {
+            min_diff = angle;
+        }
+        if(v2.norm() > max_range) {
+            max_range = v2.norm();
+        }
+        prev_pt = pc[i];
+    }
+
+    scan.angle_increment = min_diff;
+    scan.angle_min = -M_PI;
+    scan.angle_max = M_PI-min_diff;
+    scan.range_max = max_range + 1;
+    auto num_entries = ceil(2*M_PI/min_diff);
+    scan.ranges = std::vector<float>((size_t)num_entries, INFINITY);
+    scan.intensities = std::vector<float>((size_t)num_entries, 47);
+    return scan;
+}
 sensor_msgs::LaserScan toLaserScan(pcl::PointCloud<pcl::PointXYZ>& pc) {
     
     sensor_msgs::LaserScan scan;
@@ -486,7 +517,18 @@ void decomposeLidarScanIntoPlanesFast(const pcl::PointCloud<pcl::PointXYZ>& poin
         }
     }
 }
-
+void copyInitilizationParams(const sensor_msgs::LaserScan& src,  sensor_msgs::LaserScan& dst) {
+    dst.angle_max       = src.angle_max;
+    dst.header          = src.header;
+    dst.angle_increment = src.angle_increment;
+    dst.angle_min       = src.angle_min;
+    dst.range_max       = src.range_max;
+    dst.range_min       = src.range_min;
+    dst.scan_time       = src.scan_time;
+    dst.time_increment  = src.time_increment;
+    dst.ranges = std::vector<float>(src.ranges.size(), INFINITY);
+    dst.intensities = std::vector<float>(src.ranges.size(), 47);
+}
 void decomposeLidarScanIntoPlanes(const pcl::PointCloud<pcl::PointXYZ>& points, LidarScan& scan_stack) {
     if(scan_stack.size() > 0) {
         //Optimized route so that we dont reallocate memory all the time.
@@ -516,12 +558,22 @@ void decomposeLidarScanIntoPlanes(const pcl::PointCloud<pcl::PointXYZ>& points, 
     }
     std::sort(scan_angles.begin(), scan_angles.end());
 
+    //Find the smallest ring size
+    sensor_msgs::LaserScan best_parameters;
+    best_parameters.angle_increment = M_PI;
+    for(auto angle: scan_angles) {
+        auto params = getScanParameters(planar_scans[angle]);
+        if(params.angle_increment < best_parameters.angle_increment) {
+            best_parameters = params;
+        }
+    }
     for(auto angle: scan_angles) {
         LidarRing ring;
         ring.azimuth = angle*M_PI/180;
-        ring.scan = toLaserScan(planar_scans[angle]);
+        copyInitilizationParams(best_parameters, ring.scan);
         scan_stack.push_back(ring);
     }
+    decomposeLidarScanIntoPlanesFast(points, scan_stack);
 }
 
 float EstimateYawCorrection(sensor_msgs::LaserScan scan1, sensor_msgs::LaserScan scan2, std::vector<double>& accumulator){

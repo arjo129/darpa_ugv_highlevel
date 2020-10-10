@@ -80,8 +80,9 @@ nav_msgs::OccupancyGrid Grid::toOccupancyGrid() {
     occupancygrid.info.origin.orientation.y = 0;
     occupancygrid.info.origin.orientation.z = 0;
     occupancygrid.info.origin.orientation.w = 1;
+    occupancygrid.data.reserve(this->gridHeight*this->gridWidth +1);
     for(int i = 0; i < this->gridHeight; i++){
-        for(int j = 0; j < this->gridWidth; j++){
+        for(int j = 0; j < this->gridWidth; j++){ 
             occupancygrid.data.push_back((data[i][j] > 100 || data[i][j] < -1) ? 100: data[i][j] );
         }
     }

@@ -18,6 +18,8 @@ typedef std::vector<LidarRing> LidarScan;
 
 void decomposeLidarScanIntoPlanes(const pcl::PointCloud<pcl::PointXYZ>& points, LidarScan& scan_stack);
 sensor_msgs::LaserScan toLaserScan(pcl::PointCloud<pcl::PointXYZ>& pc);
+
+sensor_msgs::LaserScan getScanParameters(pcl::PointCloud<pcl::PointXYZ>& pc);
 pcl::PointXYZ scanPointToPointCloud(pcl::PointXYZ point, double azimuth);
 
 pcl::PointXYZ scanPointToPointCloud(sensor_msgs::LaserScan& scan, int index, double azimuth);
