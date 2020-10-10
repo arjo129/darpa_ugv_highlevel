@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # license: http://opencv.org/license.html
 
 import rospy
