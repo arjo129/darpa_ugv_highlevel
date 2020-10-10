@@ -10,7 +10,7 @@
         <include file="$(find aerial_obstacle_avoidance)/launch/aerial_obstacle_avoidance.launch">
             <arg name="robot_name" value="$(arg robot_name)" />
         </include>
-        <node pkg="exploration_goal" type="amapper_based_exploration" respawn="false" name="costmap" output="screen" launch-prefix="xterm -e gdb --args" >
+        <node pkg="exploration_goal" type="amapper_based_exploration" respawn="false" name="costmap" output="screen">
         </node>
     </group>
 
