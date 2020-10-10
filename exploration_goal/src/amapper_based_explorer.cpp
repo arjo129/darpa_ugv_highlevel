@@ -123,7 +123,6 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
     auto robot_rotation= tf::getYaw(rotation);
     Eigen::Vector2f center(origin.x(), origin.y());
     for(int i = 0; i < steep_paths.size(); i++) {
-        std::cout << steep_paths.at(i)<< std::endl;
         Eigen::Vector2f end(origin.x() + steep_paths.at(i)*cos(robot_rotation+curr_angle), origin.y() + steep_paths.at(i)*sin(robot_rotation+curr_angle));
         auto y = grid->toYIndex(end.y());
         auto x = grid->toXIndex(end.x());
