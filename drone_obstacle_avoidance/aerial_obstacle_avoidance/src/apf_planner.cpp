@@ -9,6 +9,7 @@
 #include <octomap_msgs/Octomap.h>
 #include <octomap_msgs/conversions.h>
 #include <geometry_msgs/PointStamped.h>
+#include <std_msgs/Int8.h>
 
 #include <string>
 #include <math.h>
@@ -26,6 +27,7 @@ public:
         ros::param::get("~obs_sub_topic_", obs_sub_topic_);
 
         cmd_pub_ = node.advertise<geometry_msgs::Twist>(cmd_vel_topic_, rate);
+        status_pub_ = node.advertise<std_msgs::Int8>("status", rate);
         obs_sub_ = node.subscribe(obs_sub_topic_, rate, &ArtificialPotentialField::obstacleCallback, this);
         goal_sub_ = node.subscribe(goal_sub_topic_, rate, &ArtificialPotentialField::goalCallback, this);
         collision_map_.header.stamp = ros::Time(0);
@@ -45,7 +47,7 @@ public:
         cmd_pub_.publish(cmd);
         ros::Duration(3).sleep();
         
-        const double force = 0.025;
+        const double force = 0.09;
         
         while(ros::ok()){
             if(collision_map_.header.stamp != ros::Time(0)){
@@ -100,17 +102,26 @@ public:
                 Fs += get_potential_force(goal_lc, 50, 0, 1, 1);
                 
                 dmath::Vector3D vel = Fs * force;
-
-                if(vel.x > 0.5) vel.x = 0.5;
-                if(vel.x < -0.5) vel.x = -0.5;
-                if(vel.y > 0.5) vel.y = 0.5;
-                if(vel.y < -0.5) vel.y = -0.5;
-                if(vel.z > 0.5) vel.z = 0.5;
-                if(vel.z < -0.5) vel.z = -0.5;
+                const double max_speed = 1.0;
+                if(vel.x > max_speed) vel.x = max_speed;
+                if(vel.x < -max_speed) vel.x = -max_speed;
+                if(vel.y > max_speed) vel.y = max_speed;
+                if(vel.y < -max_speed) vel.y = -max_speed;
+                if(vel.z > max_speed) vel.z = max_speed;
+                if(vel.z < -max_speed) vel.z = -max_speed;
                 cmd.linear.x = vel.x;
                 cmd.linear.y = vel.y;
-                // cmd.linear.z = vel.z;
-                
+                cmd.linear.z = vel.z;
+
+                goal_lc.z = 0;
+                if(magnitude(goal_lc) < 1) {
+                    cmd.linear.x = 0;
+                    cmd.linear.y = 0;
+                    cmd.linear.z = 0;
+                    std_msgs::Int8 status;
+                    status.data = 0;
+                    status_pub_.publish(status);
+                }
                 cmd_pub_.publish(cmd);
             }
             r.sleep();
@@ -138,10 +149,11 @@ private:
 
     void goalCallback(const geometry_msgs::PointStamped &goal_msg){
         goal_msg_gl_ = goal_msg;
+        ROS_INFO("GOAL recieved");
     }
     
     octomap_msgs::Octomap collision_map_;
-    ros::Publisher cmd_pub_;
+    ros::Publisher cmd_pub_, status_pub_;
     ros::Subscriber obs_sub_, goal_sub_;
     tf::TransformListener tf_listener_;
     std::string base_link_, cmd_vel_topic_, goal_sub_topic_, obs_sub_topic_;

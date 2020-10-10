@@ -1,0 +1,17 @@
+<launch>
+    <arg name="robot_name" default="X1" />
+
+
+
+    <group ns="$(arg robot_name)">
+        <include file="$(find loam_velodyne)/launch/loam_velodyne.launch">
+            <arg name="robot_name" value="$(arg robot_name)" />
+        </include>
+        <include file="$(find aerial_obstacle_avoidance)/launch/aerial_obstacle_avoidance.launch">
+            <arg name="robot_name" value="$(arg robot_name)" />
+        </include>
+        <node pkg="exploration_goal" type="amapper_based_exploration" respawn="false" name="costmap" output="screen" launch-prefix="xterm -e gdb --args" >
+        </node>
+    </group>
+
+</launch>
