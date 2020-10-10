@@ -59,7 +59,6 @@ class MultiLayerRaytracer : public AMapper::RayTracer {
 };
 MultiLayerRaytracer raytracer;
 void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
-    ROS_INFO("Recieved scan");
     //Find current robot pose
     tf::StampedTransform robot_pose;
     try {
@@ -75,8 +74,16 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
     } 
 
     //Look for steep points on LiDAR
-    LidarScan scan; //Static is used to preserve the lidar settings so next time we don't need to reallocate memory
-    decomposeLidarScanIntoPlanes(pcloud, scan);
+    LidarScan full_scan, scan; //Static is used to preserve the lidar settings so next time we don't need to reallocate memory
+    decomposeLidarScanIntoPlanes(pcloud, full_scan);
+    if(full_scan.size() < 1) return;
+    if(full_scan[0].scan.ranges.size() > 2000){ 
+        downsample(full_scan, scan, 4);
+    }
+    else{
+        scan = full_scan;
+    }
+
     std::reverse(scan.begin(), scan.end());    
     float start_ang = scan[0].scan.angle_min, increment = scan[0].scan.angle_increment; 
     std::vector<float> steep_paths(scan[0].scan.ranges.size(), 0);
@@ -88,7 +95,6 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
             
             auto p1 = scanPointToPointCloud(scan[i].scan, j, scan[i].azimuth);
             auto p2 = scanPointToPointCloud(scan[i+1].scan, j, scan[i+1].azimuth);
-            
             if(p1.z >  2 && p2.z >2) continue;
 
             tf::Vector3 v1(p1.x, p1.y, p1.z);
@@ -154,7 +160,9 @@ int main(int argc, char** argv) {
     listener = new tf::TransformListener();
     grid = new AMapper::Grid(0,0,5000,5000,0.3);
     grid->setFrameId("X1/world");
-    ros::Rate r(10);
+    ros::Duration start_delay(30);
+    start_delay.sleep();
+    ros::Rate r(2);
     while(ros::ok()) {
         ros::spinOnce();
         r.sleep();

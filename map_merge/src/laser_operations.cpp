@@ -280,6 +280,15 @@ void downsample(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& out,
     }
 }
 
+void downsample(const LidarScan& scan, LidarScan& out, int skip) {
+    for(auto ring: scan) {
+        LidarRing out_ring;
+        out_ring.azimuth = ring.azimuth;
+        downsample(ring.scan, out_ring.scan, skip);
+        out.push_back(out_ring);
+    }
+}
+
 class LoggingBressenham: public AMapper::RayTracer {
 private:
 Eigen::Vector2f lastGoodPoint;

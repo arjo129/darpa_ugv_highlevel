@@ -57,6 +57,8 @@ void  decomposeLidarScanIntoPlanes(pcl::PointCloud<pcl::PointXYZ>& points, std::
 
 void downsample(const sensor_msgs::LaserScan& scan, sensor_msgs::LaserScan& out, int skip);
 
+void downsample(const LidarScan& scan, LidarScan& out, int skip);
+
 float compareScansEuclid(std::vector<std::complex<double>>& s1, std::vector<std::complex<double>>& s2);
 
 
