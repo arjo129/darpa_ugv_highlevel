@@ -332,6 +332,8 @@ int main(int argc, char** argv) {
     ros::Subscriber feedback_sub = nh.subscribe("feedback", 1, onReachDestination);
     local_planner = nh.advertise<geometry_msgs::PointStamped>("local_plan", 1);
     next_location_req = nh.advertise<std_msgs::Empty>("explore/request", 1);
+    ros::Duration start_delay(5);
+    start_delay.sleep();
 
     request_timeout = nh.createTimer(ros::Duration(10), [](const ros::TimerEvent& evt) {
         ROS_INFO("Timeout check");

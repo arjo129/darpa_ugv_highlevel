@@ -149,7 +149,7 @@ private:
 
     void goalCallback(const geometry_msgs::PointStamped &goal_msg){
         goal_msg_gl_ = goal_msg;
-        goal_msg_gl_.z = 1;
+        goal_msg_gl_.z = 1.5;
         ROS_INFO("GOAL recieved");
     }
     
