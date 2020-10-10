@@ -30,6 +30,11 @@ public:
         status_pub_ = node.advertise<std_msgs::Int8>("status", rate);
         obs_sub_ = node.subscribe(obs_sub_topic_, rate, &ArtificialPotentialField::obstacleCallback, this);
         goal_sub_ = node.subscribe(goal_sub_topic_, rate, &ArtificialPotentialField::goalCallback, this);
+        timeout_ = node.createTimer(ros::Duration(20), [this](ros::TimerEvent opts){
+            std_msgs::Int8 status;
+            status.data = -1;
+            this->status_pub_.publish(status);
+        }, true);
         collision_map_.header.stamp = ros::Time(0);
     }
 
@@ -125,7 +130,7 @@ public:
                 cmd_pub_.publish(cmd);
             }
             r.sleep();
-            ros::spinOnce();
+            ros::spinOnce(); 
         }
     }
 
@@ -149,8 +154,10 @@ private:
 
     void goalCallback(const geometry_msgs::PointStamped &goal_msg){
         goal_msg_gl_ = goal_msg;
-        goal_msg_gl_.z = 1.5;
+        goal_msg_gl_.point.z = 1.5;
         ROS_INFO("GOAL recieved");
+        timeout_.stop();
+        timeout_.start();
     }
     
     octomap_msgs::Octomap collision_map_;
@@ -159,6 +166,7 @@ private:
     tf::TransformListener tf_listener_;
     std::string base_link_, cmd_vel_topic_, goal_sub_topic_, obs_sub_topic_;
     geometry_msgs::PointStamped goal_msg_gl_;
+    ros::Timer timeout_;
     int rate;
 };
 
