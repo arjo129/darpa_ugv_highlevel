@@ -205,7 +205,6 @@ void fillGaps(sensor_msgs::LaserScan& scan, size_t max_gap) {
 }
 
 
-
 void naiveCornerDetector(sensor_msgs::LaserScan& scan, pcl::PointCloud<pcl::PointXYZ>& corners, std::vector<int>& indices, int skip) {
     fillGaps(scan, 2);
     double curr_angle = scan.angle_min;

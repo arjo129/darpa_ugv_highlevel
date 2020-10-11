@@ -194,10 +194,6 @@ void Explore::visualizeFrontiers(
 void Explore::makePlan()
 {
   auto now =ros::Time::now();
-  if(now - last_request_ < ros::Duration(1.5)) {
-    ROS_ERROR("Too many goal requests. Rate limiting.");
-    return;
-  }
   last_request_ = now;
   // find frontiers
   auto pose = costmap_client_.getRobotPose();

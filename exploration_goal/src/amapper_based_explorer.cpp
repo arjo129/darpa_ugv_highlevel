@@ -57,6 +57,34 @@ class MultiLayerRaytracer : public AMapper::RayTracer {
         current_scan.insert(std::make_pair(x,y));
     }    
 };
+
+float* lookup(std::vector<float>& vec, int index) {
+    auto length = vec.size();
+    if(index < 0) {
+        return &vec[length - abs(index)%length];
+    }
+    else {
+        return &vec[index%length];
+    }
+}
+
+void interpolate(std::vector<float>& vec , int max_gap) {
+    size_t gap_count = 0;
+    for(int i = 0; i < vec.size(); i++) {
+        if(vec[i] == 0) {
+            gap_count++;
+            continue;
+        }
+
+        if(gap_count <= max_gap) for(int j = 1; j <= gap_count; j++){
+            float v1 = *lookup(vec,i);
+            float v0 = *lookup(vec,i-gap_count-1);
+            *lookup(vec, i-j) = (j*(v0 -v1))/(gap_count +1) + v1;
+        }
+        gap_count = 0;
+        
+    }
+}
 MultiLayerRaytracer raytracer;
 void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
     //Find current robot pose
@@ -87,8 +115,10 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
     std::reverse(scan.begin(), scan.end());    
     float start_ang = scan[0].scan.angle_min, increment = scan[0].scan.angle_increment; 
     std::vector<float> steep_paths(scan[0].scan.ranges.size(), 0);
+    
     for(int i = 0; i < scan.size() -1; i++){
         for(int j = 0; j < scan[i].scan.ranges.size(); j++){
+          
             if(!std::isfinite(scan[i].scan.ranges[j]) || !std::isfinite(scan[i+1].scan.ranges[j]) || 
             scan[i].scan.ranges[j] > 120 || scan[i+1].scan.ranges[j] > 120 
             || scan[i].scan.ranges[j] < 0 || scan[i+1].scan.ranges[j] < 0 ) continue;
@@ -128,7 +158,14 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
     auto rotation = robot_pose.getRotation();
     auto robot_rotation= tf::getYaw(rotation);
     Eigen::Vector2f center(origin.x(), origin.y());
+    interpolate(steep_paths, 5);
+
     for(int i = 0; i < steep_paths.size(); i++) {
+        bool mark =true;
+        if(steep_paths[i] == 0) {
+            mark = false;
+            steep_paths[i] = DISTANCE_TO_CLEAR;
+        }
         Eigen::Vector2f end(origin.x() + steep_paths.at(i)*cos(robot_rotation+curr_angle), origin.y() + steep_paths.at(i)*sin(robot_rotation+curr_angle));
         auto y = grid->toYIndex(end.y());
         auto x = grid->toXIndex(end.x());
@@ -136,12 +173,12 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
         curr_angle += increment;
         raytracer.rayTrace(*grid, center, end);
         if(!grid->isWithinGridCellMap(x, y)) continue;
-        if(steep_paths[i] != 0 && (center - end).norm() < DISTANCE_TO_CLEAR*1.3)grid->data[y][x] = 255;
+        if(mark && steep_paths[i] != 0 && (center - end).norm() < DISTANCE_TO_CLEAR*1.3)grid->data[y][x] = 255;
     }
 
     for(float i = -50; i < 50; i+= grid->getResolution()){
         auto y = grid->toYIndex(i);
-        auto x = grid->toXIndex(-0.3);
+        auto x = grid->toXIndex(-2);
         grid->data[y][x] = 100; // Don't go exploring the staging area you peice of shit
     }
     raytracer.reset();
