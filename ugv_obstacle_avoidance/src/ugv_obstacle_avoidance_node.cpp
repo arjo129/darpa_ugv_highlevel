@@ -23,10 +23,11 @@
 #define _lowerBound -15.0
 #define _upperBound 15.0
 #define nScanRings 16
-#define MAX_TIME  30
+#define MAX_TIME  15
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
-
+ tf::TransformListener* listener;
+   tf::StampedTransform transform;
 ros::Publisher pub, status_pub;
 ros::Publisher pub_vel;
 pcl::PointCloud<pcl::PointXYZ> out;
@@ -176,7 +177,7 @@ float getConstraintScore(std::vector<std::tuple<float,float>> &distances){
 
 float getAngularVelocity(std::vector<std::tuple<float,float>> &distances){
 // std::cout << "get angular velocity" <<std::endl;
-  if(current_state == AWAITING_INSTRUCTION) return 0;
+  // if(current_state == AWAITING_INSTRUCTION) return 0;
     
    if(std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y)) < 2){
         return 0;    
@@ -199,7 +200,7 @@ float getAngularVelocity(std::vector<std::tuple<float,float>> &distances){
         
       // }
    }else{
-      return yaw_to_goal/M_PI*direction*1.5 - lrscoreA/20000.0; 
+      return yaw_to_goal/M_PI*direction*2 - lrscoreA/10000.0; 
    }
    
   //  int reversingFactor = 1;
@@ -213,16 +214,30 @@ float getAngularVelocity(std::vector<std::tuple<float,float>> &distances){
 float getForwardVelocity(std::vector<std::tuple<float,float>> &distances){
   // std::cout << "getting forward velo" <<std::endl;
    
-  if(current_state == VehicleState::AWAITING_INSTRUCTION) return 0;
+  // if(current_state == VehicleState::AWAITING_INSTRUCTION) return 0;
 
     float distance_to_goal = std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y));
-    std::cout << distance_to_goal <<std::endl;
+    // std::cout << distance_to_goal <<std::endl;
    if( distance_to_goal< 2){
         std_msgs::Int8 i;
         i.data = 0;
         status_pub.publish(i);
         current_state = VehicleState::AWAITING_INSTRUCTION; 
         return 0;    
+   }
+
+      auto time_since_last_goal = ros::Time::now() - last_goal;
+   if(time_since_last_goal > ros::Duration(MAX_TIME,0)) {
+     std_msgs::Int8 i;
+        i.data = -1;
+        status_pub.publish(i);
+        current_state = VehicleState::AWAITING_INSTRUCTION; 
+      ROS_ERROR("Time out");
+       geometry_msgs::Twist t;
+    t.linear.x = 0;
+    t.angular.z = 0;
+    pub_vel.publish(t);
+     return 0;
    }
 
   float lrscore = getFreeSpaceScoreLR(distances);
@@ -275,14 +290,7 @@ float getForwardVelocity(std::vector<std::tuple<float,float>> &distances){
   //       }
   //  }
 
-  //  auto time_since_last_goal = ros::Time::now() - last_goal;
-  //  if(time_since_last_goal > ros::Duration(MAX_TIME,0)) {
-  //    std_msgs::Int8 i;
-  //       i.data = -1;
-  //       status_pub.publish(i);
-  //       current_state = VehicleState::AWAITING_INSTRUCTION; 
-  //    return 0;
-  //  }
+
    
   //  float yawFactor = 2*(M_PI/2 - yaw_to_goal)/M_PI*(M_PI/2 - yaw_to_goal)/M_PI*0.8*0.5;
   //  float distanceFactor = 0.8;
@@ -335,6 +343,8 @@ void getMaxTraversablePoint(float (*data)[10000][3] , int i , pcl::PointXYZ *poi
 }
 
 void positionCallBack(const nav_msgs::Odometry::ConstPtr& msg){
+    
+
     nav_msgs::Odometry poseMsg = *msg;
     geometry_msgs::Quaternion currentPose;
     // std::cout << "Got position fix" <<std::endl;
@@ -350,10 +360,10 @@ void positionCallBack(const nav_msgs::Odometry::ConstPtr& msg){
 
 
     float distance_to_goal = std::sqrt((goal.x - current.x)*(goal.x - current.x) + (goal.y - current.y)*(goal.y - current.y));
-    std::cout << distance_to_goal <<std::endl;
+    // std::cout << distance_to_goal <<std::endl;
     auto time_since_last_goal = ros::Time::now() - last_goal;
 
-   if( distance_to_goal< 2 && time_since_last_goal > ros::Duration(10)){
+   if( distance_to_goal< 1 && time_since_last_goal > ros::Duration(5)){
         std_msgs::Int8 i;
         i.data = 0;
         status_pub.publish(i);
@@ -431,6 +441,25 @@ float getYaw( pcl::PointXYZ &point ){
 
 }
 
+// pcl::PointXYZ transformPointToLocal(pcl::PointXYZ point){
+
+//   geometry_msgs::PointStamped initial_pt; 
+//   initial_pt.header.frame_id = "world";
+//   initial_pt.point.x = point.x;
+//   initial_pt.point.y = point.y;
+//   initial_pt.point.z = point.z;
+  
+//   geometry_msgs::PointStamped transformStamped;
+//   pcl::PointXYZ transformedPoint;
+//   listener->transformPoint("/X1", initial_pt , transformStamped);	
+//   transformedPoint.x = transformStamped.point.x;
+//   transformedPoint.y = transformStamped.point.y;
+//   transformedPoint.z = transformStamped.point.z;
+
+//   return transformedPoint;
+
+// }
+
 void callback(const PointCloud::ConstPtr& msg){
   geometry_msgs::Transform trans;
   trans.translation.x = 0;
@@ -460,9 +489,35 @@ void callback(const PointCloud::ConstPtr& msg){
     status_pub.publish(in);
   } 
 
+  // pcl::PointCloud<pcl::PointXYZ> out2;
 
-// extract valid points from input cloud
-  for (int i = 0; i < cloudSize; i++) {
+
+  // for (int i = 0; i < cloudSize; i++) {
+
+  //   pcl::PointXYZ point;
+  //   point.x = out[i].x;
+  //   point.y = out[i].y;
+  //   point.z = out[i].z;
+
+  //   if (!pcl_isfinite(point.x) ||
+  //       !pcl_isfinite(point.y) ||
+  //       !pcl_isfinite(point.z)) {
+  //     continue;
+  //   }
+
+  //   if (point.x * point.x + point.y * point.y + point.z * point.z < 0.0001) {
+  //     continue;
+  
+  //   }
+
+  //   auto pt2= transformPointToLocal(point);
+
+  //   out2.push_back(pt2);
+
+  // }
+
+
+  for (int i = 0; i < out.size(); i++) {
 
     pcl::PointXYZ point;
     point.x = out[i].x;
@@ -495,10 +550,12 @@ void callback(const PointCloud::ConstPtr& msg){
   float v = getForwardVelocity(distances);
   float w = getAngularVelocity(distances);
 
-  if(v > 1.5){
-    v = 1.5;
-  }else if(v < -1.5){
-    v = -1.5;
+  v = v*1.5;
+
+  if(v > 2){
+    v = 2;
+  }else if(v < -2){
+    v = -2;
   }
 
   if(w > 1.0){
@@ -538,14 +595,25 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "sub_pcl");
   ros::NodeHandle nh;
-  std::printf("subscriebrs ");
+
+
+  //   listener = new tf::TransformListener();
+  // try{
+  //   listener->waitForTransform("/world", "/X1", ros::Time(0), ros::Duration(3.0));
+  //   listener->lookupTransform( "/world", "/X1", ros::Time(0), transform);
+  // }
+  //  catch(tf::TransformException& ex){
+  //   ROS_ERROR("Received an exception trying to transform a point from \"world\" to \"X1\": %s", ex.what());
+    
+  // }
+
+
+
   ros::Subscriber sub = nh.subscribe<PointCloud>("traversable_pointcloud_input", 1, callback);
   ros::Subscriber sub3 = nh.subscribe("robot_position_pose", 1, positionCallBack);
   ros::Subscriber sub2 = nh.subscribe("goal_to_explore", 1, goalCallBack);
-  std::printf("subscriebrs ");
-  pub_vel = nh.advertise<geometry_msgs::Twist> ("X1/cmd_vel", 1);
-  status_pub = nh.advertise<std_msgs::Int8> ("/status", 1);
+  
+  pub_vel = nh.advertise<geometry_msgs::Twist> ("/X1/cmd_vel", 1);
+  status_pub = nh.advertise<std_msgs::Int8> ("status", 1);
   ros::spin();
 }
-
-
