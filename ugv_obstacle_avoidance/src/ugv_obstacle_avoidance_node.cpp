@@ -363,7 +363,7 @@ void positionCallBack(const nav_msgs::Odometry::ConstPtr& msg){
     // std::cout << distance_to_goal <<std::endl;
     auto time_since_last_goal = ros::Time::now() - last_goal;
 
-   if( distance_to_goal< 2 && time_since_last_goal > ros::Duration(5)){
+   if( distance_to_goal< 1 && time_since_last_goal > ros::Duration(5)){
         std_msgs::Int8 i;
         i.data = 0;
         status_pub.publish(i);

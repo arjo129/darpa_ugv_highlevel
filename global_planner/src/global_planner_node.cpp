@@ -256,6 +256,19 @@ void debugPath() {
     }
 }
 
+std::pair<size_t, size_t> randomGoal(size_t x, size_t y) {
+    std::vector<std::pair<size_t,size_t>> gg;
+    for(size_t i = 4; i*grid->getResolution() < 10; i++) {
+        for(size_t j = 4; j*grid->getResolution() < 10; j++) {
+            if(grid->data[y + j][x +i] == 0) {
+                gg.emplace_back(x+i,y+j);
+            }
+        }    
+    }
+    return gg[rand()%gg.size()];
+
+}
+
 
 void onRecieveNewPoint(geometry_msgs::PointStamped goal) {
     ROS_INFO("Recieved new goal");
@@ -281,6 +294,13 @@ void onRecieveNewPoint(geometry_msgs::PointStamped goal) {
 
     auto goal_x = grid->toXIndex(goal.point.x);
     auto goal_y = grid->toYIndex(goal.point.y);
+
+    if(euclideanDistance(start_x, start_y, goal_x, goal_y) < grid->getResolution()*4) {
+        ROS_INFO("Goal too near selecting random goal");
+        auto randgoal = randomGoal(start_x, start_y);
+        goal_x= randgoal.first;
+        goal_y = randgoal.second;
+    }
 
     ROS_INFO("Attempting to plan route");
     try{
@@ -321,6 +341,10 @@ void onReachDestination(std_msgs::Int8 status) {
     }
 }
 
+void wallFollow() {
+
+}
+
 int main(int argc, char** argv) {
     ros::init(argc, argv, "global_planner");
     //getrlimit();
@@ -332,7 +356,7 @@ int main(int argc, char** argv) {
     ros::Subscriber feedback_sub = nh.subscribe("feedback", 1, onReachDestination);
     local_planner = nh.advertise<geometry_msgs::PointStamped>("local_plan", 1);
     next_location_req = nh.advertise<std_msgs::Empty>("explore/request", 1);
-    ros::Duration start_delay(5);
+    ros::Duration start_delay(6);
     start_delay.sleep();
 
     request_timeout = nh.createTimer(ros::Duration(10), [](const ros::TimerEvent& evt) {

@@ -85,6 +85,13 @@ void interpolate(std::vector<float>& vec , int max_gap) {
         
     }
 }
+
+bool is_drone(LidarScan scan) {
+    if(scan.size() > 17 || DISTANCE_TO_CLEAR > 17) {
+        return true;
+    }
+    return false;
+}
 MultiLayerRaytracer raytracer;
 void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
     //Find current robot pose
@@ -158,11 +165,12 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
     auto rotation = robot_pose.getRotation();
     auto robot_rotation= tf::getYaw(rotation);
     Eigen::Vector2f center(origin.x(), origin.y());
+
     interpolate(steep_paths, 5);
 
     for(int i = 0; i < steep_paths.size(); i++) {
         bool mark =true;
-        if(steep_paths[i] == 0) {
+        if(steep_paths[i] == 0 && !is_drone(scan)) {
             mark = false;
             steep_paths[i] = DISTANCE_TO_CLEAR;
         }
@@ -178,8 +186,15 @@ void onRecievePointCloud(pcl::PointCloud<pcl::PointXYZ> pcloud){
 
     for(float i = -50; i < 50; i+= grid->getResolution()){
         auto y = grid->toYIndex(i);
-        auto x = grid->toXIndex(-2);
-        grid->data[y][x] = 100; // Don't go exploring the staging area you peice of shit
+        if(origin.x() < 10) {
+            auto x = grid->toXIndex(-2);
+            grid->data[y][x] = 100; // Don't go exploring the staging area you peice of shit
+        }
+        else {
+            auto x = grid->toXIndex(8);
+            grid->data[y][x] = 100;
+        }
+        
     }
     raytracer.reset();
 
