@@ -270,7 +270,7 @@ int getBestNextNode(std::vector<std::tuple<float,float>> &distances , pcl::Point
     // }
 
     if(bestPoint.x == 0 && bestPoint.y == 0 && bestPoint.z == 0){
-        p.x = -1;
+        p.x = -3;
         p.y = 0;
     }
     
@@ -409,7 +409,7 @@ pcl::PointXYZ p;
   getBestNextNode(distances , p );
 
   if((ros::Time::now() - last_goal) > ros::Duration(3,0)){
-    ROS_INFO("Published Goal")
+    ROS_INFO("Published Goal");
     last_goal = ros::Time::now();
     transformPointToWorldAndPublish(p);
   }
