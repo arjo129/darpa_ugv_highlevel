@@ -665,7 +665,6 @@ template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontie
       
     int countPath = 0;
     int stateOfPathFinding = 0;
-    auto now now =ros::Time::now();
       while(getDistanceBetween(middle_point , start_point) > 3 && stateOfPathFinding == 0){
         stateOfPathFinding = getBestNextNode(distances , middle_point , start_point, discreteMap);
         std::cout << stateOfPathFinding << std::endl;
@@ -684,7 +683,7 @@ template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontie
 
         // inputMPoint.header.stamp = ros::Time::now().toNSec();
         inputMPoint.header.frame_id = robot_name+"/base_link";
-        inputMPoint.header.stamp = now:
+        inputMPoint.header.stamp = now;
         inputMPoint.point.x = middle_point.x;
         inputMPoint.point.y = middle_point.y;
         inputMPoint.point.z = middle_point.z;
