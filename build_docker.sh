@@ -1,1 +1,1 @@
-docker build . -t arjo129/nusseds_subt_sol --build-arg user_id=$(id -u) -f DOCKERFILE
+docker build . -t 200670743174.dkr.ecr.us-east-1.amazonaws.com/subt/nusseds --build-arg user_id=$(id -u) -f DOCKERFILE

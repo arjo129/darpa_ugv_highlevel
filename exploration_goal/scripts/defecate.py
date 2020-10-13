@@ -42,8 +42,8 @@ if __name__ == "__main__":
     while not rospy.is_shutdown():
         try:
             now = rospy.Time.now()
-            listener.waitForTransform(robot_name+"/base_link", robot_name+"/world", now, rospy.Duration(3))
-            trans, rot = listener.lookupTransform(robot_name+"/base_link", robot_name+"/world", now)
+            listener.waitForTransform(robot_name+"/world", robot_name+"/base_link", now, rospy.Duration(3))
+            trans, rot = listener.lookupTransform(robot_name+"/world", robot_name+"/base_link" , now)
         except Exception as e:
             print (e)
             continue
