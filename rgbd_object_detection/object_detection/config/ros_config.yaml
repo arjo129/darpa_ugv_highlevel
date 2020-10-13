@@ -1,10 +1,10 @@
 subscribers:
 
     camera_2d:
-        topic: /X1/pan_tilt/image_raw          # Image Topic
+        topic: pan_tilt/image_raw          # Image Topic
 
     camera_3d:
-        topic: /X1/pan_tilt_rgbd_camera/depth/points  # PointCloud2 XYZRGB Topic
+        topic: pan_tilt_rgbd_camera/depth/points  # PointCloud2 XYZRGB Topic
 
     synchronized_queue_size: 5             # number of frames to consider synchronizing
                                             # via ApproximateTimeSynchronizer
@@ -18,11 +18,11 @@ publishers:
 
     # debug_image only published if enable_debug_image is True
     debug_image:
-        topic: /object_detector/debug/image_raw
+        topic: object_detector/debug/image_raw
         queue_size: 1
 
     detected_objects:
-        topic: /object_detector/detected
+        topic: object_detector/detected
         queue_size: 1
 
 
@@ -30,7 +30,3 @@ publishers:
 # assuming the transform lookup exists        
 enable_global_point_publish: True
 
-ros_transforms:
-    robot_frame: X1/tilt_gimbal_link/camera_pan_tilt
-    global_frame: artifact_origin
-    transform_timeout: 0.5

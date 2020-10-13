@@ -40,6 +40,7 @@ ros::Publisher pub2;
 std::deque<pcl::PointXYZ> allUsedFrontiers;
 
 int globalGraphId = 0;
+std::string robot_name;
 
 int global_i = 0;
 geometry_msgs::Vector3 goal;
@@ -490,14 +491,20 @@ void goalCallBack(const geometry_msgs::PointStamped::ConstPtr& msg){
 pcl::PointXYZ transformPointToWorld(pcl::PointXYZ point , tf::TransformListener* listener){
 
   geometry_msgs::PointStamped initial_pt; 
-  initial_pt.header.frame_id = "X1";
+  initial_pt.header.frame_id = robot_name+"/base_link";
+  initial_pt.header.stamp = ros::Time::now();
   initial_pt.point.x = point.x;
   initial_pt.point.y = point.y;
   initial_pt.point.z = point.z;
   
   geometry_msgs::PointStamped transformStamped;
   pcl::PointXYZ transformedPoint;
-  listener->transformPoint("/world", initial_pt , transformStamped);	
+  try{
+    listener->waitForTransform(robot_name+"/world", initial_pt.header.frame_id, initial_pt.header.stamp, ros::Duration(3.0));
+    listener->transformPoint(robot_name+"/world", initial_pt , transformStamped);	
+  } catch(tf::LookupException ex) {
+    ROS_ERROR("Lookup exception occurred %s", ex.what());
+  }
   transformedPoint.x = transformStamped.point.x;
   transformedPoint.y = transformStamped.point.y;
   transformedPoint.z = transformStamped.point.z;
@@ -521,12 +528,12 @@ void processFrontiers(const sensor_msgs::PointCloud2& msg){
   tf::TransformListener* listener = new tf::TransformListener();
    tf::StampedTransform transform;
   try{
-    listener->waitForTransform("/world", "/X1", ros::Time(0), ros::Duration(3.0));
-    listener->lookupTransform( "/world", "/X1", ros::Time(0), transform);
+    listener->waitForTransform(robot_name+"/world", msg.header.frame_id, msg.header.stamp, ros::Duration(3.0));
+    listener->lookupTransform( robot_name+"/world", msg.header.frame_id, msg.header.stamp, transform);
   }
    catch(tf::TransformException& ex){
     ROS_ERROR("Received an exception trying to transform a point from \"world\" to \"X1\": %s", ex.what());
-    
+    return;
   }
 
   pcl::fromROSMsg(msg, out2);
@@ -551,22 +558,13 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
   tf::TransformListener* listener = new tf::TransformListener();
    tf::StampedTransform transform;
   try{
-    listener->waitForTransform("/world", "/X1", ros::Time(0), ros::Duration(3.0));
-    listener->lookupTransform( "/world", "/X1", ros::Time(0), transform);
+    listener->waitForTransform(robot_name+"/world", msg->header.frame_id, ros::Time(0), ros::Duration(3.0));
+    listener->lookupTransform(robot_name+"/world", msg->header.frame_id, ros::Time(0), transform);
   }
    catch(tf::TransformException& ex){
     ROS_ERROR("Received an exception trying to transform a point from \"world\" to \"X1\": %s", ex.what());
-    
+    return;
   }
-
-  geometry_msgs::Transform trans;
-  trans.translation.x = 0;
-  trans.translation.y = 0;
-  trans.translation.z = 0;
-  trans.rotation.x = 0;
-  trans.rotation.y = 0;
-  trans.rotation.z = 0;
-  trans.rotation.w = 1;
   pcl_ros::transformPointCloud	(*msg , out2 , transform);
   processFrontierPointCloud(out2 , listener);
 
@@ -626,18 +624,26 @@ template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontie
     geometry_msgs::Quaternion invPoseC = invPose;
 
 
+    auto now = ros::Time::now();
+
     geometry_msgs::PointStamped initial_pt; 
-    initial_pt.header.frame_id = "world";
+    initial_pt.header.frame_id = robot_name+"/world";
+    initial_pt.header.stamp = now;
     initial_pt.point.x = point.x;
     initial_pt.point.y = point.y;
     initial_pt.point.z = point.z;
     
     geometry_msgs::PointStamped transformStamped;
-    listener->transformPoint("/X1", initial_pt , transformStamped);	
+    try{
+      listener->waitForTransform(robot_name+"/base_link", initial_pt.header.frame_id, initial_pt.header.stamp, ros::Duration(1.0));
+    listener->transformPoint(robot_name+"/base_link", initial_pt , transformStamped);	
      goal.x = transformStamped.point.x;
       goal.y = transformStamped.point.y;
       goal.z = transformStamped.point.z;
-
+    } catch(tf::LookupException e) {
+      ROS_ERROR("Failed to transform : %s. Lone: %d", e.what(), __LINE__);
+      return;
+    }
 
     mColor++;
 
@@ -676,7 +682,8 @@ template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontie
         geometry_msgs::PointStamped inputMPoint;
 
         // inputMPoint.header.stamp = ros::Time::now().toNSec();
-        inputMPoint.header.frame_id = "X1";
+        inputMPoint.header.frame_id = robot_name+"/base_link";
+
         inputMPoint.point.x = middle_point.x;
         inputMPoint.point.y = middle_point.y;
         inputMPoint.point.z = middle_point.z;
@@ -685,7 +692,7 @@ template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontie
 // 
         geometry_msgs::PointStamped stamped_out;
         
-        listener->transformPoint("/world", inputMPoint , stamped_out);	
+        listener->transformPoint(robot_name+"/world", inputMPoint , stamped_out);	
         marker.color.r = 1.0;
        marker.color.g = 0.0;
        marker.color.b = 0.0;
@@ -749,11 +756,14 @@ void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::Transfo
 
     std::cout << "I am here" << std::endl;
 
+    std::cout << __FILE__ <<":" << __LINE__ << std::endl;
+
     for(int a = 0; a < finalPathToFrontier.size() ; a++){
       if(finalPathToFrontier[a] >= 0 && finalPathToFrontier[a] < 6){
         finalPathToFrontier.erase(finalPathToFrontier.begin()+a);
       }
      }
+     std::cout << __FILE__ <<":" << __LINE__ << std::endl;
     if(finalPathToFrontier[0] != -1){
       finalPathToFrontier.push_front(-1);
     }
@@ -762,7 +772,7 @@ void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::Transfo
       std::cout << " " << finalPathToFrontier[a] <<  " ";
       }
     std::cout << std::endl;
-
+std::cout << __FILE__ <<":" << __LINE__ << std::endl;
     // std::map<int , std::set<int>> terrainGraphConnected;
 
     // std::queue<int> frontier;
@@ -780,9 +790,10 @@ void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::Transfo
     // std::map<int , int> nodeIdMapping;
     graph_msgs::GeometryGraph gg;
     gg.header.seq = globalGraphId;
-    gg.header.frame_id = "world";
+    gg.header.frame_id = robot_name+"/world";
     gg.header.stamp = ros::Time::now();
     int point_id = 0;
+    std::cout << __FILE__ <<":" << __LINE__ << std::endl;
     for(int a = 0; a < finalPathToFrontier.size()-1 ; a++){
       if(finalPathToFrontier[a] == -1 ){
         geometry_msgs::Point tempPt;
@@ -794,7 +805,9 @@ void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::Transfo
         gg.edges[a].node_ids.push_back(a+1);
         
       }else{
+        std::cout << __FILE__ <<":" << __LINE__ << std::endl;
         auto pt = transformPointToWorld(discreteMap[finalPathToFrontier[a]] , listener);
+        std::cout << __FILE__ <<":" << __LINE__ << std::endl;
         geometry_msgs::Point tempPt;
         tempPt.x =pt.x;
         tempPt.y =pt.y;
@@ -804,7 +817,7 @@ void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::Transfo
         gg.edges[a].node_ids.push_back(a+1);
       }
     }
-
+std::cout << __FILE__ <<":" << __LINE__ << std::endl;
     auto pt = transformPointToWorld(discreteMap[finalPathToFrontier[finalPathToFrontier.size()-1]] , listener);
     geometry_msgs::Point tempPt;
     tempPt.x =pt.x;
@@ -885,7 +898,7 @@ void callback(const PointCloud::ConstPtr& msg){
 int main(int argc, char** argv)
 {
 
-  marker.header.frame_id = "cave_qual";
+  marker.header.frame_id = robot_name+"/world";
 marker.type = marker.SPHERE;
   marker.action = marker.ADD;
   marker.scale.x = 0.2;
@@ -898,17 +911,14 @@ marker.type = marker.SPHERE;
 
   ros::init(argc, argv, "sub_pcl");
   ros::NodeHandle nh;
-  std::printf("subscriebrs ");
+
   ros::Subscriber sub = nh.subscribe<PointCloud>("traversable_pointcloud_input", 1, callback);
   ros::Subscriber sub3 = nh.subscribe("robot_position_pose", 1, positionCallBack);
   ros::Subscriber sub2 = nh.subscribe("goal_to_explore", 1, goalCallBack);
   ros::Subscriber sub4 = nh.subscribe<PointCloud>("frontiers", 1, frontierCallBack);
   pub = nh.advertise<visualization_msgs::MarkerArray> ("Path", 1);
   pub2 = nh.advertise<graph_msgs::GeometryGraph> ("graph", 1);
-
-
-
-  std::printf("subscriebrs ");
+  ros::param::get("~robot_name", robot_name);
   ros::spin();
 }
 

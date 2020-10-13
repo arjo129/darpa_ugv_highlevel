@@ -37,14 +37,7 @@ namespace loam
 {
 
 LaserMapping::LaserMapping(const float& scanPeriod, const size_t& maxIterations)
-{
-   // initialize mapping odometry and odometry tf messages
-   _odomAftMapped.header.frame_id = "/cave_qual";
-   _odomAftMapped.child_frame_id = "/aft_mapped";
-
-   _aftMappedTrans.frame_id_ = "/cave_qual";
-   _aftMappedTrans.child_frame_id_ = "/aft_mapped";
-}
+{}
 
 
 bool LaserMapping::setup(ros::NodeHandle& node, ros::NodeHandle& privateNode)
@@ -52,6 +45,8 @@ bool LaserMapping::setup(ros::NodeHandle& node, ros::NodeHandle& privateNode)
    // fetch laser mapping params
    float fParam;
    int iParam;
+
+   privateNode.getParam("robot_name", robot_name);
 
    if (privateNode.getParam("scanPeriod", fParam))
    {
@@ -152,27 +147,34 @@ bool LaserMapping::setup(ros::NodeHandle& node, ros::NodeHandle& privateNode)
    }
 
    // advertise laser mapping topics
-   _pubLaserCloudSurround = node.advertise<sensor_msgs::PointCloud2>("/laser_cloud_surround", 1);
-   _pubLaserCloudFullRes  = node.advertise<sensor_msgs::PointCloud2>("/velodyne_cloud_registered", 2);
-   _pubOdomAftMapped      = node.advertise<nav_msgs::Odometry>("/aft_mapped_to_init", 5);
+   _pubLaserCloudSurround = node.advertise<sensor_msgs::PointCloud2>("laser_cloud_surround", 1);
+   _pubLaserCloudFullRes  = node.advertise<sensor_msgs::PointCloud2>("velodyne_cloud_registered", 2);
+   _pubOdomAftMapped      = node.advertise<nav_msgs::Odometry>("aft_mapped_to_init", 5);
 
    //_pubGroundDeep         = node.advertise<sensor_msgs::PointCloud2>("/grond_points", 1);
 
    // subscribe to laser odometry topics
    _subLaserCloudCornerLast = node.subscribe<sensor_msgs::PointCloud2>
-      ("/laser_cloud_corner_last", 2, &LaserMapping::laserCloudCornerLastHandler, this);
+      ("laser_cloud_corner_last", 2, &LaserMapping::laserCloudCornerLastHandler, this);
 
    _subLaserCloudSurfLast = node.subscribe<sensor_msgs::PointCloud2>
-      ("/laser_cloud_surf_last", 2, &LaserMapping::laserCloudSurfLastHandler, this);
+      ("laser_cloud_surf_last", 2, &LaserMapping::laserCloudSurfLastHandler, this);
 
    _subLaserOdometry = node.subscribe<nav_msgs::Odometry>
-      ("/laser_odom_to_init", 5, &LaserMapping::laserOdometryHandler, this);
+      ("laser_odom_to_init", 5, &LaserMapping::laserOdometryHandler, this);
 
    _subLaserCloudFullRes = node.subscribe<sensor_msgs::PointCloud2>
-      ("/velodyne_cloud_3", 2, &LaserMapping::laserCloudFullResHandler, this);
+      ("velodyne_cloud_3", 2, &LaserMapping::laserCloudFullResHandler, this);
 
    // subscribe to IMU topic
-   _subImu = node.subscribe<sensor_msgs::Imu>("/X1/imu/data", 50, &LaserMapping::imuHandler, this);
+   _subImu = node.subscribe<sensor_msgs::Imu>("imu/data", 50, &LaserMapping::imuHandler, this);
+
+   // initialize mapping odometry and odometry tf messages
+   _odomAftMapped.header.frame_id = robot_name + "/world";
+   _odomAftMapped.child_frame_id = robot_name + "/aft_mapped";
+
+   _aftMappedTrans.frame_id_ = robot_name + "/world";
+   _aftMappedTrans.child_frame_id_ = robot_name + "/aft_mapped";
 
    return true;
 }
@@ -279,10 +281,10 @@ void LaserMapping::publishResult()
 {
    // publish new map cloud according to the input output ratio
    if (hasFreshMap()) // publish new map cloud
-      publishCloudMsg(_pubLaserCloudSurround, laserCloudSurroundDS(), _timeLaserOdometry, "/cave_qual");
+      publishCloudMsg(_pubLaserCloudSurround, laserCloudSurroundDS(), _timeLaserOdometry, robot_name +"/world");
 
    // publish transformed full resolution input cloud
-   publishCloudMsg(_pubLaserCloudFullRes, laserCloud(), _timeLaserOdometry, "/cave_qual");
+   publishCloudMsg(_pubLaserCloudFullRes, laserCloud(), _timeLaserOdometry, robot_name +"/world");
 
    // publish odometry after mapped transformations
    geometry_msgs::Quaternion geoQuat = tf::createQuaternionMsgFromRollPitchYaw

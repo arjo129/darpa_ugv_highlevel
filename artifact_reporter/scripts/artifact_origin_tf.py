@@ -8,14 +8,13 @@ from std_msgs.msg import String
 
 
 SUBT_SRV_NAME = "/subt/pose_from_artifact_origin"
-ROBOT_NAME = "X1"
 
-def send_transform(pose):
+def send_transform(pose, parent_frame, child_frame):
     broadcaster = tf2_ros.StaticTransformBroadcaster()
     static_transformStamped = TransformStamped()
     static_transformStamped.header.stamp = rospy.Time.now()
-    static_transformStamped.header.frame_id = "artifact_origin"
-    static_transformStamped.child_frame_id = "world"
+    static_transformStamped.header.frame_id = parent_frame
+    static_transformStamped.child_frame_id = child_frame
 
     static_transformStamped.transform.translation.x = pose.pose.pose.position.x
     static_transformStamped.transform.translation.y = pose.pose.pose.position.y
@@ -33,7 +32,8 @@ def send_transform(pose):
     rospy.spin()
 
 def main():
-    
+    robot_name = None
+    robot_name = rospy.get_param("~robot_name")
 
     rospy.logwarn("[ARTIFACT-ORIGIN-TF] Waiting for darpa artifact origin service....")
     rospy.wait_for_service(SUBT_SRV_NAME)
@@ -44,16 +44,16 @@ def main():
     try:
         get_artifact_origin = rospy.ServiceProxy(SUBT_SRV_NAME, PoseFromArtifact)
         robot_name_msg = String()
-        robot_name_msg.data = ROBOT_NAME
+        robot_name_msg.data = robot_name
         artifact_origin_pose = get_artifact_origin(robot_name_msg)
     except rospy.ServiceException as e:
-        rospy.logerr("Service call failed: %s"%e)
-        rospy.logerr("Likely robot too far from staging area. Please restart sim...")
+        rospy.logerr("[ARTIFACT-ORIGIN-TF] Service call failed: %s"%e)
+        rospy.logerr("[ARTIFACT-ORIGIN-TF] Likely robot too far from staging area. Please restart sim...")
         return
 
     rospy.loginfo("[ARTIFACT-ORIGIN-TF] Artifact Origin Pose Received...\n{}".format(artifact_origin_pose))
 
-    send_transform(artifact_origin_pose)
+    send_transform(artifact_origin_pose, "artifact_origin", robot_name+"/world")
 
 
 

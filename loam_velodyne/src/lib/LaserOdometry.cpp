@@ -51,14 +51,7 @@ namespace loam
   LaserOdometry::LaserOdometry(float scanPeriod, uint16_t ioRatio, size_t maxIterations):
     BasicLaserOdometry(scanPeriod, maxIterations),
     _ioRatio(ioRatio)
-  {
-    // initialize odometry and odometry tf messages
-    _laserOdometryMsg.header.frame_id = "/cave_qual";
-    _laserOdometryMsg.child_frame_id  = "/laser_odom";
-
-    _laserOdometryTrans.frame_id_       = "/cave_qual";
-    _laserOdometryTrans.child_frame_id_ = "/laser_odom";
-  }
+  {}
 
 
   bool LaserOdometry::setup(ros::NodeHandle &node, ros::NodeHandle &privateNode)
@@ -66,6 +59,8 @@ namespace loam
     // fetch laser odometry params
     float fParam;
     int iParam;
+
+    privateNode.getParam("robot_name", robot_name);
 
     if (privateNode.getParam("scanPeriod", fParam))
     {
@@ -138,29 +133,36 @@ namespace loam
     }
 
     // advertise laser odometry topics
-    _pubLaserCloudCornerLast = node.advertise<sensor_msgs::PointCloud2>("/laser_cloud_corner_last", 2);
-    _pubLaserCloudSurfLast = node.advertise<sensor_msgs::PointCloud2>("/laser_cloud_surf_last", 2);
-    _pubLaserCloudFullRes = node.advertise<sensor_msgs::PointCloud2>("/velodyne_cloud_3", 2);
-    _pubLaserOdometry = node.advertise<nav_msgs::Odometry>("/laser_odom_to_init", 5);
+    _pubLaserCloudCornerLast = node.advertise<sensor_msgs::PointCloud2>("laser_cloud_corner_last", 2);
+    _pubLaserCloudSurfLast = node.advertise<sensor_msgs::PointCloud2>("laser_cloud_surf_last", 2);
+    _pubLaserCloudFullRes = node.advertise<sensor_msgs::PointCloud2>("velodyne_cloud_3", 2);
+    _pubLaserOdometry = node.advertise<nav_msgs::Odometry>("laser_odom_to_init", 5);
 
     // subscribe to scan registration topics
     _subCornerPointsSharp = node.subscribe<sensor_msgs::PointCloud2>
-      ("/laser_cloud_sharp", 2, &LaserOdometry::laserCloudSharpHandler, this);
+      ("laser_cloud_sharp", 2, &LaserOdometry::laserCloudSharpHandler, this);
 
     _subCornerPointsLessSharp = node.subscribe<sensor_msgs::PointCloud2>
-      ("/laser_cloud_less_sharp", 2, &LaserOdometry::laserCloudLessSharpHandler, this);
+      ("laser_cloud_less_sharp", 2, &LaserOdometry::laserCloudLessSharpHandler, this);
 
     _subSurfPointsFlat = node.subscribe<sensor_msgs::PointCloud2>
-      ("/laser_cloud_flat", 2, &LaserOdometry::laserCloudFlatHandler, this);
+      ("laser_cloud_flat", 2, &LaserOdometry::laserCloudFlatHandler, this);
 
     _subSurfPointsLessFlat = node.subscribe<sensor_msgs::PointCloud2>
-      ("/laser_cloud_less_flat", 2, &LaserOdometry::laserCloudLessFlatHandler, this);
+      ("laser_cloud_less_flat", 2, &LaserOdometry::laserCloudLessFlatHandler, this);
 
     _subLaserCloudFullRes = node.subscribe<sensor_msgs::PointCloud2>
-      ("/velodyne_cloud_2", 2, &LaserOdometry::laserCloudFullResHandler, this);
+      ("velodyne_cloud_2", 2, &LaserOdometry::laserCloudFullResHandler, this);
 
     _subImuTrans = node.subscribe<sensor_msgs::PointCloud2>
-      ("/imu_trans", 5, &LaserOdometry::imuTransHandler, this);
+      ("imu_trans", 5, &LaserOdometry::imuTransHandler, this);
+
+    // initialize odometry and odometry tf messages
+    _laserOdometryMsg.header.frame_id = robot_name + "/world";
+    _laserOdometryMsg.child_frame_id  = robot_name + "/laser_odom";
+
+    _laserOdometryTrans.frame_id_       = robot_name + "/world";
+    _laserOdometryTrans.child_frame_id_ = robot_name + "/laser_odom";
 
     return true;
   }
@@ -320,11 +322,11 @@ namespace loam
     if (_ioRatio < 2 || frameCount() % _ioRatio == 1)
     {
       ros::Time sweepTime = _timeSurfPointsLessFlat;
-      publishCloudMsg(_pubLaserCloudCornerLast, *lastCornerCloud(), sweepTime, "/X1");
-      publishCloudMsg(_pubLaserCloudSurfLast, *lastSurfaceCloud(), sweepTime, "/X1");
+      publishCloudMsg(_pubLaserCloudCornerLast, *lastCornerCloud(), sweepTime, robot_name);
+      publishCloudMsg(_pubLaserCloudSurfLast, *lastSurfaceCloud(), sweepTime, robot_name);
 
       transformToEnd(laserCloud());  // transform full resolution cloud to sweep end before sending it
-      publishCloudMsg(_pubLaserCloudFullRes, *laserCloud(), sweepTime, "/X1");
+      publishCloudMsg(_pubLaserCloudFullRes, *laserCloud(), sweepTime, robot_name);
     }
   }
 

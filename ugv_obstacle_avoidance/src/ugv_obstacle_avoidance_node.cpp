@@ -368,6 +368,7 @@ void positionCallBack(const nav_msgs::Odometry::ConstPtr& msg){
         i.data = 0;
         status_pub.publish(i);
         current_state = VehicleState::AWAITING_INSTRUCTION;  
+        ROS_INFO("Already there bro\n");
    }
 
     // std::cout << "Current goal" << goal.x << ", " << goal.y << "| " << current.x << ", " << current.y <<std::endl;
@@ -608,12 +609,10 @@ int main(int argc, char** argv)
   // }
 
 
-
   ros::Subscriber sub = nh.subscribe<PointCloud>("traversable_pointcloud_input", 1, callback);
   ros::Subscriber sub3 = nh.subscribe("robot_position_pose", 1, positionCallBack);
   ros::Subscriber sub2 = nh.subscribe("goal_to_explore", 1, goalCallBack);
-  
-  pub_vel = nh.advertise<geometry_msgs::Twist> ("/X1/cmd_vel", 1);
+  pub_vel = nh.advertise<geometry_msgs::Twist> ("cmd_vel", 1);
   status_pub = nh.advertise<std_msgs::Int8> ("status", 1);
   ros::spin();
 }

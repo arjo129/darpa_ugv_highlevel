@@ -56,7 +56,7 @@ void onStartCallback(const std_msgs::Empty e)
         geometry_msgs::PointStamped goal = global_graph.getNextGoal();
         exploration_goal_pub.publish(goal);
         ROS_INFO("Waiting for goal to be reached...");
-        std_msgs::Int8ConstPtr status = ros::topic::waitForMessage<std_msgs::Int8>(ROBOT_GOAL_STATUS, *nh, ros::Duration(40.0));
+        std_msgs::Int8ConstPtr status = ros::topic::waitForMessage<std_msgs::Int8>(ROBOT_GOAL_STATUS, *nh, ros::Duration(20.0));
 
         ROS_INFO("Received goal status...");
 

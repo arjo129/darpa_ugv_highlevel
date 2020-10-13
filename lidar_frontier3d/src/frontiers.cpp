@@ -10,6 +10,7 @@
 #include <lidar_frontier3d/frontier_request.h>
 #include <tf/tf.h>
 
+std::string robot_name;
 ros::Publisher visualization_pub, centroid_pub, local_pub;
 pcl::PointXYZ scanPointToPointCloud(pcl::PointXYZ point, double azimuth); //Access private API
 tf::TransformListener* listener;
@@ -52,8 +53,8 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
     tf::StampedTransform current_pose;
     try{
         auto time_now = ros::Time::now();
-        listener->waitForTransform(pcl_msg->header.frame_id, "world", time_now, ros::Duration(1.0));
-        listener->lookupTransform(pcl_msg->header.frame_id, "world", time_now/*pcl_conversions::fromPCL(pcl_msg->header.stamp)*/, current_pose);
+        listener->waitForTransform(pcl_msg->header.frame_id, robot_name+"/world", time_now, ros::Duration(1.0));
+        listener->lookupTransform(pcl_msg->header.frame_id, robot_name+"/world", time_now/*pcl_conversions::fromPCL(pcl_msg->header.stamp)*/, current_pose);
     } catch (tf::TransformException error) {
         ROS_WARN("Failed to transform tf %s", error.what());
         return;
@@ -108,12 +109,12 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
 
     pcl::PointCloud<pcl::PointXYZ> global_frame;
     pcl_ros::transformPointCloud(centroid_points, global_frame, current_pose.inverse());
-    global_frame.header.frame_id  = "world";
+    global_frame.header.frame_id  = robot_name+"/world";
     local_pub.publish(global_frame);
     
     pcl::PointCloud<pcl::PointXYZ> filtered;
     filtered.header = pcl_msg->header;
-    filtered.header.frame_id  = "world";
+    filtered.header.frame_id  = robot_name+"/world";
     for(auto pt: global_frame) {
         if(!manager.queryFrontierPoint(pt) && pt.z < 2) {
             filtered.push_back(pt);
@@ -127,12 +128,13 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
 int main(int argc, char** argv) {
     ros::init(argc, argv,"map_merge");
     ros::NodeHandle nh;
-    ros::Subscriber sub = nh.subscribe("/X1/points/", 1, onPointCloudRecieved);
-    ros::ServiceServer server = nh.advertiseService("/get_frontiers", getFrontiers);
+    ros::param::get("~robot_name", robot_name);
+    ros::Subscriber sub = nh.subscribe("points", 1, onPointCloudRecieved);
+    ros::ServiceServer server = nh.advertiseService("get_frontiers", getFrontiers);
    
-    visualization_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontiers", 10);
-    centroid_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontiers/centroid", 10);
-    local_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("/frontiers/local", 10);
+    visualization_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("frontiers", 10);
+    centroid_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("frontiers/centroid", 10);
+    local_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> >("frontiers/local", 10);
     listener = new tf::TransformListener();
    
     int i = 0;
@@ -140,7 +142,7 @@ int main(int argc, char** argv) {
         ros::spinOnce();
         //if(i%10 == 0){
             pcl::PointCloud<pcl::PointXYZ> cloud;
-            cloud.header.frame_id ="world";
+            cloud.header.frame_id = robot_name+"/world";
             //cloud.header.stamp = ros::Time::now();
             manager.getFrontiers(cloud);
             //std::cout << "count"<< cloud.size() <<std::endl;

@@ -28,6 +28,8 @@ typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 ros::Publisher pub;
 pcl::PointCloud<pcl::PointXYZ> out;
 
+ros::Publisher pub2;
+pcl::PointCloud<pcl::PointXYZ> out2;
 
 float getDistanceBetween(pcl::PointXYZ p1 , pcl::PointXYZ p2){
     // std::cout << p1.x << " " << p1.y << " " << p1.z <<std::endl;
@@ -46,10 +48,10 @@ float distanceFromOrigin(float *p, bool plane){
 }
 
 bool steep(float *p1 , float *p2){
-  float angle = std::atan(  (p2[2]- p1[2]) / std::sqrt((p2[1]- p1[1]) * (p2[1]- p1[1]) + (p2[0]- p1[0]) * (p2[0]- p1[0]) )  );
+  float angle = std::atan(  std::fabs(p2[2]- p1[2]) / std::sqrt((p2[1]- p1[1]) * (p2[1]- p1[1]) + (p2[0]- p1[0]) * (p2[0]- p1[0]) )  );
 
 
-  if(angle > 0.70 || distanceFromOrigin(p2 , true) < distanceFromOrigin(p1 ,true)  ||(p2[2]- p1[2]) < -0.3){
+  if(angle > 0.80 || distanceFromOrigin(p2 , true) < distanceFromOrigin(p1 ,true)){
     return true;
   }else{
     return false;
@@ -79,7 +81,7 @@ float getYaw( pcl::PointXYZ &point ){
 void getMaxTraversablePoint(float (*data)[10000][3] , int i , pcl::PointXYZ *point){
   int capture = 0;
   for(int ring = 0; ring < 9 ; ring++){
-    if(steep(data[ring][i] , data[ring+2][i])){
+    if(steep(data[ring][i] , data[ring+1][i])){
       break;
     }
     capture++;
@@ -94,6 +96,25 @@ void getMaxTraversablePoint(float (*data)[10000][3] , int i , pcl::PointXYZ *poi
 bool sortFunc(std::pair<float , pcl::PointXYZ> p1 , std::pair<float , pcl::PointXYZ> p2){
   return p1.first < p2.first;
 }
+
+// pcl::PointXYZ transformPointToWorld(pcl::PointXYZ point , tf::TransformListener* listener){
+
+//   geometry_msgs::PointStamped initial_pt; 
+//   initial_pt.header.frame_id = "X1";
+//   initial_pt.point.x = point.x;
+//   initial_pt.point.y = point.y;
+//   initial_pt.point.z = point.z;
+  
+//   geometry_msgs::PointStamped transformStamped;
+//   pcl::PointXYZ transformedPoint;
+//   listener->transformPoint("/world", initial_pt , transformStamped);	
+//   transformedPoint.x = transformStamped.point.x;
+//   transformedPoint.y = transformStamped.point.y;
+//   transformedPoint.z = transformStamped.point.z;
+
+//   return transformedPoint;
+
+// }
 
 void callback(const PointCloud::ConstPtr& msg){
   geometry_msgs::Transform trans;
@@ -112,6 +133,18 @@ void callback(const PointCloud::ConstPtr& msg){
   float _factor = (nScanRings - 1) / (_upperBound - _lowerBound);
 
   std::vector<int> ringCount (16,0); 
+
+   
+  //  tf::StampedTransform transform;
+  //   tf::TransformListener* listener = new tf::TransformListener();
+  // try{
+  //   listener->waitForTransform("/world", "/X1", ros::Time(0), ros::Duration(3.0));
+  //   listener->lookupTransform( "/world", "/X1", ros::Time(0), transform);
+  // }
+  //  catch(tf::TransformException& ex){
+  //   ROS_ERROR("Received an exception trying to transform a point from \"world\" to \"X1\": %s", ex.what());
+    
+  // }
 
   std::vector<std::pair<float , pcl::PointXYZ>> yawPoints;
   
@@ -199,9 +232,10 @@ void callback(const PointCloud::ConstPtr& msg){
     //     // std::cout << distBetPoint << std::endl;
     //     out.push_back(pastPoint);
     // }
-
+    // auto pt = transformPointToWorld(point , listener);
 
     out.push_back(point);
+    // out2.push_back(pt);
 
     pastPoint.x = point.x;
     pastPoint.y = point.y;
@@ -212,10 +246,16 @@ void callback(const PointCloud::ConstPtr& msg){
 
   pcl::PCLPointCloud2 pc2;
   pcl::toPCLPointCloud2 (out ,pc2);
+  // pcl::PCLPointCloud2 pc3;
+  // pcl::toPCLPointCloud2 (out2 ,pc3);
+
+  // pc3.header.frame_id = "world";
   pub.publish(pc2);
+  // pub2.publish(pc3);
   // pub_vel.publish(t);
 
  out.clear();
+//  out2.clear();
   // pcl::PointCloud<pcl::PointXYZ> laserCloudIn;
   // pcl::fromROSMsg(*msg, laserCloudIn);
   // pub.publish(laserCloudIn);
@@ -225,12 +265,15 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "sub_pcl");
   ros::NodeHandle nh;
+
+
   std::printf("subscriebrs ");
   ros::Subscriber sub = nh.subscribe<PointCloud>("lidar_input", 1, callback);
   // ros::Subscriber sub3 = nh.subscribe("robot_position_pose", 1, positionCallBack);
   // ros::Subscriber sub2 = nh.subscribe("goal_to_explore", 1, goalCallBack);
   std::printf("subscriebrs ");
-  pub = nh.advertise<PointCloud> ("X1/points2", 1);
+  pub = nh.advertise<PointCloud> ("points2", 1);
+  // pub2 = nh.advertise<PointCloud> ("X1/points3", 1);
   // pub_vel = nh.advertise<geometry_msgs::Twist> ("X1/cmd_vel", 1);
   ros::spin();
 }

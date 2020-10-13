@@ -1,25 +1,29 @@
 <launch>
 
-  <arg name="rviz" default="true" />
+  <arg name="rviz" default="false" />
   <arg name="scanPeriod" default="0.1" />
-  <env name="LD_LIBRARY_PATH" value="/usr/local/lib:$LD_LIBRARY_PATH" />
+  <!-- <env name="LD_LIBRARY_PATH" value="/usr/local/lib:$LD_LIBRARY_PATH" /> -->
+  <arg name="robot_name" default="X2" />
 
   <node pkg="loam_velodyne" type="multiScanRegistration" name="multiScanRegistration" output="screen">
     <param name="lidar" value="VLP-16" /> <!-- options: VLP-16  HDL-32  HDL-64E -->
     <param name="scanPeriod" value="$(arg scanPeriod)" />
 
-    <remap from="/multi_scan_points" to="/X1/points" />
+    <remap from="/multi_scan_points" to="/$(arg robot_name)/points" />
   </node>
 
   <node pkg="loam_velodyne" type="laserOdometry" name="laserOdometry" output="screen" respawn="true">
     <param name="scanPeriod" value="$(arg scanPeriod)" />
+    <param name="robot_name" value="$(arg robot_name)" />
   </node>
 
   <node pkg="loam_velodyne" type="laserMapping" name="laserMapping" output="screen">
     <param name="scanPeriod" value="$(arg scanPeriod)" />
+    <param name="robot_name" value="$(arg robot_name)" />
   </node>
 
   <node pkg="loam_velodyne" type="transformMaintenance" name="transformMaintenance" output="screen">
+    <param name="robot_name" value="$(arg robot_name)" />
   </node>
 
   <group if="$(arg rviz)">
