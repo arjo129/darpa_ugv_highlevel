@@ -5,36 +5,30 @@ from noroute_mesh.srv import neighbour
 from std_msgs.msg import Empty
 from nav_msgs.msg import OccupancyGrid
 global rssi_reading
+
+DROP_BEACON = 38
+
 rssi_reading = ""
+global positions
+positions = [[0,0,0]]
 
-def last_rssi(message):
-    global rssi_reading
-    rssi_reading = message.header.frame_id
-    print "updating rssi"
+def euclidean_distance(d1, d2):
+    dist = 0
+    for i in range(len(d1)):
+        r = d1[i] - d2[i]
+        dist += r*r
+    return dist**0.5
 
-def parse_result(message):
-    neighbours_rssi_combined = res.response.split("|")
-    neighbours = {}
-    for n in neighbours_rssi_combined:
-        try:
-            neighbour, rssi= n.split(",")
-            if rssi != "inf":
-                neighbours[neighbour] = float(rssi)
-        except:
-            pass
-    return neighbours
+def get_closest(position):
+    global positions
+    min_dist = 9999999
+    for p in positions:
+        d = euclidean_distance(p, position) 
+        if d < min_dist:
+            min_dist =d
+    return min_dist
 
-def determine_if_use_teambase(message):
-    global rssi_reading
-    print(rssi_reading, message)
-    neighbours_me = parse_result(rssi_reading)
-    print(neighbours_me)
-    neighbours_team_base = parse_result(message)
-    neighbours_me.update(neighbours_team_base)
-    return neighbours_me
-    
 if __name__ == "__main__":
-    drop_points = [-55, -60, -65,  -70, -75, -78, -80, -82, -84, -85, -86]
     rospy.init_node("breadcrumb_dropper")
     try:
         robot_name = rospy.get_param("~robot_name")
@@ -43,27 +37,23 @@ if __name__ == "__main__":
     print("waiting for comms service")
     rate = rospy.Rate(1)
     rate.sleep()
-    dropper = rospy.Publisher(robot_name+"/breadcrumb/deploy", Empty)
-    sub =rospy.Subscriber(robot_name+"/comms_publisher", OccupancyGrid, last_rssi)
-    
-    try:
-        get_neighbours  = rospy.ServiceProxy('X1/get_neighbour', neighbour)
-        num_of_drops = 0
-        while not rospy.is_shutdown():
-            res = get_neighbours()
-            neighbours = determine_if_use_teambase(res.response)
-            print(neighbours)
-            if "teambase" in neighbours:
-                #print(neighbours["teambase"])
-                rssi = neighbours["teambase"]
-                if num_of_drops < len(drop_points) and rssi < drop_points[num_of_drops]:
-                    num_of_drops += 1
-                    dropper.publish(Empty())
-                    print ("dropping ", num_of_drops)
-            else:
-                print ("LOST CONTACT")
-            rssi_reading = ""
-            rate.sleep()
-    except Exception as e:
-        print e
-    
+    dropper = rospy.Publisher("breadcrumb/deploy", Empty)
+    listener = TransformListener()
+    while not rospy.is_shutdown():
+        try:
+            now = rospy.Time.now()
+            listener.waitForTransform(robot_name+"/base_link", robot_name+"/world", now, rospy.Duration(3))
+            trans, rot = listener.lookupTransform(robot_name+"/base_link", robot_name+"/world", now)
+        except Exception as e:
+            print (e)
+            continue
+
+        rospy.sleep(1.0)  
+        rospy.loginfo (trans)
+        res = get_closest(trans)
+        rospy.loginfo ("distance from nearest breadcrumb %f", res)
+        if res > DROP_BEACON:
+            empt = Empty()
+            dropper.publish(empt)
+            positions.append(trans)
+            rospy.loginfo("Deploying breadcrumb")
