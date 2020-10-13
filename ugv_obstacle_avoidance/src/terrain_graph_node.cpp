@@ -396,7 +396,7 @@ int getBestNextNode(std::vector<std::tuple<float,float>> &distances , pcl::Point
     int seg = getSegmentValue(bestPoint);
 
      
-    
+    bestPoint.z = 0;
     // std::cout << "segemnt: "<<segForPoint << std::endl;
 
     if(discreteSegmentMap.find(seg) == discreteSegmentMap.end()){
@@ -651,7 +651,7 @@ template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontie
     pcl::PointXYZ middle_point;
     middle_point.x = goal.x;
     middle_point.y = goal.y;
-    middle_point.z = goal.z;
+    middle_point.z = 0;
       pcl::PointXYZ start_point;
       start_point.x = 0;
       start_point.y = 0;
@@ -702,7 +702,7 @@ template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontie
        marker.color.b = 0.0;
       marker.pose.position.x = stamped_out.point.x;
        marker.pose.position.y = stamped_out.point.y;
-       marker.pose.position.z = stamped_out.point.z;
+       marker.pose.position.z = 0;
              
 
        id++;

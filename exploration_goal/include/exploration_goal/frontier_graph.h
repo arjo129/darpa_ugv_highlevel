@@ -14,8 +14,6 @@
 #include <vector>
 #include <algorithm>
 
-#define GLOBAL_TF_FRAME "world"
-
 // struct PointCloud3d_ {
 //     std::vector<Eigen::Vector3f> pts;
     
@@ -50,7 +48,7 @@ typedef enum GraphNodeExploredState
 class FrontierGraph 
 {
     public:
-        FrontierGraph();
+        FrontierGraph(std::string global_frame_id_);
         FrontierGraph(graph_msgs::GeometryGraph graph);
         ~FrontierGraph();
         void mergeLocalGraph (FrontierGraph & local_graph);
@@ -78,10 +76,11 @@ class FrontierGraph
         int num_nodes;
         int current_node_idx;
         int upcoming_node_idx;
+        std::string global_frame_id;
 };
 
 
-FrontierGraph::FrontierGraph() : num_nodes(0), current_node_idx(0)
+FrontierGraph::FrontierGraph(std::string global_frame_id_) : num_nodes(0), current_node_idx(0), global_frame_id(global_frame_id_)
 {}
 
 FrontierGraph::FrontierGraph(graph_msgs::GeometryGraph graph) : num_nodes(graph.nodes.size()), current_node_idx(0) , upcoming_node_idx(0)
@@ -190,7 +189,7 @@ int FrontierGraph::getNextGoalId(){
 
 geometry_msgs::PointStamped FrontierGraph::getNextGoal(){
     geometry_msgs::PointStamped goal;
-    goal.header.frame_id = GLOBAL_TF_FRAME;
+    goal.header.frame_id = global_frame_id;
     goal.header.stamp = ros::Time::now();
     int id = getNextGoalId();
     upcoming_node_idx = id;
@@ -201,7 +200,7 @@ geometry_msgs::PointStamped FrontierGraph::getNextGoal(){
 
 geometry_msgs::PointStamped FrontierGraph::reset(){
     geometry_msgs::PointStamped goal;
-    goal.header.frame_id = GLOBAL_TF_FRAME;
+    goal.header.frame_id = global_frame_id;
     goal.header.stamp = ros::Time::now();
     geometry_msgs::Point goalpoint = getPointForNodeId(current_node_idx);
     goal.point = goalpoint;
@@ -230,7 +229,7 @@ graph_msgs::GeometryGraph FrontierGraph::toMsg()
 {
     graph_msgs::GeometryGraph graph;
 
-    graph.header.frame_id = GLOBAL_TF_FRAME;
+    graph.header.frame_id = global_frame_id;
     graph.header.stamp = ros::Time::now();
 
     graph.nodes = node_idx_to_3d_point;

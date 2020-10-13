@@ -4,7 +4,14 @@
 
 
     <group ns="$(arg robot_name)">
-        <node pkg="exploration_goal" type="exploration_goal" name="exploration_goal" output="screen" respawn="true">
+        <node pkg="exploration_goal" type="exploration_goal" name="exploration_goal" output="screen">
+            <param name="robot_name" type="str" value="$(arg robot_name)" />
+        </node>
+
+        <node pkg="exploration_goal" type="graph_visualization" name="global_graph_viz" output="screen">
+            <param name="graph_topic" type="str" value="global_graph" />
+            <param name="graph_vis_topic" type="str" value="global_graph/vis" />
+            <param name="robot_name" type="str" value="$(arg robot_name)" />
         </node>
 
         <node pkg="exploration_goal" type="get_ur_ass_inside" name="get_ur_ass_inside" output="screen" respawn="true">

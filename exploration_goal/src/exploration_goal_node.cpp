@@ -17,8 +17,9 @@
  */  
 
 ros::Publisher global_graph_pub, exploration_goal_pub, request_local_graph_pub;
-FrontierGraph global_graph;
+boost::shared_ptr<FrontierGraph> global_graph;
 boost::shared_ptr<ros::NodeHandle> nh;
+std::string robot_name;
 
 
 void onStartCallback(const std_msgs::Empty e)
@@ -27,14 +28,14 @@ void onStartCallback(const std_msgs::Empty e)
     bool stuck = false;
     while (ros::ok())
     {       
-        if(global_graph.getAL().size() == 0 ||global_graph.isLeafNode() || stuck){
+        if(global_graph->getAL().size() == 0 ||global_graph->isLeafNode() || stuck){
             stuck = false;
 
             ROS_INFO("Requesting Local Graph...");
             // request for local terrain graph
             geometry_msgs::PointStamped temp;
             temp.header.stamp = ros::Time::now();
-            temp.header.frame_id = GLOBAL_TF_FRAME;
+            temp.header.frame_id = robot_name;
             request_local_graph_pub.publish(temp);
 
             // wait for local terrain graph to be received
@@ -44,16 +45,16 @@ void onStartCallback(const std_msgs::Empty e)
             // Some frontiers are returned as local graph
             if (local_graph != NULL){
                 FrontierGraph local_graph_obj(*local_graph);
-                global_graph.mergeLocalGraph(local_graph_obj);
+                global_graph->mergeLocalGraph(local_graph_obj);
                 // ROS_INFO("Global graph: ");
-                // std::cout << global_graph.toMsg() << std::endl;
+                // std::cout << global_graph->toMsg() << std::endl;
             }
         }
 
-        global_graph_pub.publish(global_graph.toMsg());
+        global_graph_pub.publish(global_graph->toMsg());
 
         ROS_INFO("Get next goal...");
-        geometry_msgs::PointStamped goal = global_graph.getNextGoal();
+        geometry_msgs::PointStamped goal = global_graph->getNextGoal();
         exploration_goal_pub.publish(goal);
         ROS_INFO("Waiting for goal to be reached...");
         std_msgs::Int8ConstPtr status = ros::topic::waitForMessage<std_msgs::Int8>(ROBOT_GOAL_STATUS, *nh, ros::Duration(20.0));
@@ -62,15 +63,15 @@ void onStartCallback(const std_msgs::Empty e)
 
         if(status != NULL && status->data == 0){
             ROS_INFO("[Exploration] Reached goal node successfully...");
-            global_graph.updateNewGoalSuccess();
-            global_graph_pub.publish(global_graph.toMsg());
+            global_graph->updateNewGoalSuccess();
+            global_graph_pub.publish(global_graph->toMsg());
         }else{
             ROS_ERROR("[Exploration] Failed to reach goal node...");
-            global_graph.updateNewGoalFail();
-            // goal = global_graph.reset();
+            global_graph->updateNewGoalFail();
+            // goal = global_graph->reset();
             // exploration_goal_pub.publish(goal);
             stuck = true;
-            global_graph_pub.publish(global_graph.toMsg());
+            global_graph_pub.publish(global_graph->toMsg());
             // ROS_INFO("[Exploration] Going back to parent node...");
             // status = ros::topic::waitForMessage<std_msgs::Int8>(ROBOT_GOAL_STATUS, *nh, ros::Duration(10.0));
         }
@@ -87,6 +88,9 @@ int main(int argc, char *argv[])
     global_graph_pub = nh->advertise<graph_msgs::GeometryGraph>(GLOBAL_GRAPH_TOPIC, 1);
     request_local_graph_pub = nh->advertise<geometry_msgs::PointStamped>(REQUEST_LOCAL_GRAPH_TOPIC, 1);
     ros::Subscriber start_exploration = nh->subscribe(START_EXPLORATION_TOPIC, 1, onStartCallback);
+
+    ros::param::get("~robot_name", robot_name);
+    global_graph.reset(new FrontierGraph(robot_name+"/world"));
     
     ros::spin();    
 

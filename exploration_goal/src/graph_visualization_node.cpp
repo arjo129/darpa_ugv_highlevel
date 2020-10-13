@@ -9,7 +9,6 @@
 
 // Reference: https://github.com/unr-arl/gbplanner_ros/blob/1530b24f9088be2951d91b9539d2fc6517359e06/gbplanner/src/gbplanner_rviz.cpp
 
-#define WORLD_FRAME_ID "world"
 #define GRAPH_LIFETIME 100000
 
 ros::Publisher vis_pub;
@@ -20,7 +19,7 @@ visualization_msgs::Marker getEdgeMarkers(const graph_msgs::GeometryGraph graph_
     visualization_msgs::Marker edge_marker;
     edge_marker.header.stamp = ros::Time::now();
     edge_marker.header.seq = 0;
-    edge_marker.header.frame_id = WORLD_FRAME_ID;
+    edge_marker.header.frame_id = graph_msg.header.frame_id;
     edge_marker.id = 0;
     edge_marker.ns = "edges";
     edge_marker.type = visualization_msgs::Marker::LINE_LIST;
@@ -60,7 +59,7 @@ visualization_msgs::Marker getVertexMarkers(const graph_msgs::GeometryGraph grap
     visualization_msgs::Marker vertex_marker;
     vertex_marker.header.stamp = ros::Time::now();
     vertex_marker.header.seq = 0;
-    vertex_marker.header.frame_id = WORLD_FRAME_ID;
+    vertex_marker.header.frame_id = graph_msg.header.frame_id;
     vertex_marker.id = 0;
     vertex_marker.ns = "vertices";
     vertex_marker.action = visualization_msgs::Marker::ADD;

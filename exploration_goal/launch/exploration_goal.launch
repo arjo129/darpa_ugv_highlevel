@@ -6,11 +6,13 @@
         </node> -->
 
         <node pkg="exploration_goal" type="exploration_goal" name="exploration_goal" output="screen">
+            <param name="robot_name" type="str" value="$(arg robot_name)" />
         </node>
 
         <node pkg="exploration_goal" type="graph_visualization" name="global_graph_viz" output="screen">
-            <rosparam param="graph_topic">global_graph</rosparam>
-            <rosparam param="graph_vis_topic">global_graph/vis</rosparam>
+            <param name="graph_topic" type="str" value="global_graph" />
+            <param name="graph_vis_topic" type="str" value="global_graph/vis" />
+            <param name="robot_name" type="str" value="$(arg robot_name)" />
         </node>
 
 

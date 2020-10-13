@@ -11,12 +11,12 @@
  */  
 
 ros::Publisher global_graph_pub;
-FrontierGraph global_graph;
+boost::shared_ptr<FrontierGraph> global_graph;
 
 void onLocalGraphRecv(const graph_msgs::GeometryGraph local_graph_msg)
 {
     FrontierGraph local_graph(local_graph_msg);
-    global_graph.mergeLocalGraph(local_graph);
+    global_graph->mergeLocalGraph(local_graph);
 }
 
 int main(int argc, char *argv[])
@@ -27,12 +27,16 @@ int main(int argc, char *argv[])
     ros::Subscriber local_graph_sub = nh.subscribe(LOCAL_GRAPH_TOPIC, 1, onLocalGraphRecv);
     global_graph_pub = nh.advertise<graph_msgs::GeometryGraph> (GLOBAL_GRAPH_TOPIC, 1);
 
+    std::string robot_name;
+    ros::param::get("~robot_name", robot_name);
+    global_graph.reset(new FrontierGraph(robot_name+"/world"));
+
     ros::Rate loop_rate(5);
 
     while(ros::ok())
     {
         ros::spinOnce();
-        global_graph_pub.publish(global_graph.toMsg());
+        global_graph_pub.publish(global_graph->toMsg());
         loop_rate.sleep();
     }
 
