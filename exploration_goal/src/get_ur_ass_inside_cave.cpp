@@ -28,14 +28,15 @@ tf::Transform invertTransform(subt_msgs::PoseFromArtifact & service)
   return invertedTF;
 }
 
-bool first = true;
+bool first = true, goal_set = false, obstacle_avoidance_ready = false;
+tf::Vector3 goal;
 ros::ServiceClient client;
 tf::TransformListener* listener;
 ros::Publisher exploration_goal_pub, start_publisher;
 std::string robot_name;
 
 void onFrontierAvailable(const sensor_msgs::PointCloud2::Ptr frontiers_ptr) {
-    if(!first) return;
+    if(!first || !obstacle_avoidance_ready) return;
 
     ROS_INFO("Got frontier message");
     pcl::PointCloud<pcl::PointXYZ> frontier;
@@ -59,7 +60,7 @@ void onFrontierAvailable(const sensor_msgs::PointCloud2::Ptr frontiers_ptr) {
         auto dir = darpa_to_base_link.getOrigin();
         std::cout << "Got artifact_origin as" << dir.x() << "," << dir.y() << std::endl;
         float max_dot = 0;
-        tf::Vector3 goal;
+
         for(auto point: frontier) {
             tf::Vector3 vec(point.x, point.y, point.z);
             auto l = vec.dot(dir);
@@ -77,14 +78,35 @@ void onFrontierAvailable(const sensor_msgs::PointCloud2::Ptr frontiers_ptr) {
         stamp.point.y = 0.9*goal.y();
         stamp.point.z = 0.9*goal.z();
         exploration_goal_pub.publish(stamp);
+        goal_set = true;
     }
     
 }
 
 void handover(std_msgs::Int8 reached) {
-    ROS_INFO("Inside the cave. Handing over to explorer");
-    std_msgs::Empty empty;
-    start_publisher.publish(empty);
+    obstacle_avoidance_ready = true;
+    if(!goal_set) {
+        ROS_INFO("Haven't reached cave interior. Ignoring.");
+        return;
+    }
+
+     tf::StampedTransform world_to_baselink;
+    try{
+        auto now =ros::Time::now();
+        listener->waitForTransform(robot_name + "/base_link", robot_name+"/world", now, ros::Duration(10));
+        listener->lookupTransform(robot_name + "/base_link", robot_name+"/world", now, world_to_baselink);
+    } catch (tf::LookupException e){
+        ROS_ERROR("failed to lookup transform: %s", e.what());
+        return;
+    }
+
+    auto pos = world_to_baselink.getOrigin();
+    ROS_INFO("Cave goal %f,%f; Current pos %f, %f", goal.x(), goal.y(), pos.x(), pos.y());
+    if(pos.dot(pos) > 49) {
+        ROS_INFO("Inside the cave. Handing over to explorer");
+        std_msgs::Empty empty;
+        start_publisher.publish(empty);
+    }
 }
 
 int main(int argc, char** argv) {

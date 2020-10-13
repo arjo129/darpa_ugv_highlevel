@@ -7,7 +7,7 @@
         <node pkg="exploration_goal" type="exploration_goal" name="exploration_goal" output="screen">
         </node>
 
-        <node pkg="exploration_goal" type="get_ur_ass_inside" name="get_ur_ass_inside">
+        <node pkg="exploration_goal" type="get_ur_ass_inside" name="get_ur_ass_inside" output="screen">
             <param name="robot_name" type="str" value="$(arg robot_name)" />
         </node>
 
