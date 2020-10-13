@@ -23,7 +23,7 @@
 #define _lowerBound -15.0
 #define _upperBound 15.0
 #define nScanRings 16
-#define MAX_TIME  30
+#define MAX_TIME  15
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
  tf::TransformListener* listener;
@@ -232,6 +232,11 @@ float getForwardVelocity(std::vector<std::tuple<float,float>> &distances){
         i.data = -1;
         status_pub.publish(i);
         current_state = VehicleState::AWAITING_INSTRUCTION; 
+      ROS_ERROR("Time out");
+       geometry_msgs::Twist t;
+    t.linear.x = 0;
+    t.angular.z = 0;
+    pub_vel.publish(t);
      return 0;
    }
 
@@ -358,7 +363,7 @@ void positionCallBack(const nav_msgs::Odometry::ConstPtr& msg){
     // std::cout << distance_to_goal <<std::endl;
     auto time_since_last_goal = ros::Time::now() - last_goal;
 
-   if( distance_to_goal< 2 && time_since_last_goal > ros::Duration(5)){
+   if( distance_to_goal< 1 && time_since_last_goal > ros::Duration(5)){
         std_msgs::Int8 i;
         i.data = 0;
         status_pub.publish(i);
@@ -604,14 +609,10 @@ int main(int argc, char** argv)
   // }
 
 
-  std::printf("subscriebrs ");
   ros::Subscriber sub = nh.subscribe<PointCloud>("traversable_pointcloud_input", 1, callback);
   ros::Subscriber sub3 = nh.subscribe("robot_position_pose", 1, positionCallBack);
   ros::Subscriber sub2 = nh.subscribe("goal_to_explore", 1, goalCallBack);
-  std::printf("subscriebrs ");
   pub_vel = nh.advertise<geometry_msgs::Twist> ("cmd_vel", 1);
   status_pub = nh.advertise<std_msgs::Int8> ("status", 1);
   ros::spin();
 }
-
-

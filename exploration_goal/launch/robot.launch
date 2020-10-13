@@ -23,7 +23,11 @@
             <arg name="robot_name" value="$(arg robot_name)" />
         </include>
 
-        <node pkg="exploration_goal" type="defecate.py" name="$(arg robot_name)_defecation_agent">
+        <node pkg="exploration_goal" type="defecate.py" name="defecation_agent">
+            <param name="robot_name" type="str" value="$(arg robot_name)" />
+        </node>
+
+        <node pkg="exploration_goal" type="pantilt.py" name="pan_tilt">
             <param name="robot_name" type="str" value="$(arg robot_name)" />
         </node>
 
