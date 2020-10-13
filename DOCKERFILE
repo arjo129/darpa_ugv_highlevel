@@ -107,7 +107,7 @@ WORKDIR ${SOLUTION_WS_PATH}
 RUN [ "/bin/bash" , "-c" , \
   "source /opt/ros/melodic/setup.bash \
   && sudo apt-get -qq update \
-  && catkin_make -DCMAKE_BUILD_TYPE=release \
+  && catkin_make -DCMAKE_BUILD_TYPE=Release \
   && sudo rm -rf /var/lib/apt/lists/* \
   && sudo apt-get -qq clean" ]
 
