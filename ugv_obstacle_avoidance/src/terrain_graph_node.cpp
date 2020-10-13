@@ -665,6 +665,7 @@ template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontie
       
     int countPath = 0;
     int stateOfPathFinding = 0;
+    auto now ros::Time::now();
       while(getDistanceBetween(middle_point , start_point) > 3 && stateOfPathFinding == 0){
         stateOfPathFinding = getBestNextNode(distances , middle_point , start_point, discreteMap);
         std::cout << stateOfPathFinding << std::endl;
@@ -683,7 +684,7 @@ template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontie
 
         // inputMPoint.header.stamp = ros::Time::now().toNSec();
         inputMPoint.header.frame_id = robot_name+"/base_link";
-
+        inputMPoint.header.stamp = now:
         inputMPoint.point.x = middle_point.x;
         inputMPoint.point.y = middle_point.y;
         inputMPoint.point.z = middle_point.z;
@@ -691,8 +692,12 @@ template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontie
         std::cout << "MIDDLE POINT" << middle_point.x << "" << middle_point.y << "" << middle_point.z << std::endl;
 // 
         geometry_msgs::PointStamped stamped_out;
-        
-        listener->transformPoint(robot_name+"/world", inputMPoint , stamped_out);	
+        try{
+          listener->waitForTransform(robot_name+"/world", inputMPoint.header.frame_id , now, ros::Duration(3.0));
+          listener->transformPoint(robot_name+"/world", inputMPoint , stamped_out);	
+        } catch (tf::LookupException e) {
+          ROS_ERROR("%s:%d: %s", __FILE__,  __LINE__, e.what());
+        }
         marker.color.r = 1.0;
        marker.color.g = 0.0;
        marker.color.b = 0.0;
