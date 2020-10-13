@@ -4,4 +4,4 @@ docker run --network host \
   --privileged \
   --runtime=nvidia \
   --security-opt seccomp=unconfined \
-  arjo129/nusseds_subt_sol:latest
+  200670743174.dkr.ecr.us-east-1.amazonaws.com/subt/nusseds:latest

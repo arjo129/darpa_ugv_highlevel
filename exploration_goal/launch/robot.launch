@@ -4,14 +4,14 @@
 
 
     <group ns="$(arg robot_name)">
-        <node pkg="exploration_goal" type="exploration_goal" name="exploration_goal" output="screen">
+        <node pkg="exploration_goal" type="exploration_goal" name="exploration_goal" output="screen" respawn="true">
         </node>
 
-        <node pkg="exploration_goal" type="get_ur_ass_inside" name="get_ur_ass_inside" output="screen">
+        <node pkg="exploration_goal" type="get_ur_ass_inside" name="get_ur_ass_inside" output="screen" respawn="true">
             <param name="robot_name" type="str" value="$(arg robot_name)" />
         </node>
 
-        <node pkg="lidar_frontier3d" type="frontier" name="frontier_detector">
+        <node pkg="lidar_frontier3d" type="frontier" name="frontier_detector" respawn="true">
             <param name="robot_name" type="str" value="$(arg robot_name)" />
         </node>
 
@@ -23,11 +23,11 @@
             <arg name="robot_name" value="$(arg robot_name)" />
         </include>
 
-        <node pkg="exploration_goal" type="defecate.py" name="defecation_agent" output="screen">
+        <node pkg="exploration_goal" type="defecate.py" name="defecation_agent" output="screen" respawn="true">
             <param name="robot_name" type="str" value="$(arg robot_name)" />
         </node>
 
-        <node pkg="exploration_goal" type="pantilt.py" name="pan_tilt">
+        <node pkg="exploration_goal" type="pantilt.py" name="pan_tilt" respawn="true">
             <param name="robot_name" type="str" value="$(arg robot_name)" />
         </node>
 
