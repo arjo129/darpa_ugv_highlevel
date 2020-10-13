@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 from utils import utils
 from pydoc import locate
 import time
