@@ -665,7 +665,7 @@ template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontie
       
     int countPath = 0;
     int stateOfPathFinding = 0;
-    auto now ros::Time::now();
+    auto now now =ros::Time::now();
       while(getDistanceBetween(middle_point , start_point) > 3 && stateOfPathFinding == 0){
         stateOfPathFinding = getBestNextNode(distances , middle_point , start_point, discreteMap);
         std::cout << stateOfPathFinding << std::endl;
