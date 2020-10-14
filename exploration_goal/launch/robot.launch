@@ -14,10 +14,6 @@
             <param name="robot_name" type="str" value="$(arg robot_name)" />
         </node>
 
-        <node pkg="exploration_goal" type="get_ur_ass_inside" name="get_ur_ass_inside" output="screen" respawn="true">
-            <param name="robot_name" type="str" value="$(arg robot_name)" />
-        </node>
-
         <node pkg="lidar_frontier3d" type="frontier" name="frontier_detector" respawn="true">
             <param name="robot_name" type="str" value="$(arg robot_name)" />
         </node>

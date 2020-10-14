@@ -6,8 +6,7 @@
         <arg name="id" value="2"/>
     </include>
 
-    <include file="$(find exploration_goal)/launch/robot.launch">
+    <!--<include file="$(find exploration_goal)/launch/robot.launch">
         <arg name="robot_name" value="$(arg robot_name)" />
-    </include>
-
+    </include>-->
 </launch>

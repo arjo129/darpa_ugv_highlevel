@@ -38,7 +38,7 @@ def serialize_telemetry(robot_name, position, beacons):
     message["type"] = "telemetry"
     message["robot"] = robot_name
     message["beacons"] = beacons
-    message["my_position"] = last_position
+    message["position"] = last_position
     packet = OccupancyGrid()
     packet.header.frame_id = json.dumps(message)
     return packet
@@ -64,7 +64,7 @@ def transform_points_to_artifact(listener, points, frame):
         for to_convert in for_conversion:
             r = listener.transformPoint("artifact_origin", to_convert)
             pt = [r.point.x, r.point.y, r.point.z]
-            res.append
+            res.append(pt)
     except Exception as e:
         rospy.logerr(e)
     return res
