@@ -1,10 +1,5 @@
 subscribers:
-
-    camera_2d:
-        topic: pan_tilt/image_raw          # Image Topic
-
-    camera_3d:
-        topic: pan_tilt_rgbd_camera/depth/points  # PointCloud2 XYZRGB Topic
+    # Topic names are set in launch file
 
     synchronized_queue_size: 5             # number of frames to consider synchronizing
                                             # via ApproximateTimeSynchronizer

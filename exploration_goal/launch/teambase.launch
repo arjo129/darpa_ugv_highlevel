@@ -4,4 +4,5 @@
     <arg name="name" value="teambase"/>
     <arg name="id" value="0"/>
   </include>
+  <!--<node name="teambase_master" pkg="exploration_goal" type="teambase_master.py"/>-->
 </launch>

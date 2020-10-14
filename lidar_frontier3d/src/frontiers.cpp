@@ -8,6 +8,7 @@
 #include <nanoflann/nanoflann.hpp>
 #include <lidar_frontier3d/frontier_manager.h>
 #include <lidar_frontier3d/frontier_request.h>
+#include <sensor_msgs/Imu.h>
 #include <tf/tf.h>
 
 std::string robot_name;
@@ -48,6 +49,18 @@ bool getFrontiers(lidar_frontier3d::frontier_request::Request &req,
     return true;
 }
 
+float roll = 0;
+float get_height() {
+    if(roll < -0.1)
+    return 7;
+    else
+    return 1;
+}
+
+void onImuData(sensor_msgs::Imu data){
+    roll = atan2(data.linear_acceleration.x, data.linear_acceleration.z);
+    ROS_INFO("rolls: %f", roll);
+}
 void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_msg) {
     
     tf::StampedTransform current_pose;
@@ -88,7 +101,7 @@ void onPointCloudRecieved(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr  pcl_ms
             Eigen::Vector3f p2(pt.x, pt.y, pt.z);
 
             auto length = (p2 - p1).norm();
-            if(length > 1.5 && pt.z < 1) { //Onlu frontiers 1.5m and height less than 2m
+            if(length > 1.5 && pt.z < get_height()) { //Onlu frontiers 1.5m and height less than 2m
                 frontiers.push_back(Frontier2D(p1, p2));
             }
             prev_pt = pt;
@@ -129,6 +142,7 @@ int main(int argc, char** argv) {
     ros::init(argc, argv,"map_merge");
     ros::NodeHandle nh;
     ros::param::get("~robot_name", robot_name);
+    ros::Subscriber imu_sub = nh.subscribe("imu/data", 1, onImuData);
     ros::Subscriber sub = nh.subscribe("points", 1, onPointCloudRecieved);
     ros::ServiceServer server = nh.advertiseService("get_frontiers", getFrontiers);
    
