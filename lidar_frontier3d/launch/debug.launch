@@ -1,0 +1,10 @@
+
+ <launch>
+    <arg name="robot_name" default="X1" />
+    <group ns="$(arg robot_name)">
+        <node pkg="lidar_frontier3d" type="frontier" name="frontier_detector" respawn="true" output="screen">
+            <param name="robot_name" type="str" value="$(arg robot_name)" />
+        </node>
+        <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 1 X1/base_link X1/world 100" />
+    </group>
+</launch>
