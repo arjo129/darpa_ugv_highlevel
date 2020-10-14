@@ -22,6 +22,7 @@ launch = None
 def main():
     rospy.init_node('LaunchSelectorNode', anonymous=True)
     rospy.logwarn("[Launch-Selector] Waiting for /subt/start service to start scoring...")
+    rospy.loginfo("[Launch-Selector] v0.3")
     rospy.wait_for_service(SUBT_START_SRV_NAME)
     
     # Start the scoring server
@@ -58,7 +59,7 @@ def main():
     rospy.loginfo("launching robot file "+ launch_file)
     
     #Launch the 
-    launch = roslaunch.parent.ROSLaunchParent(uuid, [launch_file])
+    launch = roslaunch.parent.ROSLaunchParent(uuid, [launch_file], force_log=True, master_logger_level=True, verbose=True, show_summary=True)
     rospy.sleep(2.0)
     launch.start()
     rospy.loginfo("[Launch-Selector] Launch Succesful. All tasks completed.")

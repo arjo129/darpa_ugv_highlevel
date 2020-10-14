@@ -4,7 +4,7 @@
 
 
     <group ns="$(arg robot_name)">
-        <node pkg="exploration_goal" type="exploration_goal" name="exploration_goal" output="screen">
+        <node pkg="exploration_goal" type="exploration_goal" name="exploration_goal" output="screen" respawn="true">
             <param name="robot_name" type="str" value="$(arg robot_name)" />
         </node>
 

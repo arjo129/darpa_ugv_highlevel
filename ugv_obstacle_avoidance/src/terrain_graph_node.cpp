@@ -547,7 +547,8 @@ void frontierCallBack(const PointCloud::ConstPtr& msg){
   
   if(findNewFrontiers){
 
-    std::cout << "Need New Frontier" << std::endl;
+    ROS_INFO( "Need New Frontier");
+
     findNewFrontiers = false;
 
 
@@ -583,7 +584,7 @@ template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontie
   bool firstTimeHEre = true;
   bool foundOnePoint = false;
   while(!allFrontiers.empty()) {
-    std::cout << "F Popping" << std::endl;
+    ROS_INFO("F Popping");
     pcl::PointXYZ point = allFrontiers.top();
     allFrontiers.pop();
     point.z = 0;
@@ -688,7 +689,7 @@ template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontie
         inputMPoint.point.y = middle_point.y;
         inputMPoint.point.z = middle_point.z;
 
-        std::cout << "MIDDLE POINT" << middle_point.x << "" << middle_point.y << "" << middle_point.z << std::endl;
+        ROS_INFO( "MIDDLE POINT %f %f %f" , middle_point.x, middle_point.y, middle_point.z);
 // 
         geometry_msgs::PointStamped stamped_out;
         try{
@@ -727,7 +728,7 @@ template<typename T> void getFinalPathToGoal(std::deque<int> &finalPathToFrontie
 void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::TransformListener* listener){
 
   size_t cloudSize = out2.size();
-  std::cout << "Frontiers: " << cloudSize << std::endl;
+  ROS_INFO("Frontiers: %lu", cloudSize);
   int countPath = 0;
   auto cmp = [](pcl::PointXYZ left, pcl::PointXYZ right) { return hieuristic(left) < hieuristic(right); };
   std::priority_queue<pcl::PointXYZ , std::deque<pcl::PointXYZ> , decltype(cmp)> allFrontiers(cmp);
@@ -739,7 +740,7 @@ void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::Transfo
     point.y = out2[i].y;
     point.z = out2[i].z;
 
-    std::cout << "Possible Frontiers" << point.x << " " << point.y << " " << point.z << std::endl;
+    ROS_INFO("Possible Frontiers %f %f %f", point.x , point.y, point.z);
 
     if (!pcl_isfinite(point.x) ||
         !pcl_isfinite(point.y) ||
@@ -758,25 +759,22 @@ void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::Transfo
   std::deque<int> finalPathToFrontier;
   getFinalPathToGoal(finalPathToFrontier , listener , allFrontiers);
 
-    std::cout << "I am here" << std::endl;
+   ROS_INFO("I am here");
 
-    std::cout << __FILE__ <<":" << __LINE__ << std::endl;
 
     for(int a = 0; a < finalPathToFrontier.size() ; a++){
       if(finalPathToFrontier[a] >= 0 && finalPathToFrontier[a] < 6){
         finalPathToFrontier.erase(finalPathToFrontier.begin()+a);
       }
      }
-     std::cout << __FILE__ <<":" << __LINE__ << std::endl;
     if(finalPathToFrontier[0] != -1){
       finalPathToFrontier.push_front(-1);
     }
 
     for(int a = 0; a < finalPathToFrontier.size() ; a++){
-      std::cout << " " << finalPathToFrontier[a] <<  " ";
-      }
-    std::cout << std::endl;
-std::cout << __FILE__ <<":" << __LINE__ << std::endl;
+      ROS_INFO("Final frontier:%d", finalPathToFrontier[a]);
+    }
+
     // std::map<int , std::set<int>> terrainGraphConnected;
 
     // std::queue<int> frontier;
@@ -831,7 +829,7 @@ std::cout << __FILE__ <<":" << __LINE__ << std::endl;
     gg.edges.push_back(graph_msgs::Edges());
     
     for(auto a = 0; a < gg.nodes.size() ; a++){
-      std::cout << "Node: " << a << std::endl;
+      ROS_INFO( "Node: %d", a );
       for(auto b: gg.edges[a].node_ids){
         std::cout <<  b << " ";
       } 

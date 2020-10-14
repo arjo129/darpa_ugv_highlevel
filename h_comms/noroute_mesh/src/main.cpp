@@ -92,7 +92,7 @@ public:
 
                 ROS_INFO("Received map from source %s", eth.src.c_str());
                 if (eth.payload.at(0) == '1'){
-                    std::cout << "Received nav_msgs::OccupancyGrid message type." << std::endl;
+                    ROS_INFO("Received nav_msgs::OccupancyGrid message type.");
                     noroute_mesh::string_to_map srv;
                     srv.request.str.data = eth.payload;
                     if (string_to_map_client.call(srv))
@@ -220,7 +220,7 @@ public:
             artifact.set_type(static_cast<uint32_t>(subt::ArtifactType::TYPE_ROPE));
         }
         else {
-            std::cout << "ReportArtifact(): Not a valid artifact type" << std::endl;
+            ROS_ERROR( "ReportArtifact(): Not a valid artifact type" );
             res.response = false;
             return false;
         }
