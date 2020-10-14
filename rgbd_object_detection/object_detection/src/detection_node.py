@@ -48,11 +48,11 @@ class ObjectDetector3D:
         rospy.loginfo("ROS configs loaded successfully")
 
     def init_subscribers(self):
-        camera_2d = self.subscribers['camera_2d']
-        camera_3d = self.subscribers['camera_3d']
+        camera_2d_topic = rospy.get_param("~camera_2d_topic")
+        camera_3d_topic = rospy.get_param("~camera_3d_topic")
 
-        self.image_sub = message_filters.Subscriber(camera_2d['topic'], Image, buff_size=2**28)
-        self.pointcloud_sub = message_filters.Subscriber(camera_3d['topic'], PointCloud2, buff_size=2**28)
+        self.image_sub = message_filters.Subscriber(camera_2d_topic, Image, buff_size=2**28)
+        self.pointcloud_sub = message_filters.Subscriber(camera_3d_topic, PointCloud2, buff_size=2**28)
 
         # try to synchronize the 2 topics as closely as possible for higher XYZ accuracy
         self.time_sync = message_filters.ApproximateTimeSynchronizer([self.image_sub, \

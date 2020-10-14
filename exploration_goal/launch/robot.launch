@@ -1,6 +1,7 @@
 <launch>
     <arg name="robot_name" default="X1" />
-
+    <arg name="robot_rgb_topic" default="front/image_raw" />
+    <arg name="robot_rgbd_topic" default="rgbd_camera/depth/points" />
 
 
     <group ns="$(arg robot_name)">
@@ -20,6 +21,8 @@
 
         <include file="$(find object_detection)/launch/object_detection.launch">
             <arg name="robot_name" value="$(arg robot_name)" />
+            <arg name="robot_rgb_topic" value="$(arg robot_rgb_topic)" />
+            <arg name="robot_rgbd_topic" value="$(arg robot_rgbd_topic)" />
         </include>
 
         <include file="$(find loam_velodyne)/launch/loam_velodyne.launch">
