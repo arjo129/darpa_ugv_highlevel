@@ -11,6 +11,8 @@
 
 #define GRAPH_LIFETIME 100000
 
+
+
 ros::Publisher vis_pub;
 
 visualization_msgs::Marker getEdgeMarkers(const graph_msgs::GeometryGraph graph_msg)
@@ -52,6 +54,8 @@ visualization_msgs::Marker getEdgeMarkers(const graph_msgs::GeometryGraph graph_
 
     return edge_marker;
 }
+
+
 
 visualization_msgs::Marker getVertexMarkers(const graph_msgs::GeometryGraph graph_msg)
 {
@@ -135,7 +139,6 @@ int main(int argc, char* argv[])
 
     ros::param::get("~graph_topic", graph_topic);
     ros::param::get("~graph_vis_topic", graph_vis_topic);
-
     ros::Subscriber graph_sub = nh.subscribe(graph_topic, 1, onGraphRecv);
     vis_pub = nh.advertise<visualization_msgs::MarkerArray>(graph_vis_topic, 10);
 

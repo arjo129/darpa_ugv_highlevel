@@ -10,6 +10,9 @@
 #include <Eigen/Dense>
 #include <geometry_msgs/PointStamped.h>
 
+#include <nav_msgs/Path.h>
+#include <geometry_msgs/PoseStamped.h>
+
 #include <nanoflann/nanoflann.hpp>
 #include <vector>
 #include <algorithm>
@@ -68,6 +71,7 @@ class FrontierGraph
         void updateNewGoalSuccess();
         void updateNewGoalFail();
         void setGraph(FrontierGraph temp);
+        void AddWayPoints(nav_msgs::Path waypoints);
 
 //    protected:
         std::vector<int> explored_state;
@@ -77,10 +81,11 @@ class FrontierGraph
         int current_node_idx;
         int upcoming_node_idx;
         std::string global_frame_id;
+        int numberWaypoints;
 };
 
 
-FrontierGraph::FrontierGraph(std::string global_frame_id_) : num_nodes(0), current_node_idx(0), global_frame_id(global_frame_id_)
+FrontierGraph::FrontierGraph(std::string global_frame_id_) : num_nodes(0), current_node_idx(0), global_frame_id(global_frame_id_) ,numberWaypoints(0)
 {}
 
 FrontierGraph::FrontierGraph(graph_msgs::GeometryGraph graph) : num_nodes(graph.nodes.size()), current_node_idx(0) , upcoming_node_idx(0)
@@ -116,6 +121,25 @@ int FrontierGraph::getSize(){
 
 std::vector<std::set<int>>& FrontierGraph::getAL(){
     return adjacency_list;
+}
+
+void FrontierGraph::AddWayPoints(nav_msgs::Path waypoints){
+
+    adjacency_list[current_node_idx].clear();
+
+    for(int i = numberWaypoints; i < waypoints.poses.size() ;  i++){
+
+        geometry_msgs::Point tempPoint;
+        tempPoint = waypoints.poses[i].pose.position;
+        node_idx_to_3d_point.push_back(tempPoint);
+        int current_node_id = node_idx_to_3d_point.size()-1;
+        adjacency_list[current_node_id-1].insert(current_node_id);
+        num_nodes++;
+        explored_state.push_back(GraphNodeExploredState::NODE_UNEXPLORED);
+        numberWaypoints++;
+       
+    }
+
 }
 
 void FrontierGraph::setGraph(FrontierGraph temp)

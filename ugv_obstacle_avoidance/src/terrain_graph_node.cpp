@@ -756,15 +756,16 @@ void processFrontierPointCloud(pcl::PointCloud<pcl::PointXYZ> &out2, tf::Transfo
     allFrontiers.push(point);
 
   }
-  std::deque<int> finalPathToFrontier;
-  getFinalPathToGoal(finalPathToFrontier , listener , allFrontiers);
+  std::deque<int> finalPathToFrontierC;
+  getFinalPathToGoal(finalPathToFrontierC , listener , allFrontiers);
 
    ROS_INFO("I am here");
 
+   std::deque<int> finalPathToFrontier;
 
-    for(int a = 0; a < finalPathToFrontier.size() ; a++){
-      if(finalPathToFrontier[a] >= 0 && finalPathToFrontier[a] < 6){
-        finalPathToFrontier.erase(finalPathToFrontier.begin()+a);
+    for(int a = 0; a < finalPathToFrontierC.size()-1 ; a++){
+      if(finalPathToFrontierC[a] >= 6){
+	      finalPathToFrontier.push_back(finalPathToFrontierC[a]);
       }
      }
     if(finalPathToFrontier[0] != -1){
