@@ -9,6 +9,7 @@
 #include <std_msgs/UInt8.h>
 #include <Eigen/Dense>
 #include <geometry_msgs/PointStamped.h>
+#include <nav_msgs/Path.h>
 
 #include <nanoflann/nanoflann.hpp>
 #include <vector>
@@ -68,6 +69,7 @@ class FrontierGraph
         void updateNewGoalSuccess();
         void updateNewGoalFail();
         void setGraph(FrontierGraph temp);
+        void addWayPoints(nav_msgs::Path waypoints);
 
 //    protected:
         std::vector<int> explored_state;
@@ -77,6 +79,7 @@ class FrontierGraph
         int current_node_idx;
         int upcoming_node_idx;
         std::string global_frame_id;
+        int numberWaypoints;
 };
 
 
@@ -255,6 +258,24 @@ graph_msgs::GeometryGraph FrontierGraph::toMsg()
     }
 
     return graph;
+}
+
+void FrontierGraph::addWayPoints(nav_msgs::Path waypoints) {
+
+    adjacency_list[current_node_idx].clear();
+
+    for(int i = numberWaypoints; i < waypoints.poses.size() ;  i++){
+
+        geometry_msgs::Point tempPoint;
+        tempPoint = waypoints.poses[i].pose.position;
+        node_idx_to_3d_point.push_back(tempPoint);
+        int current_node_id = node_idx_to_3d_point.size()-1;
+        adjacency_list[current_node_id-1].insert(current_node_id);
+        num_nodes++;
+        explored_state.push_back(GraphNodeExploredState::NODE_UNEXPLORED);
+        numberWaypoints++;
+       
+    }
 }
 
 void FrontierGraph::markAsUnExplored(int node_idx) {explored_state[node_idx] = NODE_UNEXPLORED;}
