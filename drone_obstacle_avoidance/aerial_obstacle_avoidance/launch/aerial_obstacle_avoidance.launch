@@ -1,18 +1,56 @@
 <launch>
+	<arg name="robot_name" default="X1" />
+	 <node pkg="nodelet" type="nodelet" name="pcl_manager" args="manager" output="screen" />
+	<node pkg="nodelet" type="nodelet" name="voxel_grid" args="load pcl/VoxelGrid pcl_manager" output="screen">
+    <remap from="~input" to="points" />
+	 <remap from="~output" to="cloud_in" />
+    <rosparam>
+      filter_field_name: z
+      filter_limit_min: 0.01
+      filter_limit_max: 1.5
+      filter_limit_negative: False
+      leaf_size: 0.2
+    </rosparam>
+	</node>
+
+	<node pkg="nodelet" type="nodelet" name="voxel_grid_bottom_cam" args="load pcl/VoxelGrid pcl_manager" output="screen">
+    <remap from="~input" to="tof_bottom/depth/points" />
+	 <remap from="~output" to="cloud_in" />
+    <rosparam>
+      filter_field_name: z
+      filter_limit_min: 0.01
+      filter_limit_max: 1.5
+      filter_limit_negative: False
+      leaf_size: 0.2
+    </rosparam>
+  </node>
+  <node pkg="nodelet" type="nodelet" name="voxel_grid_top_cam" args="load pcl/VoxelGrid pcl_manager" output="screen">
+    <remap from="~input" to="tof_top/depth/points" />
+	 <remap from="~output" to="cloud_in" />
+    <rosparam>
+      filter_field_name: z
+      filter_limit_min: 0.01
+      filter_limit_max: 1.5
+      filter_limit_negative: False
+      leaf_size: 0.2
+    </rosparam>
+  </node>
+
 	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server" output="screen">
-		<param name="resolution" value="0.05" />
+		<param name="resolution" value="0.20" />
 		<!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
-		<param name="frame_id" type="string" value="/MARBLE_QAV500/base_link" />
+		<param name="frame_id" type="string" value="/$(arg robot_name)/world" />
 		<!-- maximum range to integrate (speedup!) -->
 		<param name="sensor_model/max_range" value="5.0" />
 		<!-- data source to integrate (PointCloud2) -->
-		<remap from="cloud_in" to="/MARBLE_QAV500/points" />
+		<!--<remap from="cloud_in" to="downsampled_points" />-->
 	</node>
 	<node pkg="aerial_obstacle_avoidance" type="apf_planner" name="apf_planner" output="screen">
-		<param name="cmd_vel_topic_" value="/MARBLE_QAV500/cmd_vel" />
-		<param name="base_link_" value="/MARBLE_QAV500/base_link" />
-		<param name="goal_sub_topic_" value="/clicked_point" />
-		<param name="obs_sub_topic_" value="/octomap_full" />
+		<param name="cmd_vel_topic_" value="/$(arg robot_name)/cmd_vel" />
+		<param name="base_link_" value="/$(arg robot_name)/base_link" />
+		<param name="goal_sub_topic_" value="/$(arg robot_name)/goal_to_explore" />
+		<param name="obs_sub_topic_" value="octomap_full" />
 		<param name="rate" value="10" />
 	</node>
+	
 </launch>

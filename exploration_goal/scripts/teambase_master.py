@@ -12,10 +12,10 @@ send_map = rospy.ServiceProxy("/teambase/send_map", send_map)
 get_neighbour = rospy.ServiceProxy("/teambase/get_neighbour", neighbour)
 
 global robot_trails
-robot_trails = {}
+robot_trails = {} 
 #{'X1': [[5.2004780769348145, -2.444396734237671, -0.0180668905377388], [10.032371741074781, -3.7997345190781813, 0.03697027359157801], [15.765952550447905, -4.439849926875188, 0.25452865087069], [21.168655395507812, -3.8392802079518638, 0.4649305840333303], [26.78882598876953, -3.2424774169921875, 0.7068935632705688], [32.10504150390625, -2.352442979812622, 0.6796616911888123]]}
 global breadcrumbs
-breadcrumbs = []
+breadcrumbs = [[0,0,0]]
 
 def euclidean_distance(d1, d2):
     dist = 0
@@ -32,6 +32,14 @@ def get_closest(position):
         if d < min_dist:
             min_dist =d
     return min_dist
+
+def add_breadcrumbs(crumbs):
+    global breadcrumbs
+    for crumb in crumbs:
+        d = get_closest(crumb, breadcrumbs)
+        if d < 20:
+            continue
+        breadcrumbs.append(crumb)
 
 def callback(message):
     global robot_trails

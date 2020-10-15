@@ -69,6 +69,8 @@ def transform_points_to_artifact(listener, points, frame):
         rospy.logerr(e)
     return res
 
+
+
 if __name__ == "__main__":
     rospy.init_node("breadcrumb_dropper")
     try:

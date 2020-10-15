@@ -1,0 +1,53 @@
+<launch>
+    <arg name="robot_name" default="U1" />
+    <arg name="robot_rgb_topic" default="front/image_raw" />
+    <arg name="robot_rgbd_topic" default="rgbd_camera/depth/points" />
+
+
+    <group ns="$(arg robot_name)">
+        <node pkg="exploration_goal" type="exploration_goal" name="exploration_goal" output="screen" respawn="true">
+            <param name="robot_name" type="str" value="$(arg robot_name)" />
+        </node>
+
+        <node pkg="exploration_goal" type="graph_visualization" name="global_graph_viz" output="screen">
+            <param name="graph_topic" type="str" value="global_graph" />
+            <param name="graph_vis_topic" type="str" value="global_graph/vis" />
+            <param name="robot_name" type="str" value="$(arg robot_name)" />
+        </node>
+
+        <node pkg="lidar_frontier3d" type="frontier" name="frontier_detector" respawn="true">
+            <param name="robot_name" type="str" value="$(arg robot_name)" />
+        </node>
+
+        <include file="$(find object_detection)/launch/object_detection.launch">
+            <arg name="robot_name" value="$(arg robot_name)" />
+            <arg name="robot_rgb_topic" value="$(arg robot_rgb_topic)" />
+            <arg name="robot_rgbd_topic" value="$(arg robot_rgbd_topic)" />
+        </include>
+
+        <include file="$(find loam_velodyne)/launch/loam_velodyne.launch">
+            <arg name="robot_name" value="$(arg robot_name)" />
+        </include>
+
+        <node pkg="ugv_obstacle_avoidance" name="traversable_map_node" output="screen" type="traversable_map_node" respawn="true">
+            <remap from="lidar_input" to="points"/>
+        </node>
+
+         <node pkg="ugv_obstacle_avoidance" name="terrain_graph_node" output="screen" type="terrain_graph_node" respawn="true">
+    <remap from="traversable_pointcloud_input" to="points2"/>
+    <remap from="robot_position_pose" to="integrated_to_init"/>
+    <remap from="goal_to_explore" to="req_local_graph"/>
+    <remap from="frontiers" to="frontiers/local"/>
+    <param name="robot_name" value="$(arg robot_name)"/>
+  </node>
+
+        <include file="$(find artifact_reporter)/launch/artifact_reporter.launch">
+            <arg name="robot_name" value="$(arg robot_name)" />
+        </include>
+
+        <include file="$(find aerial_obstacle_avoidance)/launch/aerial_obstacle_avoidance.launch">
+            <arg name="robot_name" value="$(arg robot_name)" />
+        </include>
+    </group>
+
+</launch>
