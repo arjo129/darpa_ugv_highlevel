@@ -4,7 +4,7 @@ import json
 from noroute_mesh.srv import neighbour, send_map
 from std_msgs.msg import Empty
 from nav_msgs.msg import OccupancyGrid, Path
-from geometry_msgs.msg import PoseStamped, Pose
+from geometry_msgs.msg import PoseStamped, Pose, PointStamped
 from tf.listener import TransformListener
 
 rospy.init_node("x2start")
@@ -13,6 +13,11 @@ rospy.wait_for_service("/X2/send_map")
 send_map = rospy.ServiceProxy("/X2/send_map", send_map)
 get_neighbour = rospy.ServiceProxy("/X2/get_neighbour", neighbour)
 pub = rospy.Publisher("/X2/headstart_waypoint", Path)
+start_exploring = rospy.Publisher("/X2/start_exploration", Empty)
+global first
+first = True
+global listener
+listener = TransformListener()
 
 def create_point_stamped(point, _time, frame):
     point_stamped = PointStamped()
@@ -25,8 +30,9 @@ def create_point_stamped(point, _time, frame):
 
 
 def on_recieve(msg):
-    message = msg.header.frame
-    data = json.loads(msg)
+    global first, listener
+    message = msg.header.frame_id
+    data = json.loads(message)
     if data["type"] != "trail":
         rospy.logerr("unknown message type skipping")
     trail = data["trail_to_follow"]
@@ -35,7 +41,14 @@ def on_recieve(msg):
     for point in points:
         pose = create_point_stamped(point, rospy.Time.now(), "X2/world")
         my_path.poses.append(pose)
-    pub.publish(my_path)
+    
+    if len(my_path.poses) >1 and first:
+        rospy.loginfo("Recieved the path information")
+        first = False
+        pub.publish(my_path)
+        start_exploration()
+    else:
+        rospy.loginfo("Triggered exploration already")
     
 
 def transform_points_from_artifact(listener, points):
@@ -64,8 +77,15 @@ def request_init_path():
     send_map("teambase", packet)
     print("saent request")
 
+def start_exploration():
+    mes = Empty()
+    start_exploring.publish(mes)
+
 sub = rospy.Subscriber("/X2/comms_publisher", OccupancyGrid, on_recieve)
 
 while not rospy.is_shutdown():
-    request_init_path()
+    if first:
+        request_init_path()
+    else:
+        start_exploration()
     rospy.sleep(1.0)
