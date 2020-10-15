@@ -4,7 +4,7 @@ from tf.listener import TransformListener
 from noroute_mesh.srv import neighbour, send_map
 from std_msgs.msg import Empty
 from nav_msgs.msg import OccupancyGrid
-from geometry_msgs.msg import PointStamped
+from geometry_msgs.msg import PointStamped, PoseArray
 import json
 global rssi_reading
 
@@ -69,7 +69,15 @@ def transform_points_to_artifact(listener, points, frame):
         rospy.logerr(e)
     return res
 
-
+def breadcrumbs_recieved(msg):
+    global positions
+    for pose in msg.poses:
+        pt = [0,0,0]
+        pt[0] = pose.position.x
+        pt[1] = pose.position.y
+        pt[2] = pose.position.z
+        positions.append(pt)
+    rospy.info("Recieived breadcrumb update!!")
 
 if __name__ == "__main__":
     rospy.init_node("breadcrumb_dropper")
@@ -82,6 +90,7 @@ if __name__ == "__main__":
     rate.sleep()
     dropper = rospy.Publisher("breadcrumb/deploy", Empty)
     send_map = rospy.ServiceProxy("send_map", send_map)
+    subscriber = rospy.Subscriber("breadcrumb_list", PoseArray, breadcrumbs_recieved)
     listener = TransformListener()
     while not rospy.is_shutdown():
         try:

@@ -19,10 +19,14 @@ TEAMBASE_LAUNCH_URI = CURR_PATH + "/launch/teambase.launch"
 TEAMBASE_NAME= "teambase"
 launch = None
 
+# delays to launch
+delay_durations = {"x1": 0, "teambase": 0, "x2": 500, "u1": 800}
+
 def main():
     rospy.init_node('LaunchSelectorNode', anonymous=True)
     rospy.logwarn("[Launch-Selector] Waiting for /subt/start service to start scoring...")
     rospy.loginfo("[Launch-Selector] v0.3")
+    
     rospy.wait_for_service(SUBT_START_SRV_NAME)
     
     # Start the scoring server
@@ -30,6 +34,7 @@ def main():
     start_req = SetBoolRequest()
     start_req.data = True
     subt_start_srv(start_req)
+    
     rospy.loginfo("[Launch-Selector] Subt Scoring server started")
     uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
 
@@ -60,7 +65,8 @@ def main():
     
     #Launch the 
     launch = roslaunch.parent.ROSLaunchParent(uuid, [launch_file], force_log=True, master_logger_level=True, verbose=True, show_summary=True)
-    rospy.sleep(2.0)
+    rospy.loginfo("Waiting %f for %s",delay_durations[robot_to_launch], robot_to_launch)
+    rospy.sleep(2.0 + delay_durations[robot_to_launch])
     launch.start()
     rospy.loginfo("[Launch-Selector] Launch Succesful. All tasks completed.")
 

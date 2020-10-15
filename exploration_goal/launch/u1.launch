@@ -9,9 +9,7 @@
     <include file="$(find exploration_goal)/launch/drone.launch">
         <arg name="robot_name" value="$(arg robot_name)" />
     </include>
-<!--
-    <group ns="u1">
+    <group ns="U1">
         <node name="start" pkg="exploration_goal" type="u1_start.py"/>
     </group>
-    -->
 </launch>

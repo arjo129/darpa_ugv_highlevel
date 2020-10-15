@@ -31,6 +31,16 @@ def create_point_stamped(point, _time, frame):
     return point_stamped
 
 
+def create_pose_stamped(point, _time, frame):
+    point_stamped = PoseStamped()
+    point_stamped.header.frame_id = frame
+    point_stamped.header.stamp = _time
+    point_stamped.pose.position.x = point[0]
+    point_stamped.pose.position.y = point[1]
+    point_stamped.pose.position.z = point[2]
+    return point_stamped
+
+
 def on_recieve(msg):
     global first, listener
     message = msg.header.frame_id
@@ -41,8 +51,8 @@ def on_recieve(msg):
     points = transform_points_from_artifact(listener, trail)
     my_path = Path()
     for point in points:
-        pose = create_point_stamped(point, rospy.Time.now(), "U1/world")
-        pose.point.z += 0.5
+        pose = create_pose_stamped(point, rospy.Time.now(), "U1/world")
+        pose.point.z += 1.0
         my_path.poses.append(pose)
     
     if len(my_path.poses) >1 and first:
@@ -85,7 +95,7 @@ def start_exploration():
     start_exploring.publish(mes)
 
 sub = rospy.Subscriber("/U1/comms_publisher", OccupancyGrid, on_recieve)
-
+rospy.sleep(7) #wait for drone to be airborne
 while not rospy.is_shutdown():
     if first:
         request_init_path()
