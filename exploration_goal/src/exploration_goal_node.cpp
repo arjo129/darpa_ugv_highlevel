@@ -19,7 +19,7 @@
  * merges it to form a mega global graph and the next best goal is selected with DFS traversal for exploration.
  */  
 
-ros::Publisher global_graph_pub, exploration_goal_pub, request_local_graph_pub , waypoints_pub;
+ros::Publisher global_graph_pub, exploration_goal_pub, request_local_graph_pub, waypoints_pub;
 boost::shared_ptr<FrontierGraph> global_graph;
 boost::shared_ptr<ros::NodeHandle> nh;
 std::string robot_name;
@@ -34,6 +34,11 @@ nav_msgs::Path Waypoints;
     
 //     ROS_INFO("RECEIVED WAYPOINTS!!!" , waypoints.poses.size());
 // }
+
+
+void onHeadStartWaypoint(const nav_msgs::Path p) {
+    global_graph->addWayPoints(p);
+}
 
 
 void onStartCallback(const std_msgs::Empty e)
@@ -88,10 +93,9 @@ void onStartCallback(const std_msgs::Empty e)
 
             global_graph->updateNewGoalSuccess();
             global_graph_pub.publish(global_graph->toMsg());
-
             Waypoints.header.stamp = ros::Time::now();
             Waypoints.poses.push_back(goalP);
-            waypoints_pub.publish(Waypoints);
+            //waypoints_pub.publish(Waypoints);
         }else{
             ROS_ERROR("[Exploration] Failed to reach goal node...");
             global_graph->updateNewGoalFail();
@@ -115,12 +119,13 @@ int main(int argc, char *argv[])
     global_graph_pub = nh->advertise<graph_msgs::GeometryGraph>(GLOBAL_GRAPH_TOPIC, 1);
     request_local_graph_pub = nh->advertise<geometry_msgs::PointStamped>(REQUEST_LOCAL_GRAPH_TOPIC, 1);
 
-    waypoints_pub = nh->advertise<nav_msgs::Path>(PATH_TOPIC, 1);
+    //waypoints_pub = nh->advertise<nav_msgs::Path>(PATH_TOPIC, 1);
 
     ros::Subscriber start_exploration = nh->subscribe(START_EXPLORATION_TOPIC, 1, onStartCallback);
-    // ros::Subscriber wayPointsSub = nh->subscribe(WAY_POINTS_TOPIC, 1, onWayPointsRecv);
+    ros::Subscriber wayPointsSub = nh->subscribe(WAY_POINTS_TOPIC, 1, onHeadStartWaypoint);
     
     ros::param::get("~robot_name", robot_name);
+    Waypoints.header.frame_id = robot_name+"/world";
     global_graph.reset(new FrontierGraph(robot_name+"/world"));
     
     ros::spin();    
