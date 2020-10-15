@@ -3,6 +3,8 @@
 #include <std_msgs/Int8.h>
 #include <std_msgs/Empty.h>
 #include <exploration_goal/frontier_graph.h>
+#include <nav_msgs/Path.h>
+#include <geometry_msgs/PoseStamped.h>
 
 #define LOCAL_GRAPH_TOPIC "graph"
 #define GLOBAL_GRAPH_TOPIC "global_graph"
@@ -11,7 +13,7 @@
 #define ROBOT_GOAL_STATUS "status"
 #define START_EXPLORATION_TOPIC "start_exploration"
 #define PATH_TOPIC "waypoints"
-
+#define WAY_POINTS_TOPIC "waypoints"
 /**
  * This node accepts local graphs produced by (ugv_obs_avoid pkg) frontier detection + path planning / branching and 
  * merges it to form a mega global graph and the next best goal is selected with DFS traversal for exploration.
@@ -23,16 +25,30 @@ boost::shared_ptr<ros::NodeHandle> nh;
 std::string robot_name;
 nav_msgs::Path Waypoints;
 
-/*
+
+
+
+
+// void onWayPointsRecv(const nav_msgs::Path waypoints)
+// {
+    
+//     ROS_INFO("RECEIVED WAYPOINTS!!!" , waypoints.poses.size());
+// }
+
+
 void onHeadStartWaypoint(const nav_msgs::Path p) {
     global_graph->addWayPoints(p);
 }
-*/
+
 
 void onStartCallback(const std_msgs::Empty e)
 {
     ros::Rate loop_rate(1);
     bool stuck = false;
+    ros::param::get("~robot_name", robot_name);
+    Waypoints.header.frame_id = robot_name+"/world";
+
+
     while (ros::ok())
     {       
         if(global_graph->getAL().size() == 0 ||global_graph->isLeafNode() || stuck){
@@ -74,11 +90,12 @@ void onStartCallback(const std_msgs::Empty e)
 
         if(status != NULL && status->data == 0){
             ROS_INFO("[Exploration] Reached goal node successfully...");
+
             global_graph->updateNewGoalSuccess();
             global_graph_pub.publish(global_graph->toMsg());
             Waypoints.header.stamp = ros::Time::now();
             Waypoints.poses.push_back(goalP);
-            waypoints_pub.publish(Waypoints);
+            //waypoints_pub.publish(Waypoints);
         }else{
             ROS_ERROR("[Exploration] Failed to reach goal node...");
             global_graph->updateNewGoalFail();
@@ -101,10 +118,12 @@ int main(int argc, char *argv[])
     exploration_goal_pub = nh->advertise<geometry_msgs::PointStamped>(SELECTED_GOAL_TOPIC, 1);
     global_graph_pub = nh->advertise<graph_msgs::GeometryGraph>(GLOBAL_GRAPH_TOPIC, 1);
     request_local_graph_pub = nh->advertise<geometry_msgs::PointStamped>(REQUEST_LOCAL_GRAPH_TOPIC, 1);
-    waypoints_pub = nh->advertise<nav_msgs::Path>(PATH_TOPIC, 1);
-    ros::Subscriber start_exploration = nh->subscribe(START_EXPLORATION_TOPIC, 1, onStartCallback);
-    // ros::Subscriber headstart_path_sub = nh->subscribe(BLABLA, 1, onHeadStartWaypoint);
 
+    //waypoints_pub = nh->advertise<nav_msgs::Path>(PATH_TOPIC, 1);
+
+    ros::Subscriber start_exploration = nh->subscribe(START_EXPLORATION_TOPIC, 1, onStartCallback);
+    ros::Subscriber wayPointsSub = nh->subscribe(WAY_POINTS_TOPIC, 1, onHeadStartWaypoint);
+    
     ros::param::get("~robot_name", robot_name);
     Waypoints.header.frame_id = robot_name+"/world";
     global_graph.reset(new FrontierGraph(robot_name+"/world"));

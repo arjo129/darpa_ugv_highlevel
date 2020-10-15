@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-
+#include <nav_msgs/Path.h>
 #include <exploration_goal/frontier_graph.h>
 
 #define LOCAL_GRAPH_TOPIC "graph"
@@ -19,6 +19,7 @@ void onLocalGraphRecv(const graph_msgs::GeometryGraph local_graph_msg)
     global_graph->mergeLocalGraph(local_graph);
 }
 
+
 int main(int argc, char *argv[])
 {
     ros::init(argc, argv,"global_exploration_graph_node");
@@ -26,6 +27,8 @@ int main(int argc, char *argv[])
 
     ros::Subscriber local_graph_sub = nh.subscribe(LOCAL_GRAPH_TOPIC, 1, onLocalGraphRecv);
     global_graph_pub = nh.advertise<graph_msgs::GeometryGraph> (GLOBAL_GRAPH_TOPIC, 1);
+
+    
 
     std::string robot_name;
     ros::param::get("~robot_name", robot_name);
