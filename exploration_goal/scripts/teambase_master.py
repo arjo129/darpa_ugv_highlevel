@@ -24,9 +24,9 @@ def euclidean_distance(d1, d2):
     return dist**0.5
 
 def get_closest(position):
-    global positions
+    global breadcrumbs
     min_dist = 9999999
-    for p in positions:
+    for p in breadcrumbs:
         d = euclidean_distance(p, position) 
         if d < min_dist:
             min_dist =d
@@ -35,7 +35,7 @@ def get_closest(position):
 def add_breadcrumbs(crumbs):
     global breadcrumbs
     for crumb in crumbs:
-        d = get_closest(crumb, breadcrumbs)
+        d = get_closest(crumb)
         if d < 20:
             continue
         breadcrumbs.append(crumb)
@@ -50,10 +50,10 @@ def callback(message):
         print(message)
         if message["type"] == "telemetry" and message["robot"] in robot_trails:
             robot_trails[message["robot"]].append(message["position"])
-            rospy.INFO ("trails")
-            rospy.INFO (robot_trails)
-            rospy.INFO ("breadcrumbs")
-            rospy.INFO (breadcrumbs)
+            rospy.loginfo ("trails")
+            rospy.loginfo (robot_trails)
+            rospy.loginfo ("breadcrumbs")
+            rospy.loginfo (breadcrumbs)
             add_breadcrumbs(message["beacons"])
         elif message["type"] == "telemetry" :
             robot_trails[message["robot"]] = [message["position"]]
