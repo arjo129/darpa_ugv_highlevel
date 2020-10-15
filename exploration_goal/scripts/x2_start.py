@@ -11,7 +11,7 @@ rospy.init_node("x2start")
 rospy.loginfo("waiting for comms service")
 rospy.wait_for_service("/X2/send_map")
 rospy.loginfo("Waiting for start time")
-
+rospy.sleep(6.0)
 send_map = rospy.ServiceProxy("/X2/send_map", send_map)
 get_neighbour = rospy.ServiceProxy("/X2/get_neighbour", neighbour)
 pub = rospy.Publisher("/X2/waypoints", Path)

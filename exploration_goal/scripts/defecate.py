@@ -71,13 +71,14 @@ def transform_points_to_artifact(listener, points, frame):
 
 def breadcrumbs_recieved(msg):
     global positions
+    rospy.loginfo("Recieived breadcrumb update!!")
     for pose in msg.poses:
         pt = [0,0,0]
         pt[0] = pose.position.x
         pt[1] = pose.position.y
         pt[2] = pose.position.z
         positions.append(pt)
-    rospy.info("Recieived breadcrumb update!!")
+    rospy.loginfo("Finished breadcrumb update!!")
 
 if __name__ == "__main__":
     rospy.init_node("breadcrumb_dropper")
@@ -93,6 +94,7 @@ if __name__ == "__main__":
     subscriber = rospy.Subscriber("breadcrumb_list", PoseArray, breadcrumbs_recieved)
     listener = TransformListener()
     while not rospy.is_shutdown():
+        print (positions)
         try:
             now = rospy.Time.now()
             listener.waitForTransform(robot_name+"/world", robot_name+"/base_link", now, rospy.Duration(3))
@@ -100,11 +102,11 @@ if __name__ == "__main__":
         except Exception as e:
             print (e)
             continue
-
         rospy.sleep(1.0)  
         rospy.loginfo (trans)
         res = get_closest(trans)
         rospy.loginfo ("distance from nearest breadcrumb %f", res)
+       
         if res > DROP_BEACON:
             empt = Empty()
             dropper.publish(empt)
