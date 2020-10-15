@@ -14,7 +14,7 @@ rospy.loginfo("Waiting for start time")
 
 send_map = rospy.ServiceProxy("/X2/send_map", send_map)
 get_neighbour = rospy.ServiceProxy("/X2/get_neighbour", neighbour)
-pub = rospy.Publisher("/X2/headstart_waypoint", Path)
+pub = rospy.Publisher("/X2/waypoints", Path)
 global bc_pub
 bc_pub = rospy.Publisher("/X2/breadcrumb_list", Path)
 start_exploring = rospy.Publisher("/X2/start_exploration", Empty)

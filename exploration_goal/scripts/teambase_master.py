@@ -54,13 +54,14 @@ def callback(message):
             rospy.INFO (robot_trails)
             rospy.INFO ("breadcrumbs")
             rospy.INFO (breadcrumbs)
-            add_breadcrumbs(breadcrumbs)
+            add_breadcrumbs(message["beacons"])
         elif message["type"] == "telemetry" :
             robot_trails[message["robot"]] = [message["position"]]
         elif message["type"] == "query":
             send_robot_trail(message["robot"])
-    except Exception:
+    except Exception as e:
         rospy.logerr("Malformatted JSON")
+        print(e)
 
 def send_robot_trail(robot):
     msg = OccupancyGrid()
