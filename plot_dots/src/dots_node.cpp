@@ -1,5 +1,9 @@
 /**
-**  Simple ROS Node
+I have 3 methods and 2 structs here. 
+The 2 structs are for the hashMap I use to track visited dots. 
+The 3 methods are main, cloud_cb and add_to_queue. 
+I make use of a BFS style to structure how I go about adding the dots. The initial dot is 0,0,0 which is added to the queue. When it dequeues that dot, that dot is added to out_cloud which publishes it at the end
+I will also call add_to_queue which looks at the possible dots around it in 3 dimensions (exclude diagonals). If I have not visited those dots and they still loe within the lidar scans, I will add them to the queue.
 **/
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud.h>
@@ -56,7 +60,7 @@ struct key_equal : public std::binary_function<std::tuple<float, float, float>, 
 };
 
 
-//standardise to making use of pcl::pointXYZ only instead of std::tuple
+//standardise to making use of pcl::pointXYZ only instead of std::tuple as KEY in the map
 
 void add_to_queue(std::unordered_map<std::tuple<float, float, float>,bool,key_hash,key_equal>& visited_map, pcl::PointXYZ& point,std::queue<pcl::PointXYZ>& q, LidarScan& scan) 
 {
