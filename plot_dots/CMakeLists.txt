@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   map_merge
+  geometry_msgs
+  graph_msgs
 #  pointcloud_to_laserscan
 )
 
@@ -110,7 +112,7 @@ catkin_package(
   CATKIN_DEPENDS 
 	roscpp
 	map_merge
-#	pointcloud_to_laserscan
+	geometry_msgs
 #  DEPENDS system_lib
 )
 

@@ -52,8 +52,10 @@
   <build_depend>roscpp</build_depend>
   <build_export_depend>roscpp</build_export_depend>
   <exec_depend>roscpp</exec_depend>
-  <!--     <depend>pointcloud_to_laserscan</depend> -->
   <depend>map_merge</depend>
+  <depend>geometry_msgs</depend>
+  <build_depend>graph_msgs</build_depend>
+  <exec_depend>graph_msgs</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
