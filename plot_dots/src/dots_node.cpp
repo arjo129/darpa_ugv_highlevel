@@ -1,10 +1,30 @@
 /**
-I have 3 methods and 2 structs here. 
-The 2 structs are for the hashMap I use to track visited dots. 
-The 3 methods are main, cloud_cb and add_to_queue. 
-I make use of a BFS style to structure how I go about adding the dots. The initial dot is 0,0,0 which is added to the queue. When it dequeues that dot, that dot is added to out_cloud which publishes it at the end
-I will also call add_to_queue which looks at the possible dots around it in 3 dimensions (exclude diagonals). If I have not visited those dots and they still loe within the lidar scans, I will add them to the queue.
+I do a bfs in 3d space - front and back. Top and bottom. Left and right. 
+
+I have 2 maps. One map is keep track of the points visited throughout the lifetime of the node and the other is just the lifetime of the method call. I need one for the method's lifetime because otherwise it will not run until the robot has entered a completely new area. 
+
+I first populate a queue with a point from /integrated_with_init. I use a tuple (bool, point) here to denote that it should be added to the graph_msgs.
+
+I then start a while loop. It will continue till the queue is empty
+
+Within the while loop, I dequeue the tuple from queue and depending on its bool value, add it to graph_msgs. I also call add_to_queue here.
+
+add_to_queue is the method to find the neighbours of the point as well as add them to the queue. It looks in the 6 directions mentioned above. 
+
+It checks if the point is not too high. It then checks if we have visited this point for this method's lifetime before. We then check if the point is still within the lidar scan. We then check if throughout the lifetime of this node, have we visited this point before. 
+
+If yes, we add to the queue with bool value as true.
+Increment index_global. This index keeps track of the points added to the graph_msgs.
+Push the point with its index into the global map. 
+Push the index into the edges array
+
+If no, get the index from the visited_map.
+Push it into the edges array
+Push the point into the queue with boolean value as false. 
+
+I cannot just add the point I have identified directly into graph_msgs as I do not have it's neighbour information. I add it to the queue, which will then call add_to_queue; finding its neighbours and populating an edge vector. 
 **/
+
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/PointCloud2.h>
