@@ -13,6 +13,10 @@ find_package(catkin REQUIRED COMPONENTS
   map_merge
   geometry_msgs
   graph_msgs
+  tf2
+  tf2_ros
+  tf2_msgs
+  tf2_sensor_msgs
 #  pointcloud_to_laserscan
 )
 
