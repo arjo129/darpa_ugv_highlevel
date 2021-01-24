@@ -1,0 +1,10 @@
+<launch>
+  <arg name="robot_name" default="X1"/>
+
+  <node pkg="ugv_groundmap" name="traversable_map_node" output="screen" type="traversable_map_node" respawn="true">
+    <remap from="lidar_input" to="X1/points"/>
+  </node>
+  
+
+
+</launch>

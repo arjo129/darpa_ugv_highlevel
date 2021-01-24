@@ -1,0 +1,12 @@
+<launch>
+  <arg name="robot_name" default="X2"/>
+
+  
+  <node pkg="ugv_movement_manager" name="ugv_movement_manager_node" output="screen" type="ugv_movement_manager_node" respawn="true">
+    <remap from="traversable_pointcloud_input" to="X1/points2"/>
+    <remap from="robot_position_pose" to="integrated_to_init"/>
+    <remap from="goal_to_explore" to="X1/goal"/>
+  </node>
+
+
+</launch>
