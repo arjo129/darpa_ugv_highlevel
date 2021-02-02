@@ -52,7 +52,7 @@ bool getFrontiers(lidar_frontier3d::frontier_request::Request &req,
 float roll = 0;
 float get_height() {
     if(roll < -0.1)
-    return 7;
+    return 50;
     else
     return 1;
 }
