@@ -1,4 +1,5 @@
 
+
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -45,6 +46,8 @@ static pcl::PointCloud<pcl::PointXYZ> original_cloud_msg;
 static pcl::PointXYZ origin;
 static bool origin_is_updated;
 static int index_global = -1;
+static int current_frame = 0;
+const int every_x_frames = 2;
 
 
 struct key_hash {
@@ -79,7 +82,7 @@ struct key_equal : public std::binary_function<pcl::PointXYZ, pcl::PointXYZ, boo
 
 
 
-int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visited_map, pcl::PointXYZ& point,std::queue<std::tuple<pcl::PointXYZ, bool>>& q, LidarScan& scan, graph_msgs::Edges& e, int& index_global, graph_msgs::GeometryGraph& out_cloud_2, geometry_msgs::Point& out_cloud_2_point, std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal>& visited_map_2, int& index_local, geometry_msgs::TransformStamped& transformStamped_world_to_baseLink, tf2_ros::Buffer& tfBuffer, ros::Time& timeStamp) 
+int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visited_map, pcl::PointXYZ& point,std::queue<std::tuple<pcl::PointXYZ, bool>>& q, LidarScan& scan, graph_msgs::Edges& e, int& index_global, graph_msgs::GeometryGraph& out_cloud_2, geometry_msgs::Point& out_cloud_2_point, std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal>& visited_map_2, int& index_local, tf2_ros::Buffer& tfBuffer, ros::Time& timeStamp) 
 {
 	pcl::PointXYZ pointUp, pointDown, pointLeft, pointRight, pointForward, pointBackward;
 	std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal>::iterator search;
@@ -300,10 +303,10 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 	//std::cout << "index_global 2: " << index_global << std::endl;
 }
 
-void cloud_cb(const pcl::PointCloud<pcl::PointXYZ>& cloud_msg, 	pcl::PointXYZ start, geometry_msgs::TransformStamped& transformStamped_world_to_baseLink, pcl::PointCloud<pcl::PointXYZ>& original_cloud_msg, tf2_ros::Buffer& tfBuffer, ros::Time& timeStamp) {
+void cloud_cb(pcl::PointXYZ start, pcl::PointCloud<pcl::PointXYZ>& original_cloud_msg, tf2_ros::Buffer& tfBuffer, ros::Time& timeStamp) {
 
-	if ((cloud_msg.size() < 1) || !origin_is_updated) { //|| (start.x == 0 && start.y == 0 && start.z == 0)) {
-		std::cout << "Returning at start: !origin_is_updated: " << !origin_is_updated << " || cloud_msg.size(): " << cloud_msg.size() << "\n";
+	if ((original_cloud_msg.size() < 1) || !origin_is_updated) { //|| (start.x == 0 && start.y == 0 && start.z == 0)) {
+		std::cout << "Returning at start: !origin_is_updated: " << !origin_is_updated << " || original_cloud_msg.size(): " << original_cloud_msg.size() << "\n";
 		return;
 	}
 	clock_t tStart = clock();
@@ -357,7 +360,7 @@ void cloud_cb(const pcl::PointCloud<pcl::PointXYZ>& cloud_msg, 	pcl::PointXYZ st
 		}
 		
 		graph_msgs::Edges e;
-		add_to_queue(visited_map, temp, q, scan, e, index_global, out_cloud_2, out_cloud_2_point, visited_map_2, index_local, transformStamped_world_to_baseLink, tfBuffer, timeStamp); //add points around temp to the queue
+		add_to_queue(visited_map, temp, q, scan, e, index_global, out_cloud_2, out_cloud_2_point, visited_map_2, index_local, tfBuffer, timeStamp); //add points around temp to the queue
 		// std::cout << "to_add: " << to_add << std::endl;
 		if (to_add) {
 			out_cloud_2.edges.push_back(e);	
@@ -373,15 +376,23 @@ void cloud_cb(const pcl::PointCloud<pcl::PointXYZ>& cloud_msg, 	pcl::PointXYZ st
 	out_cloud_2.explored = arr;
 	
 	out_cloud_2.header.frame_id = "X1/world";
-	out_cloud_2.header.stamp = pcl_conversions::fromPCL(cloud_msg.header.stamp);
+	out_cloud_2.header.stamp = pcl_conversions::fromPCL(original_cloud_msg.header.stamp);
 	//pub.publish(out_cloud);
 	pub2.publish(out_cloud_2);
 	//std::cout << "OVER" << std::endl;
 	printf("Time taken: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
-	// ros::shutdown();
+	ros::shutdown();
 }
 
 void transform_the_cloud(const sensor_msgs::PointCloud2& cloud_msg) {
+	if (current_frame >= every_x_frames) {
+		current_frame = 0;
+		std::cout << "returning due SKIP" << std::endl;
+		return;
+	} else {
+		current_frame += 1;
+	}
+
 	//get the position of the robot
 	pcl::PointXYZ start;
 	start.x = origin.x;
@@ -394,27 +405,21 @@ void transform_the_cloud(const sensor_msgs::PointCloud2& cloud_msg) {
 	static tf2_ros::Buffer tfBuffer;
     static tf2_ros::TransformListener tfListener(tfBuffer);
 	geometry_msgs::TransformStamped transformStamped;
-	geometry_msgs::TransformStamped transformStamped_world_to_baseLink;
 	sensor_msgs::PointCloud2 cloud_transformed;
 	try {
 		if (tfBuffer.canTransform("X1/world", "X1/base_link/front_laser", cloud_msg.header.stamp, ros::Duration(3.0)) && tfBuffer.canTransform("X1/base_link/front_laser", "X1/world", cloud_msg.header.stamp, ros::Duration(3.0))) {
 			transformStamped = tfBuffer.lookupTransform("X1/world", "X1/base_link/front_laser", cloud_msg.header.stamp);
-			transformStamped_world_to_baseLink = tfBuffer.lookupTransform("X1/base_link/front_laser", "X1/world", cloud_msg.header.stamp);
 			tf2::doTransform (cloud_msg, cloud_transformed, transformStamped); //(cloud_in, cloud_out, transform)
 
 			//publish the transformed cloud
 			pub3.publish(cloud_transformed); 
-
-			//convert the transformed cloud for use in cloud_cb
-			pcl_conversions::toPCL(cloud_transformed, pcl_cloud_msg_2);
-			pcl::fromPCLPointCloud2( pcl_cloud_msg_2, pcl_cloud_msg); 
 
 			//convert the original cloud for use in cloud_cb
 			pcl_conversions::toPCL(cloud_msg, pcl_cloud_msg_2);
 			pcl::fromPCLPointCloud2( pcl_cloud_msg_2, original_cloud_msg); 
 
 			//call the grapher method
-			cloud_cb(pcl_cloud_msg, start, transformStamped_world_to_baseLink, original_cloud_msg, tfBuffer, timeStamp);
+			cloud_cb(start, original_cloud_msg, tfBuffer, timeStamp);
 		}
 
 	}  catch (tf2::TransformException &ex) {
