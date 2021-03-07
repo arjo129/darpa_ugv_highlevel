@@ -143,16 +143,8 @@ bool isPointInside(LidarScan& scan, pcl::PointXYZ pt){
     auto p2 = Eigen::Vector3d(pt2.x, pt2.y, pt2.z); 
     auto p3 = Eigen::Vector3d(pt3.x, pt3.y, pt3.z);
 
-    auto v1 = p1 - p2;
-    auto v2 = p3 - p2;
-    auto norm = v1.cross(v2);
-    auto k = norm.dot(Eigen::Vector3d(pt1.x, pt1.y, pt1.z));
-    //Calculate unit ray in the direction of the original point
-    auto ray = Eigen::Vector3d(pt.x, pt.y, pt.z)/r;
-    //Get intersection 
-    // N.r(t)  = k =>  t= k/N.r
-    auto t = k/norm.dot(ray);
-    return r<=abs(t);
+    auto min_length = min(p1, min(p2, p3));
+    return r < min_length;
 }
 
 void fillGaps(sensor_msgs::LaserScan& scan, size_t max_gap) {
