@@ -354,13 +354,13 @@ void cloud_cb(pcl::PointXYZ start, pcl::PointCloud<pcl::PointXYZ>& original_clou
 		fillGaps(scan[i].scan, fill_gap_amt);
 	}
 	
-	std::tuple<pcl::PointXYZ, bool> temp_tuple;
-	pcl::PointXYZ temp;
-	static std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal> visited_map; //to keep throughout the run
-	std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal> visited_map_2; //per call back
+	std::tuple<pcl::PointXYZ, bool> temp_tuple; //declare a tuple to keep the tuple I'll dequeue later
+	pcl::PointXYZ temp; //declare a point which I'll get from the de-queued tuple
+	static std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal> visited_map; //to keep throughout the run - the one keeping all the global points
+	std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal> visited_map_2; //per call back - to keep track of my locally visited BFS points, etc
 	
 	pcl::PointCloud<pcl::PointXYZ> out_cloud;
-	std::queue<std::tuple<pcl::PointXYZ, bool>> q; //use a tuple here, if true then add to geo msg. true/false is set in the above method
+	std::queue<std::tuple<pcl::PointXYZ, bool>> q; //declare the queue of tuples - if true then add to geo msg. true/false is set in the above method
 	
 	static graph_msgs::GeometryGraph out_cloud_2;
 	static geometry_msgs::Point out_cloud_2_point;
@@ -421,7 +421,7 @@ void cloud_cb(pcl::PointXYZ start, pcl::PointCloud<pcl::PointXYZ>& original_clou
 	// ros::shutdown();
 }
 
-void transform_the_cloud(const sensor_msgs::PointCloud2& cloud_msg) {
+void transform_the_cloud(const sensor_msgs::PointCloud2& cloud_msg) { //called when there is a new lidar scan in the form of a point cloud being sent in 
 	if (disable_skipping || current_frame >= every_x_frames ) {
 		current_frame = 0;
 	} else {
@@ -432,10 +432,10 @@ void transform_the_cloud(const sensor_msgs::PointCloud2& cloud_msg) {
 
 	//get the position of the robot
 	pcl::PointXYZ start;
-	start.x = origin.x;
+	start.x = origin.x; //where origin is the robot's location updated by integrated_to_init in the update_origin() callback method
 	start.y = origin.y;
 	start.z = origin.z;
-	std::cout << "start: " << start.x << ", " << start.y << ", " << start.z << std::endl;	
+	std::cout << "robot's location: " << start.x << ", " << start.y << ", " << start.z << std::endl;	
 	ros::Time timeStamp = cloud_msg.header.stamp;
 
 	//transform the pointcloud: X1/points
@@ -444,9 +444,9 @@ void transform_the_cloud(const sensor_msgs::PointCloud2& cloud_msg) {
 	geometry_msgs::TransformStamped transformStamped;
 	sensor_msgs::PointCloud2 cloud_transformed;
 	try {
-		if (tfBuffer.canTransform("X1/world", "X1/base_link/front_laser", cloud_msg.header.stamp, ros::Duration(3.0)) && tfBuffer.canTransform("X1/base_link/front_laser", "X1/world", cloud_msg.header.stamp, ros::Duration(3.0))) {
+		if (tfBuffer.canTransform("X1/world", "X1/base_link/front_laser", cloud_msg.header.stamp, ros::Duration(3.0))) {
 			transformStamped = tfBuffer.lookupTransform("X1/world", "X1/base_link/front_laser", cloud_msg.header.stamp);
-			tf2::doTransform (cloud_msg, cloud_transformed, transformStamped); //(cloud_in, cloud_out, transform)
+			tf2::doTransform (cloud_msg, cloud_transformed, transformStamped); //tf2::doTransform(cloud_in, cloud_out, transform)
 
 			//publish the transformed cloud
 			pub3.publish(cloud_transformed); 
