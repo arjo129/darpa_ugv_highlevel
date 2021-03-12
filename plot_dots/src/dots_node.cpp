@@ -82,36 +82,54 @@ struct key_equal : public std::binary_function<pcl::PointXYZ, pcl::PointXYZ, boo
   }
 };
 
+pcl::PointXYZ convert_to_local(pcl::PointXYZ pt, pcl::PointXYZ origin) {
+	return pcl::PointXYZ(pt.x - origin.x, pt.y - origin.y, pt.z - origin.z);
+}
 
 
-int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visited_map, pcl::PointXYZ& point,std::queue<std::tuple<pcl::PointXYZ, bool>>& q, LidarScan& scan, graph_msgs::Edges& e, int& index_global, graph_msgs::GeometryGraph& out_cloud_2, geometry_msgs::Point& out_cloud_2_point, std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal>& visited_map_2, int& index_local, tf2_ros::Buffer& tfBuffer, ros::Time& timeStamp) 
+int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visited_map, 
+					pcl::PointXYZ& point,
+					pcl::PointXYZ& local_point,
+					std::queue<std::tuple<pcl::PointXYZ, bool>>& q, 
+					LidarScan& scan, graph_msgs::Edges& e, int& index_global, 
+					graph_msgs::GeometryGraph& out_cloud_2, 
+					geometry_msgs::Point& out_cloud_2_point, 
+					std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal>& visited_map_2, 
+					int& index_local, 
+					tf2_ros::Buffer& tfBuffer, 
+					ros::Time& timeStamp,
+					bool debug_bool) 
 {
 	pcl::PointXYZ pointUp, pointDown, pointLeft, pointRight, pointForward, pointBackward;
 	std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal>::iterator search;
 	std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal>::iterator search_global;
-	std::cout << "index_global (add_to_queue()): " << index_global << std::endl;
+	// std::cout << "index_global (add_to_queue()): " << index_global << std::endl;
 
-	geometry_msgs::PointStamped geo_point, transformed_geo_pt; 
-	geo_point.header.frame_id = "X1/world";
-	geo_point.header.stamp = timeStamp;
-	transformed_geo_pt.header.frame_id = "X1/base_link/front_laser";
-	geo_point.point.x = point.x;
-	geo_point.point.y = point.y;
-	geo_point.point.z = point.z;
-	tfBuffer.transform(geo_point, transformed_geo_pt, "X1/base_link/front_laser");
+	// geometry_msgs::PointStamped geo_point, transformed_geo_pt; 
+	// geo_point.header.frame_id = "X1/world";
+	// geo_point.header.stamp = timeStamp;
+	// transformed_geo_pt.header.frame_id = "X1/base_link/front_laser";
+	// geo_point.point.x = point.x;
+	// geo_point.point.y = point.y;
+	// geo_point.point.z = point.z;
+	// tfBuffer.transform(geo_point, transformed_geo_pt, "X1/base_link/front_laser");
 
-	std::cout << "index_global (add_to_queue()): " << index_global << std::endl;
+	if (debug_bool) {
+		std::cout << "Transformed Local_Point: " << local_point << std::endl;
+		std::cout << "Global_Point: " << point << std::endl;
+	}
+	// ros::shutdown();
 
 	pcl::PointXYZ transformed_pt;
 	
 	pointUp.x = point.x;
 	pointUp.y = point.y;
 	pointUp.z = point.z + dot_distance;	
-	std::cout << "after setting pointUp" << std::endl;
+
 	if (pointUp.z < max_z) {
-		transformed_pt.x = transformed_geo_pt.point.x;
-		transformed_pt.y = transformed_geo_pt.point.y;
-		transformed_pt.z = transformed_geo_pt.point.z  + dot_distance;
+		transformed_pt.x = local_point.x;
+		transformed_pt.y = local_point.y;
+		transformed_pt.z = local_point.z  + dot_distance;
 		if (isPointInside(scan, transformed_pt)) { //if neighbouring point is still inside of scan, we just add it to the list of points to visit
 			search = visited_map_2.find(pointUp);
 			search_global = visited_map.find(pointUp);
@@ -119,16 +137,16 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 				++index_local;
 				visited_map_2.insert({pointUp, index_local}); //add it to locally visited points
 				if (search == visited_map.end()) {//if we have not visited this point globally yet, we add it to geometry message
-					std::cout << "GLOBALLY - TRUE: pushed into queue Up: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << std::endl;	
+					// std::cout << "GLOBALLY - TRUE: pushed into queue Up: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << std::endl;	
 					q.push(std::make_tuple(pointUp, true)); //add it to the queue
 					++index_global;
 					visited_map.insert({pointUp, index_global}); //add it to globally visited points
 				} else { //have visited this neighbouring point before
-					std::cout << "GLOBALLY - FALSE Up:  have visited this neighbouring point before: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << std::endl;	
+					// std::cout << "GLOBALLY - FALSE Up:  have visited this neighbouring point before: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << std::endl;	
 					q.push(std::make_tuple(pointUp, false)); //add it to the queue
 				}
 			} else {
-				std::cout << "LOCALLY Up: have visited this neighbouring point before: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << std::endl;	
+				// std::cout << "LOCALLY Up: have visited this neighbouring point before: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << std::endl;	
 			}
 
 			if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
@@ -138,19 +156,19 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 			}
 
 		} else {
-			std::cout << "OUTSIDE of laserScan Up: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << std::endl;	
+			// std::cout << "OUTSIDE of laserScan Up: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << std::endl;	
 		}
 	} else {
-		std::cout << "exceed max_z: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << " || max_z: " << max_z << std::endl;	
+		// std::cout << "exceed max_z: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << " || max_z: " << max_z << std::endl;	
 	}
 
 	pointDown.x = point.x;
 	pointDown.y = point.y;
 	pointDown.z = point.z - dot_distance;
 	if (pointDown.z < max_z) {
-		transformed_pt.x = transformed_geo_pt.point.x;
-		transformed_pt.y = transformed_geo_pt.point.y;
-		transformed_pt.z = transformed_geo_pt.point.z  - dot_distance;
+		transformed_pt.x = local_point.x;
+		transformed_pt.y = local_point.y;
+		transformed_pt.z = local_point.z  - dot_distance;
 		if (isPointInside(scan, transformed_pt)) { //if neighbouring point is still inside of scan 
 			search = visited_map_2.find(pointDown);
 			search_global = visited_map.find(pointDown);
@@ -158,16 +176,16 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 				++index_local;
 				visited_map_2.insert({pointDown, index_local}); //add it to locally visited points
 				if (search == visited_map.end()) {
-					std::cout << "GLOBALLY - TRUE: pushed into queue Down: " << pointDown.x << ", " << pointDown.y << ", " << pointDown.z  << std::endl;	
+					// std::cout << "GLOBALLY - TRUE: pushed into queue Down: " << pointDown.x << ", " << pointDown.y << ", " << pointDown.z  << std::endl;	
 					q.push(std::make_tuple(pointDown, true));
 					++index_global;
 					visited_map.insert({pointDown, index_global}); //add it to globally visited points
 				} else { //globally, I have visited this point before, so add the index_global of pointDown to the the edge list of the original point
-					std::cout << "GLOBALLY - FALSE Down: have visited this neighbouring point before: " << pointDown.x << ", " << pointDown.y << ", " << pointDown.z << std::endl;	
+					// std::cout << "GLOBALLY - FALSE Down: have visited this neighbouring point before: " << pointDown.x << ", " << pointDown.y << ", " << pointDown.z << std::endl;	
 					q.push(std::make_tuple(pointDown, false));
 				}
 			} else {
-				std::cout << "LOCALLY Down: have visited this neighbouring point before: " << pointDown.x << ", " << pointDown.y << ", " << pointDown.z << std::endl;	
+				// std::cout << "LOCALLY Down: have visited this neighbouring point before: " << pointDown.x << ", " << pointDown.y << ", " << pointDown.z << std::endl;	
 			}
 
 			if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
@@ -177,7 +195,7 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 			}
 
 		} else {
-			std::cout << "OUTSIDE of laserScan Down: " << pointDown.x << ", " << pointDown.y << ", " << pointDown.z << std::endl;	
+			// std::cout << "OUTSIDE of laserScan Down: " << pointDown.x << ", " << pointDown.y << ", " << pointDown.z << std::endl;	
 		}
 	}
 	
@@ -185,9 +203,9 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 	pointLeft.y = point.y - dot_distance;
 	pointLeft.z = point.z;	
 	if (pointLeft.z < max_z) {		
-		transformed_pt.x = transformed_geo_pt.point.x;
-		transformed_pt.y = transformed_geo_pt.point.y - dot_distance;
-		transformed_pt.z = transformed_geo_pt.point.z;
+		transformed_pt.x = local_point.x;
+		transformed_pt.y = local_point.y - dot_distance;
+		transformed_pt.z = local_point.z;
 		if (isPointInside(scan, transformed_pt)) { 
 			search = visited_map_2.find(pointLeft);
 			search_global = visited_map.find(pointLeft);
@@ -195,16 +213,16 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 				++index_local;	
 				visited_map_2.insert({pointLeft, index_local}); //add it to locally visited points
 				if (search == visited_map.end()) {
-					std::cout << "GLOBALLY - TRUE: pushed into queue Left: " << pointLeft.x << ", " << pointLeft.y << ", " << pointLeft.z << std::endl;
+					// std::cout << "GLOBALLY - TRUE: pushed into queue Left: " << pointLeft.x << ", " << pointLeft.y << ", " << pointLeft.z << std::endl;
 					q.push(std::make_tuple(pointLeft, true));
 					++index_global;
 					visited_map.insert({pointLeft, index_global}); //add it to visited points
 				} else { //if i have visited pointLeft before
-					std::cout << "GLOBALLY - FALSE Left: have visited this neighbouring point before: " << pointLeft.x << ", " << pointLeft.y << ", " << pointLeft.z << std::endl;	
+					// std::cout << "GLOBALLY - FALSE Left: have visited this neighbouring point before: " << pointLeft.x << ", " << pointLeft.y << ", " << pointLeft.z << std::endl;	
 					q.push(std::make_tuple(pointLeft, false));
 				}
 			} else {
-				std::cout << "OUTSIDE of laserScan Left: " << pointLeft.x << ", " << pointLeft.y << ", " << pointLeft.z << std::endl;	
+				// std::cout << "OUTSIDE of laserScan Left: " << pointLeft.x << ", " << pointLeft.y << ", " << pointLeft.z << std::endl;	
 			}
 
 			if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
@@ -214,7 +232,7 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 			}
 
 		} else {
-			std::cout << "LOCALLY Left: have visited this neighbouring point before: " << pointLeft.x << ", " << pointLeft.y << ", " << pointLeft.z << std::endl;	
+			// std::cout << "LOCALLY Left: have visited this neighbouring point before: " << pointLeft.x << ", " << pointLeft.y << ", " << pointLeft.z << std::endl;	
 		}
 	}
 
@@ -223,14 +241,14 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 	pointRight.y  = point.y + dot_distance;
 	pointRight.z  = point.z;
 	if (pointRight.z < max_z) {		
-		transformed_pt.x = transformed_geo_pt.point.x;
-		transformed_pt.y = transformed_geo_pt.point.y + dot_distance;
-		transformed_pt.z = transformed_geo_pt.point.z;
+		transformed_pt.x = local_point.x;
+		transformed_pt.y = local_point.y + dot_distance;
+		transformed_pt.z = local_point.z;
 		if (isPointInside(scan, transformed_pt)) { 
 			search = visited_map_2.find(pointRight);
 			search_global = visited_map.find(pointRight);
 			if (search == visited_map_2.end()) {
-				std::cout << "GLOBALLY - TRUE : pushed into queue Right: " << pointRight.x << ", " << pointRight.y << ", " << pointRight.z << std::endl;
+				// std::cout << "GLOBALLY - TRUE : pushed into queue Right: " << pointRight.x << ", " << pointRight.y << ", " << pointRight.z << std::endl;
 				++index_local;	
 				visited_map_2.insert({pointRight, index_local}); //add it to locally visited points
 				if (search == visited_map.end()) {
@@ -238,11 +256,11 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 					++index_global;
 					visited_map.insert({pointRight, index_global}); //add it to visited points
 				} else { //if i have visited pointRight before
-					std::cout << "GLOBALLY - FALSE Right: have visited this neighbouring point before: " << pointRight.x << ", " << pointRight.y << ", " << pointRight.z << std::endl;	
+					// std::cout << "GLOBALLY - FALSE Right: have visited this neighbouring point before: " << pointRight.x << ", " << pointRight.y << ", " << pointRight.z << std::endl;	
 					q.push(std::make_tuple(pointRight, false));
 				}
 			} else {
-				std::cout << "LOCALLY Right: have visited this neighbouring point before: " << pointRight.x << ", " << pointRight.y << ", " << pointRight.z << std::endl;	
+				// std::cout << "LOCALLY Right: have visited this neighbouring point before: " << pointRight.x << ", " << pointRight.y << ", " << pointRight.z << std::endl;	
 			} 
 
 			if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
@@ -252,7 +270,7 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 			}
 
 		} else {
-			std::cout << "OUTSIDE of laserScan Right: " << pointRight.x << ", " << pointRight.y << ", " << pointRight.z << std::endl;	
+			// std::cout << "OUTSIDE of laserScan Right: " << pointRight.x << ", " << pointRight.y << ", " << pointRight.z << std::endl;	
 		}
 	}
 	
@@ -261,9 +279,9 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 	pointForward.y  = point.y;
 	pointForward.z  = point.z;
 	if (pointForward.z < max_z) {		
-		transformed_pt.x = transformed_geo_pt.point.x + dot_distance;
-		transformed_pt.y = transformed_geo_pt.point.y;
-		transformed_pt.z = transformed_geo_pt.point.z;
+		transformed_pt.x = local_point.x + dot_distance;
+		transformed_pt.y = local_point.y;
+		transformed_pt.z = local_point.z;
 		if (isPointInside(scan, transformed_pt)) { 
 			search = visited_map_2.find(pointForward);
 			search_global = visited_map.find(pointForward);
@@ -272,16 +290,16 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 				++index_local;	
 				visited_map_2.insert({pointForward, index_local}); //add it to locally visited points
 				if (search == visited_map.end()) {
-					std::cout << "GLOBALLY - TRUE pushed into queue Forward: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;	
+					// std::cout << "GLOBALLY - TRUE pushed into queue Forward: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;	
 					q.push(std::make_tuple(pointForward, true));
 					++index_global;
 					visited_map.insert({pointForward, index_global}); //add it to visited points
 				} else { //if i have visited pointForward before
-					std::cout << "GLOBALLY - FALSE Forward: have visited this neighbouring point before: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;	
+					// std::cout << "GLOBALLY - FALSE Forward: have visited this neighbouring point before: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;	
 					q.push(std::make_tuple(pointForward, false));
 				}
 			} else {
-				std::cout << "LOCALLY Forward: have visited this neighbouring point before: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;	
+				// std::cout << "LOCALLY Forward: have visited this neighbouring point before: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;	
 			}
 
 			if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
@@ -291,7 +309,7 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 			}
 
 		} else {
-			std::cout << "OUTSIDE of laserScan Forward: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;	
+			// std::cout << "OUTSIDE of laserScan Forward: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;	
 		}
 	}
 	
@@ -300,9 +318,9 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 	pointBackward.y  = point.y;
 	pointBackward.z  = point.z;
 	if (pointBackward.z < max_z) {
-		transformed_pt.x = transformed_geo_pt.point.x - dot_distance;
-		transformed_pt.y = transformed_geo_pt.point.y;
-		transformed_pt.z = transformed_geo_pt.point.z;
+		transformed_pt.x = local_point.x - dot_distance;
+		transformed_pt.y = local_point.y;
+		transformed_pt.z = local_point.z;
 		if (isPointInside(scan, transformed_pt)) { //if pointBackward is still inside of scan, we add it to the list of points to visit
 			search = visited_map_2.find(pointBackward);
 			search_global = visited_map.find(pointBackward);
@@ -310,16 +328,16 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 				++index_local;
 				visited_map_2.insert({pointBackward, index_local}); //add it to locally visited points
 				if (search == visited_map.end()) {//if we have not visited this point globally yet, we add it to geometry message
-					std::cout << "GLOBALLY - TRUE pushed into queue Backward: " << pointBackward.x << ", " << pointBackward.y << ", " << pointBackward.z << std::endl;	
+					// std::cout << "GLOBALLY - TRUE pushed into queue Backward: " << pointBackward.x << ", " << pointBackward.y << ", " << pointBackward.z << std::endl;	
 					q.push(std::make_tuple(pointBackward, true));
 					++index_global;
 					visited_map.insert({pointBackward, index_global}); //add it to globally visited points
 				} else { //have visited this neighbouring point before
-					std::cout << "GLOBALLY - FALSE Backward: have visited this neighbouring point before: " << pointBackward.x << ", " << pointBackward.y << ", " << pointBackward.z << std::endl;	
+					// std::cout << "GLOBALLY - FALSE Backward: have visited this neighbouring point before: " << pointBackward.x << ", " << pointBackward.y << ", " << pointBackward.z << std::endl;	
 					q.push(std::make_tuple(pointBackward, false));
 				}
 			} else {
-					std::cout << "LOCALLY Backward: have visited this neighbouring point before: " << pointBackward.x << ", " << pointBackward.y << ", " << pointBackward.z << std::endl;	
+					// std::cout << "LOCALLY Backward: have visited this neighbouring point before: " << pointBackward.x << ", " << pointBackward.y << ", " << pointBackward.z << std::endl;	
 			}
 
 			if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
@@ -329,18 +347,19 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 			}
 
 		} else {
-			std::cout << "OUTSIDE of laserScan Backward: " << pointBackward.x << ", " << pointBackward.y << ", " << pointBackward.z << std::endl;
+			// std::cout << "OUTSIDE of laserScan Backward: " << pointBackward.x << ", " << pointBackward.y << ", " << pointBackward.z << std::endl;
 		}
 	}
 	
-	std::cout << "Neighbouring Nodes:" << std::endl;
-	for (int i : e.node_ids) {
-		std::cout << i << std::endl;
-	}
+	// std::cout << "Neighbouring Nodes:" << std::endl;
+	// for (int i : e.node_ids) {
+	// 	std::cout << i << std::endl;
+	// }
 	//std::cout << "index_global 2: " << index_global << std::endl;
 }
 
 void cloud_cb(pcl::PointXYZ start, pcl::PointCloud<pcl::PointXYZ>& original_cloud_msg, tf2_ros::Buffer& tfBuffer, ros::Time& timeStamp) {
+	int replace_index_local = 1;
 
 	if ((original_cloud_msg.size() < 1) || !origin_is_updated) { //|| (start.x == 0 && start.y == 0 && start.z == 0)) {
 		std::cout << "Returning at start: !origin_is_updated: " << !origin_is_updated << " || original_cloud_msg.size(): " << original_cloud_msg.size() << "\n";
@@ -354,39 +373,44 @@ void cloud_cb(pcl::PointXYZ start, pcl::PointCloud<pcl::PointXYZ>& original_clou
 		fillGaps(scan[i].scan, fill_gap_amt);
 	}
 	
-	std::tuple<pcl::PointXYZ, bool> temp_tuple; //declare a tuple to keep the tuple I'll dequeue later
-	pcl::PointXYZ temp; //declare a point which I'll get from the de-queued tuple
+	std::tuple<pcl::PointXYZ, bool> temp_tuple; //declare a tuple - to keep the tuple I'll dequeue later
+	pcl::PointXYZ temp, temp_local; //declare a point - to keep the point from within the de-queued tuple
+	bool to_add; //declare a boolean - to keep the boolean value from within the de-queued tuple
 	static std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal> visited_map; //to keep throughout the run - the one keeping all the global points
 	std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal> visited_map_2; //per call back - to keep track of my locally visited BFS points, etc
 	
-	pcl::PointCloud<pcl::PointXYZ> out_cloud;
+	// pcl::PointCloud<pcl::PointXYZ> out_cloud;
 	std::queue<std::tuple<pcl::PointXYZ, bool>> q; //declare the queue of tuples - if true then add to geo msg. true/false is set in the above method
 	
-	static graph_msgs::GeometryGraph out_cloud_2;
-	static geometry_msgs::Point out_cloud_2_point;
+	static graph_msgs::GeometryGraph out_cloud_2; // for visualisation - the overall structure
+	static geometry_msgs::Point out_cloud_2_point; // the individual point within the visualisation
 	int index_local = -1;
-	
-	std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal>::iterator search = visited_map.find(start);
-	if (search == visited_map.end()) { //check if start is inside visited_map. if yes, add it visited_map_2 only and is false. if no, add it to both and is true
-		++index_local;
+
+	// initialisation of the queue
+	std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal>::iterator search = visited_map.find(start); //find the origin of the robot inside of the gobal_map
+	if (search == visited_map.end()) { //check if origin of robot is inside visited_map. if yes, add it visited_map_2 only and is false. if no, add it to both and is true
+		// ++index_local;
 		++index_global;
 		visited_map.insert({start, index_global}); //add it to visited points
-		visited_map_2.insert({start, index_local}); //add it to visited points
+		visited_map_2.insert({start, replace_index_local}); //add it to visited points
 		q.push(std::make_tuple(start, true)); 
 	} else {	
-		++index_local;
-		visited_map_2.insert({start, index_local}); //add it to visited points
+		// ++index_local;
+		visited_map_2.insert({start, replace_index_local}); //add it to visited points
 		q.push(std::make_tuple(start, false)); 
 	}
-	
+	bool debug_bool = true;
+
+	// running BFS
 	while (!q.empty()) {
-		std::cout << "index_global cloud_cb(): " << index_global << std::endl;
+		// std::cout << "index_global cloud_cb(): " << index_global << std::endl;
 		//std::cout << "Queue size 0: " << q.size() << std::endl;
 		
 		temp_tuple = q.front();
 		q.pop();
 		temp = std::get<0>(temp_tuple);
-		bool to_add = std::get<1>(temp_tuple);
+		temp_local = convert_to_local(temp, start);
+		to_add = std::get<1>(temp_tuple);
 		// std::cout << "to_add: " << to_add << std::endl;
 
 		if (to_add) { //check if true or false from the tuple
@@ -397,7 +421,8 @@ void cloud_cb(pcl::PointXYZ start, pcl::PointCloud<pcl::PointXYZ>& original_clou
 		}
 		
 		graph_msgs::Edges e;
-		add_to_queue(visited_map, temp, q, scan, e, index_global, out_cloud_2, out_cloud_2_point, visited_map_2, index_local, tfBuffer, timeStamp); //add points around temp to the queue
+		add_to_queue(visited_map, temp, temp_local, q, scan, e, index_global, out_cloud_2, out_cloud_2_point, visited_map_2, index_local, tfBuffer, timeStamp, debug_bool); //finds out the neighbours of the de-queued point
+		debug_bool = false;
 		// std::cout << "to_add: " << to_add << std::endl;
 		if (to_add) {
 			out_cloud_2.edges.push_back(e);	
@@ -417,7 +442,7 @@ void cloud_cb(pcl::PointXYZ start, pcl::PointCloud<pcl::PointXYZ>& original_clou
 	//pub.publish(out_cloud);
 	pub2.publish(out_cloud_2);
 	//std::cout << "OVER" << std::endl;
-	printf("Time taken: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
+	// printf("Time taken: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC); //jaja
 	// ros::shutdown();
 }
 
@@ -435,7 +460,7 @@ void transform_the_cloud(const sensor_msgs::PointCloud2& cloud_msg) { //called w
 	start.x = origin.x; //where origin is the robot's location updated by integrated_to_init in the update_origin() callback method
 	start.y = origin.y;
 	start.z = origin.z;
-	std::cout << "robot's location: " << start.x << ", " << start.y << ", " << start.z << std::endl;	
+	std::cout << "Integrated to init: " << start.x << ", " << start.y << ", " << start.z << std::endl;	//jaja
 	ros::Time timeStamp = cloud_msg.header.stamp;
 
 	//transform the pointcloud: X1/points
@@ -445,15 +470,15 @@ void transform_the_cloud(const sensor_msgs::PointCloud2& cloud_msg) { //called w
 	sensor_msgs::PointCloud2 cloud_transformed;
 	try {
 		if (tfBuffer.canTransform("X1/world", "X1/base_link/front_laser", cloud_msg.header.stamp, ros::Duration(3.0))) {
-			transformStamped = tfBuffer.lookupTransform("X1/world", "X1/base_link/front_laser", cloud_msg.header.stamp);
-			tf2::doTransform (cloud_msg, cloud_transformed, transformStamped); //tf2::doTransform(cloud_in, cloud_out, transform)
+			// transformStamped = tfBuffer.lookupTransform("X1/world", "X1/base_link/front_laser", cloud_msg.header.stamp);
+			// tf2::doTransform (cloud_msg, cloud_transformed, transformStamped); //tf2::doTransform(cloud_in, cloud_out, transform)
 
 			//publish the transformed cloud
-			pub3.publish(cloud_transformed); 
+			// pub3.publish(cloud_transformed); 
 
 			//convert the original cloud for use in cloud_cb
-			pcl_conversions::toPCL(cloud_msg, pcl_cloud_msg_2);
-			pcl::fromPCLPointCloud2( pcl_cloud_msg_2, original_cloud_msg); 
+			pcl_conversions::toPCL(cloud_msg, pcl_cloud_msg_2); // pcl_conversions::toPCL(cloud_in, cloud_out)
+			pcl::fromPCLPointCloud2( pcl_cloud_msg_2, original_cloud_msg); // pcl::fromPCLPointCloud2(cloud_in, cloud_out)
 
 			//call the grapher method
 			cloud_cb(start, original_cloud_msg, tfBuffer, timeStamp);
