@@ -139,11 +139,11 @@ bool isPointInside(LidarScan& scan, pcl::PointXYZ pt){
     auto pt2 = scanPointToPointCloudWInf(scan[lt_index].scan, i2, scan[lt_index].azimuth);
     auto pt3 = scanPointToPointCloudWInf(scan[geq_index].scan, i3, scan[geq_index].azimuth);
 
-    auto p1 = Eigen::Vector3d(pt1.x, pt1.y, pt1.z);
-    auto p2 = Eigen::Vector3d(pt2.x, pt2.y, pt2.z); 
-    auto p3 = Eigen::Vector3d(pt3.x, pt3.y, pt3.z);
+    auto p1 = Eigen::Vector3d(pt1.x, pt1.y, pt1.z).norm();
+    auto p2 = Eigen::Vector3d(pt2.x, pt2.y, pt2.z).norm(); 
+    auto p3 = Eigen::Vector3d(pt3.x, pt3.y, pt3.z).norm();
 
-    auto min_length = min(p1, min(p2, p3));
+    auto min_length = std::min(p1, std::min(p2, p3));
     return r < min_length;
 }
 
