@@ -16,7 +16,6 @@ find_package(ZLIB)
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES rosmsg_compressor
   CATKIN_DEPENDS geometry_msgs graph_msgs nav_msgs roscpp sensor_msgs std_msgs
 #  DEPENDS system_lib
 )
