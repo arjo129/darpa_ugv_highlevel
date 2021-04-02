@@ -3,47 +3,50 @@
     <arg name="robot_rgb_topic" default="front/image_raw" />
     <arg name="robot_rgbd_topic" default="rgbd_camera/depth/points" />
 
+    <arg name="plot_dots_into_vis" default="output_2" />
 
-    <group ns="$(arg robot_name)">
-        <node pkg="exploration_goal" type="exploration_goal" name="exploration_goal" output="screen" respawn="true">
-            <param name="robot_name" type="str" value="$(arg robot_name)" />
+
+    <!-- <group ns="$(arg robot_name)"> -->
+
+        <include file="$(find exploration_goal)/launch/exploration_goal.launch">
+            <arg name="robot_name" value="$(arg robot_name)" />
+            <arg name="plot_dots_into_vis" value="$(arg plot_dots_into_vis)" />
+        </include>
+
+        <node pkg="plot_dots" type="dots_node" name="dots_node" output="screen">
+            <param name="plot_dots_into_vis" type="str" value="$(arg plot_dots_into_vis)" />
         </node>
 
-        <node pkg="exploration_goal" type="graph_visualization" name="global_graph_viz" output="screen">
-            <param name="graph_topic" type="str" value="global_graph" />
-            <param name="graph_vis_topic" type="str" value="global_graph/vis" />
-            <param name="robot_name" type="str" value="$(arg robot_name)" />
-        </node>
 
-        <node pkg="lidar_frontier3d" type="frontier" name="frontier_detector" respawn="true">
+        <!-- <node pkg="lidar_frontier3d" type="frontier" name="frontier_detector" respawn="true">
             <param name="robot_name" type="str" value="$(arg robot_name)" />
-        </node>
+        </node> -->
 
-        <include file="$(find object_detection)/launch/object_detection.launch">
+        <!-- <include file="$(find object_detection)/launch/object_detection.launch">
             <arg name="robot_name" value="$(arg robot_name)" />
             <arg name="robot_rgb_topic" value="$(arg robot_rgb_topic)" />
             <arg name="robot_rgbd_topic" value="$(arg robot_rgbd_topic)" />
-        </include>
+        </include> -->
 
         <include file="$(find loam_velodyne)/launch/loam_velodyne.launch">
             <arg name="robot_name" value="$(arg robot_name)" />
         </include>
 
-        <node pkg="exploration_goal" type="defecate.py" name="defecation_agent" output="screen" respawn="true">
+        <!-- <node pkg="exploration_goal" type="defecate.py" name="defecation_agent" output="screen" respawn="true">
             <param name="robot_name" type="str" value="$(arg robot_name)" />
-        </node>
+        </node> -->
 
-        <node pkg="exploration_goal" type="pantilt.py" name="pan_tilt" respawn="true">
+        <!-- <node pkg="exploration_goal" type="pantilt.py" name="pan_tilt" respawn="true">
             <param name="robot_name" type="str" value="$(arg robot_name)" />
-        </node>
+        </node> -->
 
-        <include file="$(find artifact_reporter)/launch/artifact_reporter.launch">
+        <!-- <include file="$(find artifact_reporter)/launch/artifact_reporter.launch">
             <arg name="robot_name" value="$(arg robot_name)" />
-        </include>
+        </include> -->
 
-        <include file="$(find ugv_obstacle_avoidance)/launch/ugv_obstacle_avoidance.launch">
+        <!-- <include file="$(find ugv_obstacle_avoidance)/launch/ugv_obstacle_avoidance.launch">
             <arg name="robot_name" value="$(arg robot_name)" />
-        </include>
-    </group>
+        </include> -->
+    <!-- </group> -->
 
 </launch>
