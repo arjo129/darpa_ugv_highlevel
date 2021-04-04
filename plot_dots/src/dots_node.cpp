@@ -517,7 +517,7 @@ int main (int argc, char* argv[]) {
 	ros::Subscriber sub = nh.subscribe ("/X1/points/", 1, transform_the_cloud);
 	ros::Subscriber sub3 = nh.subscribe ("integrated_to_init", 1, update_origin);
 	std::string output_topic = "output_2";
-	ros::param::get("~plot_dots_into_vis", output_topic);
+	ros::param::get("~input_of_graph_vis", output_topic);
 	pub2 = nh.advertise<graph_msgs::GeometryGraph> (output_topic, 1);	
 	// pub2 = nh.advertise<graph_msgs::GeometryGraph> ("output2", 1);	
 	pub3 = nh.advertise<sensor_msgs::PointCloud2> ("transformed_point_cloud", 1);	

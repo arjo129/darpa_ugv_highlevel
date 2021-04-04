@@ -3,7 +3,7 @@
     <arg name="robot_rgb_topic" default="pan_tilt/image_raw" />
     <arg name="robot_rgbd_topic" default="pan_tilt_rgbd_camera/depth/points" />
 
-    <arg name="plot_dots_into_vis" default="output_2" />
+    <arg name="input_of_graph_vis" default="output_2" />
 
     <!-- <include file="$(find noroute_mesh)/launch/converter_service.launch"/>
     <include file="$(find noroute_mesh)/launch/comms_node.launch">
@@ -15,7 +15,7 @@
         <arg name="robot_name" value="$(arg robot_name)" />
         <arg name="robot_rgb_topic" value="$(arg robot_rgb_topic)" />
         <arg name="robot_rgbd_topic" value="$(arg robot_rgbd_topic)" />
-        <arg name="plot_dots_into_vis" default="$(arg plot_dots_into_vis)" />
+        <arg name="input_of_graph_vis" default="$(arg input_of_graph_vis)" />
     </include>
     <!-- <group ns="X1">
         <node pkg="exploration_goal" type="get_ur_ass_inside" name="get_ur_ass_inside" output="screen" respawn="true">

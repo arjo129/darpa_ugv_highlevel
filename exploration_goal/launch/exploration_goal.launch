@@ -1,6 +1,6 @@
 <launch>
     <arg name="robot_name" default="X1" />
-    <arg name="plot_dots_into_vis" default="output_2" />
+    <arg name="input_of_graph_vis" default="output_2" />
     <!-- <group ns=""> -->
 
         <!-- <node pkg="exploration_goal" type="global_graph_debug" name="global_graph_debug" output="screen">
@@ -11,7 +11,7 @@
         </node>
 
         <node pkg="exploration_goal" type="graph_visualization" name="global_graph_viz" output="screen">
-            <param name="plot_dots_into_vis" type="str" value="$(arg plot_dots_into_vis)" />
+            <param name="input_of_graph_vis" type="str" value="$(arg input_of_graph_vis)" />
             <param name="graph_vis_topic" type="str" value="global_graph/vis" />
             <param name="robot_name" type="str" value="$(arg robot_name)" />
         </node>

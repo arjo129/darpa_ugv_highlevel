@@ -3,18 +3,18 @@
     <arg name="robot_rgb_topic" default="front/image_raw" />
     <arg name="robot_rgbd_topic" default="rgbd_camera/depth/points" />
 
-    <arg name="plot_dots_into_vis" default="output_2" />
+    <arg name="input_of_graph_vis" default="output_2" />
 
 
     <!-- <group ns="$(arg robot_name)"> -->
 
         <include file="$(find exploration_goal)/launch/exploration_goal.launch">
             <arg name="robot_name" value="$(arg robot_name)" />
-            <arg name="plot_dots_into_vis" value="$(arg plot_dots_into_vis)" />
+            <arg name="input_of_graph_vis" value="$(arg input_of_graph_vis)" />
         </include>
 
         <node pkg="plot_dots" type="dots_node" name="dots_node" output="screen">
-            <param name="plot_dots_into_vis" type="str" value="$(arg plot_dots_into_vis)" />
+            <param name="input_of_graph_vis" type="str" value="$(arg input_of_graph_vis)" />
         </node>
 
 

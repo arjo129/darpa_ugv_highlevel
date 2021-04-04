@@ -130,14 +130,14 @@ int main(int argc, char* argv[])
     ros::NodeHandle nh;
     std::string graph_topic, graph_vis_topic;
 
-    if (!(ros::param::has("~graph_topic")) || !(ros::param::has("~graph_vis_topic")))
+    if (!(ros::param::has("~input_of_graph_vis")) || !(ros::param::has("~graph_vis_topic")))
     {
         ROS_ERROR("Graph or Graph Visualizing topics not configured (rosparam). Aborting graph" \
                                               "visualization node.");
         return -1;
     }
 
-    ros::param::get("~graph_topic", graph_topic);
+    ros::param::get("~input_of_graph_vis", graph_topic);
     ros::param::get("~graph_vis_topic", graph_vis_topic);
     ros::Subscriber graph_sub = nh.subscribe(graph_topic, 1, onGraphRecv);
     vis_pub = nh.advertise<visualization_msgs::MarkerArray>(graph_vis_topic, 10);
