@@ -4,6 +4,7 @@
     <arg name="robot_rgbd_topic" default="rgbd_camera/depth/points" />
 
     <arg name="input_of_graph_vis" default="output_2" />
+    <arg name="global_position" default="/X1/pose_static" />
 
 
     <!-- <group ns="$(arg robot_name)"> -->
@@ -11,10 +12,12 @@
         <include file="$(find exploration_goal)/launch/exploration_goal.launch">
             <arg name="robot_name" value="$(arg robot_name)" />
             <arg name="input_of_graph_vis" value="$(arg input_of_graph_vis)" />
+            <arg name="global_position" value="$(arg global_position)" />
         </include>
 
         <node pkg="plot_dots" type="dots_node" name="dots_node" output="screen">
             <param name="input_of_graph_vis" type="str" value="$(arg input_of_graph_vis)" />
+            <param name="global_position" type="str" value="$(arg global_position)" />
         </node>
 
 

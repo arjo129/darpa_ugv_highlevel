@@ -31,6 +31,7 @@
 #include <tf2/transform_datatypes.h>
 #include <tf2_sensor_msgs/tf2_sensor_msgs.h>
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include <tf2_msgs/TFMessage.h>
 
 ros::Publisher pub;
 ros::Publisher pub2;
@@ -82,22 +83,22 @@ struct key_equal : public std::binary_function<pcl::PointXYZ, pcl::PointXYZ, boo
   }
 };
 
+static std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal> visited_map; //to keep throughout the run - the one keeping all the global points
+static graph_msgs::GeometryGraph out_cloud_2; // for visualisation - the overall structure
+
 pcl::PointXYZ convert_to_local(pcl::PointXYZ pt, pcl::PointXYZ origin) {
 	return pcl::PointXYZ(pt.x - origin.x, pt.y - origin.y, pt.z - origin.z);
 }
 
 
-int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visited_map, 
+int add_to_queue(//std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visited_map, 
 					pcl::PointXYZ& point,
 					pcl::PointXYZ& local_point,
 					std::queue<std::tuple<pcl::PointXYZ, bool>>& q, 
-					LidarScan& scan, graph_msgs::Edges& e, int& index_global, 
-					graph_msgs::GeometryGraph& out_cloud_2, 
-					geometry_msgs::Point& out_cloud_2_point, 
+					LidarScan& scan, graph_msgs::Edges& e, 
+					int& index_global, 
 					std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal>& visited_map_2, 
 					int& index_local, 
-					tf2_ros::Buffer& tfBuffer, 
-					ros::Time& timeStamp,
 					bool debug_bool) 
 {
 	pcl::PointXYZ pointUp, pointDown, pointLeft, pointRight, pointForward, pointBackward;
@@ -358,7 +359,7 @@ int add_to_queue(std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visit
 	//std::cout << "index_global 2: " << index_global << std::endl;
 }
 
-void cloud_cb(pcl::PointXYZ start, pcl::PointCloud<pcl::PointXYZ>& original_cloud_msg, tf2_ros::Buffer& tfBuffer, ros::Time& timeStamp) {
+void cloud_cb(pcl::PointXYZ start, pcl::PointCloud<pcl::PointXYZ>& original_cloud_msg) {
 	int replace_index_local = 1;
 
 	if ((original_cloud_msg.size() < 1) || !origin_is_updated) { //|| (start.x == 0 && start.y == 0 && start.z == 0)) {
@@ -376,14 +377,14 @@ void cloud_cb(pcl::PointXYZ start, pcl::PointCloud<pcl::PointXYZ>& original_clou
 	std::tuple<pcl::PointXYZ, bool> temp_tuple; //declare a tuple - to keep the tuple I'll dequeue later
 	pcl::PointXYZ temp, temp_local; //declare a point - to keep the point from within the de-queued tuple
 	bool to_add; //declare a boolean - to keep the boolean value from within the de-queued tuple
-	static std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal> visited_map; //to keep throughout the run - the one keeping all the global points
+	//////////////////////////////////////////////////////////////////
 	std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal> visited_map_2; //per call back - to keep track of my locally visited BFS points, etc
 	
 	// pcl::PointCloud<pcl::PointXYZ> out_cloud;
 	std::queue<std::tuple<pcl::PointXYZ, bool>> q; //declare the queue of tuples - if true then add to geo msg. true/false is set in the above method
 	
-	static graph_msgs::GeometryGraph out_cloud_2; // for visualisation - the overall structure
-	static geometry_msgs::Point out_cloud_2_point; // the individual point within the visualisation
+	//////////////////////////////////////////////////////////////////
+	geometry_msgs::Point out_cloud_2_point; // the individual point within the visualisation
 	int index_local = -1;
 
 	// initialisation of the queue
@@ -421,7 +422,7 @@ void cloud_cb(pcl::PointXYZ start, pcl::PointCloud<pcl::PointXYZ>& original_clou
 		}
 		
 		graph_msgs::Edges e;
-		add_to_queue(visited_map, temp, temp_local, q, scan, e, index_global, out_cloud_2, out_cloud_2_point, visited_map_2, index_local, tfBuffer, timeStamp, debug_bool); //finds out the neighbours of the de-queued point
+		add_to_queue(temp, temp_local, q, scan, e, index_global, visited_map_2, index_local, debug_bool); //finds out the neighbours of the de-queued point
 		debug_bool = false;
 		// std::cout << "to_add: " << to_add << std::endl;
 		if (to_add) {
@@ -437,7 +438,10 @@ void cloud_cb(pcl::PointXYZ start, pcl::PointCloud<pcl::PointXYZ>& original_clou
 	// std::cout<< out_cloud_2.nodes.size() << "\n"; //number of points
 	out_cloud_2.explored = arr;
 	
-	out_cloud_2.header.frame_id = "X1/world";
+	///////////////////////////////////////NEW BELOW////////////////////////////////
+	// out_cloud_2.header.frame_id = "X1/world";
+	out_cloud_2.header.frame_id = "X1";
+	///////////////////////////////////////NEW ABOVE////////////////////////////////
 	out_cloud_2.header.stamp = pcl_conversions::fromPCL(original_cloud_msg.header.stamp);
 	//pub.publish(out_cloud);
 	pub2.publish(out_cloud_2);
@@ -463,27 +467,12 @@ void transform_the_cloud(const sensor_msgs::PointCloud2& cloud_msg) { //called w
 	std::cout << "Integrated to init: " << start.x << ", " << start.y << ", " << start.z << std::endl;	//jaja
 	ros::Time timeStamp = cloud_msg.header.stamp;
 
-	//transform the pointcloud: X1/points
-	static tf2_ros::Buffer tfBuffer;
-    static tf2_ros::TransformListener tfListener(tfBuffer);
-	geometry_msgs::TransformStamped transformStamped;
-	sensor_msgs::PointCloud2 cloud_transformed;
 	try {
-		if (tfBuffer.canTransform("X1/world", "X1/base_link/front_laser", cloud_msg.header.stamp, ros::Duration(3.0))) {
-			// transformStamped = tfBuffer.lookupTransform("X1/world", "X1/base_link/front_laser", cloud_msg.header.stamp);
-			// tf2::doTransform (cloud_msg, cloud_transformed, transformStamped); //tf2::doTransform(cloud_in, cloud_out, transform)
-
-			//publish the transformed cloud
-			// pub3.publish(cloud_transformed); 
-
-			//convert the original cloud for use in cloud_cb
-			pcl_conversions::toPCL(cloud_msg, pcl_cloud_msg_2); // pcl_conversions::toPCL(cloud_in, cloud_out)
-			pcl::fromPCLPointCloud2( pcl_cloud_msg_2, original_cloud_msg); // pcl::fromPCLPointCloud2(cloud_in, cloud_out)
-
-			//call the grapher method
-			cloud_cb(start, original_cloud_msg, tfBuffer, timeStamp);
-		}
-
+		//convert the original cloud for use in cloud_cb
+		pcl_conversions::toPCL(cloud_msg, pcl_cloud_msg_2); // pcl_conversions::toPCL(cloud_in, cloud_out)
+		pcl::fromPCLPointCloud2( pcl_cloud_msg_2, original_cloud_msg); // pcl::fromPCLPointCloud2(cloud_in, cloud_out)
+		//call the grapher method
+		cloud_cb(start, original_cloud_msg);
 	}  catch (tf2::TransformException &ex) {
 		ROS_WARN("%s", ex.what());
 		return;
@@ -492,7 +481,31 @@ void transform_the_cloud(const sensor_msgs::PointCloud2& cloud_msg) { //called w
 	
 }
 
-void update_origin(const nav_msgs::Odometry nav_odo) {
+void update_origin(const tf2_msgs::TFMessage tf_msg) { //const nav_msgs::Odometry nav_odo) {
+	float origin_arr[3];
+	for (int i = 0; i < 4; i++) {
+		geometry_msgs::TransformStamped transform = tf_msg.transforms[i];
+		if (transform.child_frame_id == "X1") {
+			origin_arr[0] = transform.transform.translation.x;
+			origin_arr[1] = transform.transform.translation.y;
+			origin_arr[2] = transform.transform.translation.z;
+		}
+	}
+	for (int i = 0; i < 3; i++) {
+		float t = origin_arr[i];
+		if (t == 0) {
+			continue;
+		}
+		float remainder = fmod(t, dot_distance);
+		origin_arr[i] = t - remainder;
+	}
+	origin.x = origin_arr[0];
+	origin.y = origin_arr[1];
+	origin.z = origin_arr[2];
+	origin_is_updated = true;
+}
+
+void update_origin_old(const nav_msgs::Odometry nav_odo) { //needed if you're using integrated_to_init
 	float origin_arr[3];
 	origin_arr[0] = nav_odo.pose.pose.position.x;
 	origin_arr[1] = nav_odo.pose.pose.position.y;
@@ -515,7 +528,16 @@ int main (int argc, char* argv[]) {
 	ros::init (argc, argv, "dots_node");
 	ros::NodeHandle nh;
 	ros::Subscriber sub = nh.subscribe ("/X1/points/", 1, transform_the_cloud);
-	ros::Subscriber sub3 = nh.subscribe ("integrated_to_init", 1, update_origin);
+
+	ros::Subscriber sub3;
+	std::string global_position_topic = "/X1/pose_static";
+	ros::param::get("~global_position", global_position_topic);
+	if (global_position_topic == "/X1/pose_static") {
+		sub3 = nh.subscribe ("/X1/pose_static", 1, update_origin);
+	} else {
+		sub3 = nh.subscribe ("integrated_to_init", 1, update_origin_old);
+	}
+
 	std::string output_topic = "output_2";
 	ros::param::get("~input_of_graph_vis", output_topic);
 	pub2 = nh.advertise<graph_msgs::GeometryGraph> (output_topic, 1);	
