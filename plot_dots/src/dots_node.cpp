@@ -387,17 +387,23 @@ void cloud_cb(pcl::PointXYZ start, pcl::PointCloud<pcl::PointXYZ>& original_clou
 	geometry_msgs::Point out_cloud_2_point; // the individual point within the visualisation
 	int index_local = -1;
 
+	// initialise a zero point - for local
+	pcl::PointXYZ start_local;
+	start_local.x = 0; 
+	start_local.y = 0;
+	start_local.z = 0;
+
 	// initialisation of the queue
 	std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal>::iterator search = visited_map.find(start); //find the origin of the robot inside of the gobal_map
 	if (search == visited_map.end()) { //check if origin of robot is inside visited_map. if yes, add it visited_map_2 only and is false. if no, add it to both and is true
 		// ++index_local;
 		++index_global;
 		visited_map.insert({start, index_global}); //add it to visited points
-		visited_map_2.insert({start, replace_index_local}); //add it to visited points
+		visited_map_2.insert({start_local, replace_index_local}); //add it to visited points
 		q.push(std::make_tuple(start, true)); 
 	} else {	
 		// ++index_local;
-		visited_map_2.insert({start, replace_index_local}); //add it to visited points
+		visited_map_2.insert({start_local, replace_index_local}); //add it to visited points
 		q.push(std::make_tuple(start, false)); 
 	}
 	bool debug_bool = true;
@@ -481,7 +487,7 @@ void transform_the_cloud(const sensor_msgs::PointCloud2& cloud_msg) { //called w
 	
 }
 
-void update_origin(const tf2_msgs::TFMessage tf_msg) { //const nav_msgs::Odometry nav_odo) {
+void update_origin(const tf2_msgs::TFMessage tf_msg) {
 	float origin_arr[3];
 	for (int i = 0; i < 4; i++) {
 		geometry_msgs::TransformStamped transform = tf_msg.transforms[i];
