@@ -7,7 +7,9 @@ project(graph_colouring)
 find_package(catkin REQUIRED COMPONENTS
   image_geometry
   image_transport
-  cv_bridge
+  cv_bridge 
+  tf2
+  tf2_ros
   roscpp
   rospy
 )
@@ -37,7 +39,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES graph_colouring
-   CATKIN_DEPENDS image_geometry roscpp rospy cv_bridge image_transport
+   CATKIN_DEPENDS image_geometry roscpp rospy cv_bridge image_transport tf2 tf2_ros
 #  DEPENDS system_lib
 )
 
