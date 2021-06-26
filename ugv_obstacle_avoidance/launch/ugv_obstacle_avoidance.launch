@@ -1,5 +1,5 @@
 <launch>
-  <arg name="robot_name" default="X2"/>
+  <arg name="robot_name" default="X1"/>
 
   <node pkg="ugv_obstacle_avoidance" name="traversable_map_node" output="screen" type="traversable_map_node" respawn="true">
     <remap from="lidar_input" to="points"/>

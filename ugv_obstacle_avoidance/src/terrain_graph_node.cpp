@@ -902,7 +902,7 @@ int main(int argc, char** argv)
 {
 
   marker.header.frame_id = robot_name+"/world";
-marker.type = marker.SPHERE;
+  marker.type = marker.SPHERE;
   marker.action = marker.ADD;
   marker.scale.x = 0.2;
   marker.scale.y = 0.2;

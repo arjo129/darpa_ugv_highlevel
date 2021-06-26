@@ -42,6 +42,7 @@ add_executable(graph_visualization
                 src/graph_visualization_node.cpp)
 
 add_executable(get_ur_ass_inside 
+                include/dmath/geometry.h
                 src/get_ur_ass_inside_cave.cpp)
 
 #target_link_libraries(

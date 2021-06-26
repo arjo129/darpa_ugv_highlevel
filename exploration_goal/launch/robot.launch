@@ -5,7 +5,7 @@
 
 
     <group ns="$(arg robot_name)">
-        <node pkg="exploration_goal" type="exploration_goal" name="exploration_goal" output="screen" respawn="true">
+        <!-- <node pkg="exploration_goal" type="exploration_goal" name="exploration_goal" output="screen" respawn="true">
             <param name="robot_name" type="str" value="$(arg robot_name)" />
         </node>
 
@@ -23,13 +23,13 @@
             <arg name="robot_name" value="$(arg robot_name)" />
             <arg name="robot_rgb_topic" value="$(arg robot_rgb_topic)" />
             <arg name="robot_rgbd_topic" value="$(arg robot_rgbd_topic)" />
-        </include>
+        </include> -->
 
         <include file="$(find loam_velodyne)/launch/loam_velodyne.launch">
             <arg name="robot_name" value="$(arg robot_name)" />
         </include>
 
-        <node pkg="exploration_goal" type="defecate.py" name="defecation_agent" output="screen" respawn="true">
+        <!-- <node pkg="exploration_goal" type="defecate.py" name="defecation_agent" output="screen" respawn="true">
             <param name="robot_name" type="str" value="$(arg robot_name)" />
         </node>
 
@@ -39,7 +39,7 @@
 
         <include file="$(find artifact_reporter)/launch/artifact_reporter.launch">
             <arg name="robot_name" value="$(arg robot_name)" />
-        </include>
+        </include> -->
 
         <include file="$(find ugv_obstacle_avoidance)/launch/ugv_obstacle_avoidance.launch">
             <arg name="robot_name" value="$(arg robot_name)" />

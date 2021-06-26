@@ -1,6 +1,6 @@
 <launch>
 
-  <arg name="rviz" default="false" />
+  <arg name="rviz" default="true" />
   <arg name="scanPeriod" default="0.1" />
   <!-- <env name="LD_LIBRARY_PATH" value="/usr/local/lib:$LD_LIBRARY_PATH" /> -->
   <arg name="robot_name" default="X2" />
