@@ -54,6 +54,10 @@
   <depend>geometry_msgs</depend>
   <depend>subt_msgs</depend>
 
+  <build_depend>noroute_mesh</build_depend>
+  <build_export_depend>noroute_mesh</build_export_depend>
+  <exec_depend>noroute_mesh</exec_depend>
+
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->

@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   pcl_conversions
   subt_msgs
+  noroute_mesh
 )
 
 find_package(Boost REQUIRED)

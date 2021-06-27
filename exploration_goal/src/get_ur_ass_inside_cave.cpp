@@ -12,6 +12,8 @@
 #include "dmath/geometry.h"
 #include <math.h>
 
+#include "noroute_mesh/send_artifact.h"
+
 tf::Transform invertTransform(subt_msgs::PoseFromArtifact & service)
 {
   tf::Vector3 translation(
@@ -33,7 +35,7 @@ tf::Transform invertTransform(subt_msgs::PoseFromArtifact & service)
 
 bool first = true, goal_set = false, obstacle_avoidance_ready = false;
 tf::Vector3 goal;
-ros::ServiceClient client;
+ros::ServiceClient client, artifact_client;
 tf::TransformListener* listener;
 ros::Publisher exploration_goal_pub, start_publisher;
 std::string robot_name;
@@ -42,6 +44,7 @@ bool last_waypoint_completed = false;
 
 std::vector <std::pair<float,float>> waypoints;
 int waypoint_index = 0;
+
 
 // void onFrontierAvailable(const sensor_msgs::PointCloud2::Ptr frontiers_ptr) {
 //     if(!first || !obstacle_avoidance_ready) return;
@@ -244,7 +247,24 @@ void test(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& msg){
       new_goal = false;
       exploration_goal_pub.publish(goal_msg_gl);  
       std::cout << "Publishing " << waypoint_index << " th waypoint:" << waypoints[waypoint_index].first << " " << waypoints[waypoint_index].second << std:: endl;
-    } 
+    }
+
+    if (last_waypoint_completed){
+      noroute_mesh::send_artifact srv;
+
+      srv.request.type = "TYPE_HELMET";
+      srv.request.x = 7.833333;
+      srv.request.y = -51.640000;
+      srv.request.z = 0.900000;
+      if (artifact_client.call(srv))
+      {
+        ROS_INFO("[Artifact-Report-Spam] %s artifact reported successfully");
+      }
+      else
+      {
+        ROS_ERROR("Failed to send reports");
+      }
+    }
     
     if (distance < 2.5){
       std::cout << "Goal reached!" << std:: endl;
@@ -268,6 +288,7 @@ int main(int argc, char** argv) {
     exploration_goal_pub = node.advertise<geometry_msgs::PointStamped>("goal_to_explore", 1);
     start_publisher = node.advertise<std_msgs::Empty>("start_exploration", 1);
     client = node.serviceClient<subt_msgs::PoseFromArtifact>("/subt/pose_from_artifact_origin");
+    artifact_client = node.serviceClient<noroute_mesh::send_artifact>("send_artifact");
     listener = new tf::TransformListener();
     
     create_path();
