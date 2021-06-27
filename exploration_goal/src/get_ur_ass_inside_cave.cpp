@@ -204,6 +204,20 @@ void test(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& msg){
     if (waypoint_index >= waypoints.size()){
       if (!last_waypoint_completed){
         last_waypoint_completed = true;
+        noroute_mesh::send_artifact srv;
+
+        srv.request.type = "TYPE_HELMET";
+        srv.request.x = 7.833333;
+        srv.request.y = -51.640000;
+        srv.request.z = 0.900000;
+        if (artifact_client.call(srv))
+        {
+          ROS_INFO("[Artifact-Report-Spam] %s artifact reported successfully");
+        }
+        else
+        {
+          ROS_ERROR("Failed to send reports");
+        }
         std::cout << "Waypoint completed. " << std::endl;
         return;
       }
@@ -250,20 +264,7 @@ void test(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& msg){
     }
 
     if (last_waypoint_completed){
-      noroute_mesh::send_artifact srv;
-
-      srv.request.type = "TYPE_HELMET";
-      srv.request.x = 7.833333;
-      srv.request.y = -51.640000;
-      srv.request.z = 0.900000;
-      if (artifact_client.call(srv))
-      {
-        ROS_INFO("[Artifact-Report-Spam] %s artifact reported successfully");
-      }
-      else
-      {
-        ROS_ERROR("Failed to send reports");
-      }
+      
     }
     
     if (distance < 2.5){
