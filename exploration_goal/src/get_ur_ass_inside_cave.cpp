@@ -209,8 +209,8 @@ void test(const geometry_msgs::Twist& msg){
         noroute_mesh::send_artifact srv;
 
         srv.request.type = "TYPE_HELMET";
-        srv.request.x = 7.833333;
-        srv.request.y = -51.640000;
+        srv.request.x = 22;
+        srv.request.y = -54;
         srv.request.z = 0.900000;
         if (artifact_client.call(srv))
         {
