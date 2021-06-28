@@ -191,7 +191,9 @@ void handover(std_msgs::Int8 reached) {
   
 }
 
-void test(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& msg){
+// void test(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& msg){
+void test(const geometry_msgs::Twist& msg){
+
     //  std::cout << "Test!" << std:: endl;
 
     dmath::Vector3D goal_lc;
@@ -262,10 +264,6 @@ void test(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& msg){
       exploration_goal_pub.publish(goal_msg_gl);  
       std::cout << "Publishing " << waypoint_index << " th waypoint:" << waypoints[waypoint_index].first << " " << waypoints[waypoint_index].second << std:: endl;
     }
-
-    if (last_waypoint_completed){
-      
-    }
     
     if (distance < 2.5){
       std::cout << "Goal reached!" << std:: endl;
@@ -284,7 +282,8 @@ int main(int argc, char** argv) {
     ROS_INFO("waiting for frontier message");
     // auto s = node.subscribe("frontiers/local", 1, onFrontierAvailable);
     auto m = node.subscribe("status", 1, handover);
-    ros::Subscriber test_sub = node.subscribe<pcl::PointCloud<pcl::PointXYZ>>("points", 1, test);
+    // ros::Subscriber test_sub = node.subscribe<pcl::PointCloud<pcl::PointXYZ>>("points", 1, test);
+    ros::Subscriber test_sub = node.subscribe("cmd_vel", 1, test);
 
     exploration_goal_pub = node.advertise<geometry_msgs::PointStamped>("goal_to_explore", 1);
     start_publisher = node.advertise<std_msgs::Empty>("start_exploration", 1);
@@ -292,6 +291,7 @@ int main(int argc, char** argv) {
     artifact_client = node.serviceClient<noroute_mesh::send_artifact>("send_artifact");
     listener = new tf::TransformListener();
     
+    ros::Duration(10).sleep();
     create_path();
     // ros::Rate r(10);
     // while (ros::ok){
