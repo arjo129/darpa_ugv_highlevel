@@ -1,16 +1,16 @@
 /*
 You can just copy and paste this into the src folder of the plot_dots folder. 
 
-The first 105 lines are imports and declaration of variables. 
+The first 107 lines are imports and declaration of variables. 
 
 Total of 4 impt methods: 
-(1) main -                line 542
-(2) transform_the_cloud - line 507
-(3) cloud_cb -            line 404
-(4) add_to_queue -        line 148
+(1) main -                line 544
+(2) transform_the_cloud - line 509
+(3) cloud_cb -            line 406
+(4) add_to_queue -        line 150
 
 Then there is 1 helper method: 
-(1) convert_local_to_global - line 109
+(1) convert_local_to_global - line 111
 
 And finally, 1 method to check the angular speed:
 (1) to_skip_or_not_to_skip - line 533
@@ -60,7 +60,7 @@ And finally, 1 method to check the angular speed:
 ros::Publisher pub;
 ros::Publisher pub2;
 ros::Publisher pub3;
-const float dot_distance = 1.5; //1.5 or 3; To prevent smudging, set velocity to: 0.761822919403 and angular velocity: 0.184342206777
+const float dot_distance = 1.5; //1.5 or 3
 const float max_z = 7;
 const float EPSILON = 0.0001;
 const int fill_gap_amt = 10;
