@@ -1,25 +1,27 @@
 /*
 You can just copy and paste this into the src folder of the plot_dots folder. 
 
-The first 76 lines are imports and declaration of variables. 
+The first 105 lines are imports and declaration of variables. 
 
 Total of 4 impt methods: 
-(1) main -                line 539
-(2) transform_the_cloud - line 519
-(3) cloud_cb -            line 425
-(4) add_to_queue -        line 155
+(1) main -                line 542
+(2) transform_the_cloud - line 507
+(3) cloud_cb -            line 404
+(4) add_to_queue -        line 148
 
 Then there is 1 helper method: 
-(1) convert_local_to_global - line 111
+(1) convert_local_to_global - line 109
+
+And finally, 1 method to check the angular speed:
+(1) to_skip_or_not_to_skip - line 533
 
 */
-
-
 
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud_conversion.h>
+#include <sensor_msgs/Imu.h>
 
 #include <pcl/PCLPointCloud2.h>
 #include <pcl/conversions.h>
@@ -58,16 +60,15 @@ Then there is 1 helper method:
 ros::Publisher pub;
 ros::Publisher pub2;
 ros::Publisher pub3;
-const float dot_distance = 1.5;
+const float dot_distance = 1.5; //1.5 or 3; To prevent smudging, set velocity to: 0.761822919403 and angular velocity: 0.184342206777
 const float max_z = 7;
 const float EPSILON = 0.0001;
 const int fill_gap_amt = 10;
-// LidarScan scan;
 pcl::PCLPointCloud2 pcl_cloud_msg_2;
-// pcl::PointCloud<pcl::PointXYZ> original_cloud_msg;
 static pcl::PointXYZ origin;
 static bool origin_is_updated;
 static int index_global = -1;
+bool to_skip;
 
 tf2_ros::Buffer tfBuffer;
 
@@ -83,9 +84,6 @@ struct key_hash {
       // Start with a hash value of 0    .
       std::size_t seed = 0;
 
-	  //hash_combine(seed,hash_value(std::get<0>(k)));
-	  //hash_combine(seed,hash_value(std::get<1>(k)));
-	  //hash_combine(seed,hash_value(std::get<2>(k)));
 	  hash_combine(seed,hash_value(round(k.x)));
 	  hash_combine(seed,hash_value(round(k.y)));
 	  hash_combine(seed,hash_value(round(k.z)));
@@ -108,9 +106,10 @@ struct key_equal : public std::binary_function<pcl::PointXYZ, pcl::PointXYZ, boo
 static std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal> visited_map; //to keep throughout the run - the one keeping all the global points
 static graph_msgs::GeometryGraph out_cloud_2; // for visualisation - the overall structure
 
-bool convert_local_to_global(pcl::PointXYZ& global_point, pcl::PointXYZ& local_point, ros::Time& timeStamp) {
+
+
+bool convert_local_to_global(pcl::PointXYZ& global_point, pcl::PointXYZ& local_point, ros::Time& timeStamp, geometry_msgs::TransformStamped& transformStamped_local_to_global) { 
 	geometry_msgs::PoseStamped global_point_stamped, local_point_stamped;
-	geometry_msgs::TransformStamped transformStamped_local_to_global;
 	local_point_stamped.pose.position.x = local_point.x;
 	local_point_stamped.pose.position.y = local_point.y;
 	local_point_stamped.pose.position.z = local_point.z;
@@ -122,10 +121,7 @@ bool convert_local_to_global(pcl::PointXYZ& global_point, pcl::PointXYZ& local_p
 	local_point_stamped.header.frame_id = "X1/base_link/front_laser";
 
 	try {
-		// if (tfBuffer.canTransform("simple_cave_01", "X1/base_link/front_laser", timeStamp)) { //tfBuffer.canTransform(destFrame, originFrame, ... )
-			transformStamped_local_to_global = tfBuffer.lookupTransform("simple_cave_01", "X1/base_link/front_laser", ros::Time(0));  //tfBuffer.lookupTransform(destFrame, originFrame, ... )
-			tf2::doTransform(local_point_stamped, global_point_stamped, transformStamped_local_to_global); //tf2::doTransform(point_in, point_out, transform)
-		// } 
+        tf2::doTransform(local_point_stamped, global_point_stamped, transformStamped_local_to_global); //tf2::doTransform(point_in, point_out, transform)
 	} catch (tf2::TransformException &ex) {
 			ROS_WARN("%s", ex.what());
 			ros::Duration(1.0).sleep();
@@ -147,13 +143,11 @@ bool convert_local_to_global(pcl::PointXYZ& global_point, pcl::PointXYZ& local_p
 	global_point.x = origin_arr[0];
 	global_point.y = origin_arr[1];
 	global_point.z = origin_arr[2];
-	// std::cout << "global_point: "  << origin_arr[0] << ", " << origin_arr[1] << ", " << origin_arr[2]  << std::endl;
 	return true;
 }
 
 
-void add_to_queue(//std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& visited_map, 
-					/*pcl::PointXYZ& point,*/
+void add_to_queue(  geometry_msgs::TransformStamped& transformStamped_local_to_global,
 					pcl::PointXYZ& local_point,
 					std::queue<std::tuple<pcl::PointXYZ, pcl::PointXYZ, bool>>& q, 
 					LidarScan& scan,
@@ -168,7 +162,6 @@ void add_to_queue(//std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& vi
 	pcl::PointXYZ transformed_pt_up, transformed_pt_down, transformed_pt_left, transformed_pt_right, transformed_pt_forward, transformed_pt_backward; //the neighbouring points in the LOCAL frame
 	std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal>::iterator search;
 	std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal>::iterator search_global;
-	// std::cout << "index_global (add_to_queue()): " << index_global << std::endl;
 
 	///////////////
 	//Upwards Point
@@ -177,19 +170,15 @@ void add_to_queue(//std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& vi
 		transformed_pt_up.x = local_point.x;
 		transformed_pt_up.y = local_point.y;
 		transformed_pt_up.z = local_point.z  + dot_distance;
-		bool y = convert_local_to_global(pointUp, transformed_pt_up, timeStamp);
-		// std::cout << "local_point:\n"  << local_point << std::endl;
-		// std::cout << "1. transformed_local_pt: "  << transformed_pt_up << std::endl; 
-		std::cout << "global_point: "  << pointUp << std::endl;
-		// std::cout << "1. isPointInside: "  << isPointInside(scan, transformed_pt_up) << std::endl; 		
+		bool y = convert_local_to_global(pointUp, transformed_pt_up, timeStamp, transformStamped_local_to_global);
 		if (isPointInside(scan, transformed_pt_up)) { //if neighbouring point is still inside of scan, we just add it to the list of points to visit	
 			search = visited_map_2.find(transformed_pt_up);
 			search_global = visited_map.find(pointUp);
 			if (search == visited_map_2.end()) { //if locally, have not visited the point yet
 				++index_local;
 				visited_map_2.insert({transformed_pt_up, index_local}); //add it to locally visited points
-				if (search_global == visited_map.end()) {//if we have not visited this point globally yet, we add it to geometry message
-					// std::cout << "GLOBALLY - TRUE: pushed into queue Up: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << std::endl;	
+				if (search_global == visited_map.end()) {//cannnot find global point -> if we have not visited this point globally yet, we add it to geometry message
+					std::cout << "global_point: "  << pointUp << std::endl;
 					q.push(std::make_tuple(transformed_pt_up, pointUp, true)); //add it to the queue
 					++index_global;
 					visited_map.insert({pointUp, index_global}); //add it to globally visited points
@@ -221,15 +210,8 @@ void add_to_queue(//std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& vi
 		transformed_pt_down.x = local_point.x;
 		transformed_pt_down.y = local_point.y;
 		transformed_pt_down.z = local_point.z  - dot_distance;
-		// std::cout << "2. isPointInside: "  << isPointInside(scan, transformed_pt_down) << std::endl; 
-		bool y = convert_local_to_global(pointDown, transformed_pt_down, timeStamp);
-		// std::cout << "local_point:\n"  << local_point << std::endl;
-		// std::cout << "2. transformed_local_pt: "  << transformed_pt_down << std::endl; 
-		// std::cout << "global_point: "  << pointDown << std::endl;
-		// std::cout << "isPointInside: "  << isPointInside(scan, transformed_pt) << std::endl; 
-		// std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"  << std::endl; 
+		bool y = convert_local_to_global(pointDown, transformed_pt_down, timeStamp, transformStamped_local_to_global);
 		if (isPointInside(scan, transformed_pt_down)) { //if neighbouring point is still inside of scan 
-			// convert_local_to_global(pointDown, transformed_pt, timeStamp);
 			search = visited_map_2.find(transformed_pt_down);
 			search_global = visited_map.find(pointDown);
 			if ( search == visited_map_2.end() ) { //if locally, I have not visited the point yet
@@ -266,10 +248,8 @@ void add_to_queue(//std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& vi
 		transformed_pt_left.x = local_point.x;
 		transformed_pt_left.y = local_point.y - dot_distance;
 		transformed_pt_left.z = local_point.z;
-		// std::cout << "3. transformed_local_pt: "  << transformed_pt_left << std::endl; 
-		// std::cout << "3. isPointInside: "  << isPointInside(scan, transformed_pt_left) << std::endl; 
 		if (isPointInside(scan, transformed_pt_left)) { 
-			convert_local_to_global(pointLeft, transformed_pt_left, timeStamp);
+			convert_local_to_global(pointLeft, transformed_pt_left, timeStamp, transformStamped_local_to_global);
 			// std::cout << "pointLeft global_point: "  << pointLeft << std::endl;
 			search = visited_map_2.find(transformed_pt_left);
 			search_global = visited_map.find(pointLeft);
@@ -308,9 +288,8 @@ void add_to_queue(//std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& vi
 		transformed_pt_right.x = local_point.x;
 		transformed_pt_right.y = local_point.y + dot_distance;
 		transformed_pt_right.z = local_point.z;
-		// std::cout << "4. isPointInside: "  << isPointInside(scan, transformed_pt_right) << std::endl; 
 		if (isPointInside(scan, transformed_pt_right)) { 
-			convert_local_to_global(pointRight, transformed_pt_right, timeStamp);
+			convert_local_to_global(pointRight, transformed_pt_right, timeStamp, transformStamped_local_to_global);
 			search = visited_map_2.find(transformed_pt_right);
 			search_global = visited_map.find(pointRight);
 			if (search == visited_map_2.end()) {
@@ -350,7 +329,7 @@ void add_to_queue(//std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& vi
 		transformed_pt_forward.z = local_point.z;
 		// std::cout << "5. isPointInside: "  << isPointInside(scan, transformed_pt_forward) << std::endl; 
 		if (isPointInside(scan, transformed_pt_forward)) { 
-			convert_local_to_global(pointForward, transformed_pt_forward, timeStamp);
+			convert_local_to_global(pointForward, transformed_pt_forward, timeStamp, transformStamped_local_to_global);
 			search = visited_map_2.find(transformed_pt_forward);
 			search_global = visited_map.find(pointForward);
 			if (search == visited_map_2.end()) {
@@ -391,7 +370,7 @@ void add_to_queue(//std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& vi
 		transformed_pt_backward.z = local_point.z;
 		// std::cout << "6. isPointInside: "  << isPointInside(scan, transformed_pt_backward) << std::endl; 
 		if (isPointInside(scan, transformed_pt_backward)) { //if pointBackward is still inside of scan, we add it to the list of points to visit
-			convert_local_to_global(pointBackward, transformed_pt_backward, timeStamp);
+			convert_local_to_global(pointBackward, transformed_pt_backward, timeStamp, transformStamped_local_to_global);
 			search = visited_map_2.find(transformed_pt_backward);
 			search_global = visited_map.find(pointBackward);
 			if (search == visited_map_2.end()) { //if locally, have not visited pointBackward yet
@@ -422,12 +401,23 @@ void add_to_queue(//std::unordered_map<pcl::PointXYZ,int,key_hash,key_equal>& vi
 	}
 }
 
+
+
 void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_cloud_msg) { //pcl::PointCloud<pcl::PointXYZ>& original_cloud_msg, 
 	int replace_index_local = 1;
 
+	geometry_msgs::TransformStamped transformStamped_local_to_global;
+	try {
+		transformStamped_local_to_global = tfBuffer.lookupTransform("world", "X1/base_link/front_laser", timeStamp); //ros::Time(0));//timeStamp);  //tfBuffer.lookupTransform(destFrame, originFrame, ... )
+	} catch (tf2::TransformException &ex) {
+		ROS_WARN("%s", ex.what());
+		ros::Duration(1.0).sleep();
+		return;
+	}
+
 	pcl::PointXYZ start_global;
 	pcl::PointXYZ local_init_point = pcl::PointXYZ(0.0,0.0,0.0);
-	if (!convert_local_to_global(start_global, local_init_point, timeStamp)) {
+	if (!convert_local_to_global(start_global, local_init_point, timeStamp, transformStamped_local_to_global)) { //should always be true as line 369 - 403 would have returned otherwise
 		std::cout << "transform not ready..." << std::endl;
 		return;
 	}
@@ -448,10 +438,10 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 	std::tuple<pcl::PointXYZ, pcl::PointXYZ, bool> temp_tuple; //declare a tuple - to keep the tuple I'll dequeue later
 	pcl::PointXYZ temp_global, temp_local; //declare a point - to keep the point from within the de-queued tuple
 	bool to_add; //declare a boolean - to keep the boolean value from within the de-queued tuple
-	std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal> visited_map_2; //per call back - to keep track of my locally visited BFS points, etc. Its global analog is "visted_map"
+	std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal> visited_map_2; //per call back - to keep track of my locally visited BFS points, etc
 	
-	geometry_msgs::Point out_cloud_2_point; // the individual point within the visualisation
-	int index_local = -1;
+	
+	int index_local = 0;
 
 	// initialise a zero XYZ point - for local
 	pcl::PointXYZ start_local;
@@ -460,7 +450,7 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 	start_local.z = 0;
 
 	// initialisation of the queue
-	std::queue<std::tuple<pcl::PointXYZ, pcl::PointXYZ, bool>> q; //declare the queue of tuples - if true then add to geo msg. true/false is set in the method above. <local, global, to_add>
+	std::queue<std::tuple<pcl::PointXYZ, pcl::PointXYZ, bool>> q; //declare the queue of tuples - if true then add to geo msg. true/false is set in the above method. <local, global, to_add>
 
 	std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal>::iterator search = visited_map.find(start_global); //find the origin of the robot inside of the gobal_map
 	if (search == visited_map.end()) { //check if origin of robot is inside visited_map. if yes, add it visited_map_2 only and is false. if no, add it to both and is true
@@ -478,13 +468,15 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 
 	// running BFS
 	while (!q.empty()) {
+		
 		temp_tuple = q.front();
 		q.pop();
 		temp_local = std::get<0>(temp_tuple); 
 		temp_global = std::get<1>(temp_tuple);
 		to_add = std::get<2>(temp_tuple);
 
-		if (to_add) { //check if true or false from the tuple. If true, add the global point to the visualiser cloud i.e. out_cloud_2
+		if (to_add) { //check if true or false from the tuple
+			geometry_msgs::Point out_cloud_2_point; // the individual point within the visualisation
 			out_cloud_2_point.x = temp_global.x;
 			out_cloud_2_point.y = temp_global.y;
 			out_cloud_2_point.z = temp_global.z;
@@ -492,7 +484,7 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 		}
 		
 		graph_msgs::Edges e;
-		add_to_queue(temp_local, q, scan, e, index_global, visited_map_2, index_local, timeStamp, debug_bool); //finds out the neighbours of the de-queued point i.e. fills up the "e" just declared
+		add_to_queue(transformStamped_local_to_global, temp_local, q, scan, e, index_global, visited_map_2, index_local, timeStamp, debug_bool); //finds out the neighbours of the de-queued point
 		debug_bool = false;
 
 		if (to_add) {
@@ -508,12 +500,10 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 	std::vector<uint8_t> arr(out_cloud_2.nodes.size());
 	out_cloud_2.explored = arr;
 	
-	out_cloud_2.header.frame_id = "X1";
+	out_cloud_2.header.frame_id = "world";
 	out_cloud_2.header.stamp = pcl_conversions::fromPCL(original_cloud_msg.header.stamp);
 	pub2.publish(out_cloud_2);
-	//std::cout << "OVER" << std::endl;
-	// printf("Time taken: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC); //jaja
-	// ros::shutdown();
+
 }
 
 void transform_the_cloud(const sensor_msgs::PointCloud2& cloud_msg) { //called when there is a new lidar scan in the form of a point cloud being sent in 
@@ -524,6 +514,10 @@ void transform_the_cloud(const sensor_msgs::PointCloud2& cloud_msg) { //called w
 	// 	std::cout << "returning due SKIP" << std::endl;
 	// 	return;
 	// }
+
+	if (to_skip) {
+		return;
+	}
 
 	//convert the original cloud for use in cloud_cb
 	pcl::PointCloud<pcl::PointXYZ> original_cloud_msg;
@@ -536,68 +530,28 @@ void transform_the_cloud(const sensor_msgs::PointCloud2& cloud_msg) { //called w
 	
 }
 
+void to_skip_or_not_to_skip(const sensor_msgs::Imu& imu_msg) {
+	if (abs(imu_msg.angular_velocity.z) > 0.15 || abs(imu_msg.angular_velocity.x) > 0.1 || abs(imu_msg.angular_velocity.y) > 0.1) {
+		to_skip = true;
+	} else {
+		if (to_skip) {
+			ros::Duration(1.5).sleep();
+			to_skip = false;
+		}
+	}
+}
+
 int main (int argc, char* argv[]) {
 	ros::init (argc, argv, "dots_node");
 	ros::NodeHandle nh;
 	tf2_ros::TransformListener tfListener(tfBuffer);
 
 	ros::Subscriber sub = nh.subscribe ("/X1/points/", 1, transform_the_cloud);
-	// ros::Subscriber sub3;
-	// std::string global_position_topic = "/X1/pose_static";
-	// sub3 = nh.subscribe ("/X1/pose_static", 1, update_origin);
+	ros::Subscriber sub2 = nh.subscribe ("/X1/imu/data", 1, to_skip_or_not_to_skip);
 
 	std::string output_topic = "output_2";
-	// ros::param::get("~input_of_graph_vis", output_topic);
 	pub2 = nh.advertise<graph_msgs::GeometryGraph> (output_topic, 1);	
-
+	pub3 = nh.advertise<sensor_msgs::PointCloud2> ("transformed_point_cloud", 1);	
+	
 	ros::spin();
 }
-
-
-
-
-// void update_origin(const tf2_msgs::TFMessage tf_msg) {
-// 	//convert the original cloud for use in cloud_cb
-// 	pcl_conversions::toPCL(cloud_msg, pcl_cloud_msg_2);
-// 	pcl::fromPCLPointCloud2( pcl_cloud_msg_2, original_cloud_msg); 
-// 	ros::Time timeStamp = tf_msg.transforms[0].header.stamp;
-// 	//call the grapher method
-// 	cloud_cb(original_cloud_msg, timeStamp);
-
-
-// 	// ros::Time now = ros::Time::now();
-// 	// try {
-// 	// 	if (tfBuffer.canTransform("simple_cave_01", "X1/base_link/front_laser", now, ros::Duration(1.0))) { //tfBuffer.canTransform(destFrame, originFrame, ... )
-
-// 	// 		transformStamped_local_to_global = tfBuffer.lookupTransform("simple_cave_01", "X1/base_link/front_laser", now);  //tfBuffer.lookupTransform(destFrame, originFrame, ... )
-// 	// 		transformStamped_global_to_local = tfBuffer.lookupTransform("X1/base_link/front_laser", "simple_cave_01", now);  //tfBuffer.lookupTransform(destFrame, originFrame, ... )
-
-// 	// 		geometry_msgs::Vector3Stamped global_point, local_point;
-// 	// 		global_point.vector.x = transformStamped_local_to_global.transform.translation.x;
-// 	// 		global_point.vector.y = transformStamped_local_to_global.transform.translation.y;
-// 	// 		global_point.vector.z = transformStamped_local_to_global.transform.translation.z;
-
-// 	// 		global_point.header.stamp = now;
-// 	// 		global_point.header.frame_id = "simple_cave_01";
-
-// 	// 		local_point.header.stamp = now;
-// 	// 		local_point.header.frame_id = "X1/base_link/front_laser";
-// 	// 		tf2::doTransform(global_point, local_point, transformStamped_global_to_local); //tf2::doTransform(point_in, point_out, transform)
-
-// 	// 		std::cout << "local_point: " << local_point << std::endl; 
-// 	// 	}
-
-// 	// }  catch (tf2::TransformException &ex) {
-// 	// 	ROS_WARN("%s", ex.what());
-// 	// 	return;
-//     // }
-// }
-
-
-
-
-
-
-
-
-
