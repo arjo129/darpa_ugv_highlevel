@@ -1,0 +1,15 @@
+<launch>
+	<!-- Arguments -->
+	<arg name="robot_name" default="X1" />
+	<arg name="world_link_" value="/map" />
+	<arg name="rate" default="10" />
+
+	<!-- Main node to publish waypoint timely-->
+	<node pkg="aerial_obstacle_avoidance" type="pub_waypoint" name="pub_waypoint" output="screen">
+		<param name="goal_pub_topic_" value="/$(arg robot_name)/goal_to_explore" />
+		<param name="base_link_" value="/$(arg robot_name)/base_link/front_laser" />
+		<param name="world_link_" value="$(arg world_link_)" />
+		<param name="rate" value="$(arg rate)" />
+	</node>
+	
+</launch>

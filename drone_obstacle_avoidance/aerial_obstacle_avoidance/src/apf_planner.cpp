@@ -18,6 +18,22 @@
 #include "dmath/geometry.h"
 
 class ArtificialPotentialField{
+
+private:  
+    octomap_msgs::Octomap collision_map_;
+    ros::Publisher cmd_pub_, status_pub_;
+    ros::Subscriber obs_sub_, goal_sub_;
+    tf::TransformListener tf_listener_;
+    std::string base_link_, cmd_vel_topic_, goal_sub_topic_, obs_sub_topic_;
+    std_msgs::Int8 status;
+    geometry_msgs::Twist cmd;
+    geometry_msgs::PointStamped goal_msg_gl_;
+    ros::Timer timeout_;
+    int rate;
+    const double force = 0.09;
+    double distance_threshold;
+    bool goal_received;
+
 public:
     ArtificialPotentialField(ros::NodeHandle &node) {
         ros::param::get("~cmd_vel_topic_", cmd_vel_topic_);
@@ -25,37 +41,46 @@ public:
         ros::param::get("~rate", rate);
         ros::param::get("~goal_sub_topic_", goal_sub_topic_);
         ros::param::get("~obs_sub_topic_", obs_sub_topic_);
+        ros::param::get("~distance_threshold", distance_threshold);
 
         cmd_pub_ = node.advertise<geometry_msgs::Twist>(cmd_vel_topic_, rate);
-        status_pub_ = node.advertise<std_msgs::Int8>("status", rate);
+        status_pub_ = node.advertise<std_msgs::Int8>("/status", rate); // goal status: (-1, 0, 1) = (no goal set, goal not reached, goal reached)
         obs_sub_ = node.subscribe(obs_sub_topic_, rate, &ArtificialPotentialField::obstacleCallback, this);
         goal_sub_ = node.subscribe(goal_sub_topic_, rate, &ArtificialPotentialField::goalCallback, this);
-        timeout_ = node.createTimer(ros::Duration(20), [this](ros::TimerEvent opts){
-            std_msgs::Int8 status;
-            status.data = -1;
-            this->status_pub_.publish(status);
-        }, true);
+
+        status.data = -1; // initialized to -1, no goal set         
         collision_map_.header.stamp = ros::Time(0);
+        goal_received = false;
+        
     }
 
-    void spin(){
-        ros::Rate r(rate);
+    dmath::Vector3D get_potential_force(const dmath::Vector3D &dest_lc, double A = 1, double B = 1, double n = 1, double m = 1){
+        dmath::Vector3D u = dest_lc;
+        u = normalize(u);
+
+        const double d = magnitude(dest_lc);
+        double U = 0;
+        if(fabs(d) > dmath::tol){
+            U = -A/pow(d, n) + B/pow(d, m);
+        }
         
-        // Lift up the drone first become starting obstacle avoidance
-        ros::Duration(1).sleep();
-        geometry_msgs::Twist cmd;
-        cmd.linear.z = 0.5;
-        cmd_pub_.publish(cmd);
-        ros::Duration(3).sleep();
-        
-        cmd.linear.z = 0;
-        cmd_pub_.publish(cmd);
-        ros::Duration(3).sleep();
-        
-        const double force = 0.09;
-        
-        while(ros::ok()){
-            if(collision_map_.header.stamp != ros::Time(0)){
+        return U * u;
+    }
+
+    void obstacleCallback(const octomap_msgs::OctomapPtr &obs_msg){
+        collision_map_ = *obs_msg;
+    }
+
+    void goalCallback(const geometry_msgs::PointStamped &goal_msg){
+        goal_received = true;
+        goal_msg_gl_ = goal_msg;
+        ROS_INFO("GOAL recieved");
+    }
+
+    void avoidance(){
+
+        if(collision_map_.header.stamp != ros::Time(0)){
+            if(goal_received){
                 std::string map_frame = collision_map_.header.frame_id;
                 octomap::OcTree *tree = dynamic_cast<octomap::OcTree*>(octomap_msgs::msgToMap(collision_map_));
                 octomap::OcTree::leaf_iterator const end_it = tree->end_leafs();
@@ -104,69 +129,60 @@ public:
                     goal_lc = dmath::Vector3D();
                 }
 
+
                 Fs += get_potential_force(goal_lc, 50, 0, 1, 1);
                 
-                dmath::Vector3D vel = Fs * force;
-                const double max_speed = 1.0;
-                if(vel.x > max_speed) vel.x = max_speed;
-                if(vel.x < -max_speed) vel.x = -max_speed;
-                if(vel.y > max_speed) vel.y = max_speed;
-                if(vel.y < -max_speed) vel.y = -max_speed;
-                if(vel.z > max_speed) vel.z = max_speed;
-                if(vel.z < -max_speed) vel.z = -max_speed;
-                cmd.linear.x = vel.x;
-                cmd.linear.y = vel.y;
-                cmd.linear.z = vel.z;
+                if(magnitude(goal_lc) > distance_threshold){
 
-                goal_lc.z = 0;
-                if(magnitude(goal_lc) < 1) {
+                    dmath::Vector3D vel = Fs * force;
+                    const double max_speed = 1.0;
+                    if(vel.x > max_speed) vel.x = max_speed;
+                    if(vel.x < -max_speed) vel.x = -max_speed;
+                    if(vel.y > max_speed) vel.y = max_speed;
+                    if(vel.y < -max_speed) vel.y = -max_speed;
+                    if(vel.z > max_speed) vel.z = max_speed;
+                    if(vel.z < -max_speed) vel.z = -max_speed;
+                    cmd.linear.x = vel.x;
+                    cmd.linear.y = vel.y;
+                    cmd.linear.z = vel.z;
+                    status.data = 0;
+                    ROS_INFO("Moving towards GOAL");
+                } else {
+                    goal_lc.z = 0;
                     cmd.linear.x = 0;
                     cmd.linear.y = 0;
                     cmd.linear.z = 0;
-                    std_msgs::Int8 status;
-                    status.data = 0;
-                    status_pub_.publish(status);
+                    status.data = 1;
+                    ROS_INFO("GOAL reached");
                 }
                 cmd_pub_.publish(cmd);
             }
-            r.sleep();
-            ros::spinOnce(); 
         }
+        status_pub_.publish(status);
     }
 
-private:
-    dmath::Vector3D get_potential_force(const dmath::Vector3D &dest_lc, double A = 1, double B = 1, double n = 1, double m = 1){
-        dmath::Vector3D u = dest_lc;
-        u = normalize(u);
-
-        const double d = magnitude(dest_lc);
-        double U = 0;
-        if(fabs(d) > dmath::tol){
-            U = -A/pow(d, n) + B/pow(d, m);
-        }
+    void initialize(){
+        // Lift up the drone first become starting obstacle avoidance
+        ros::Duration(1).sleep();
+        cmd.linear.z = 0.5;
+        cmd_pub_.publish(cmd);
+        ros::Duration(3).sleep();
         
-        return U * u;
+        cmd.linear.z = 0;
+        cmd_pub_.publish(cmd);
+        ros::Duration(3).sleep();
+        ROS_INFO("Drone READY, waiting for goal");        
     }
 
-    void obstacleCallback(const octomap_msgs::OctomapPtr &obs_msg){
-        collision_map_ = *obs_msg;
-    }
-
-    void goalCallback(const geometry_msgs::PointStamped &goal_msg){
-        goal_msg_gl_ = goal_msg;
-        ROS_INFO("GOAL recieved");
-        timeout_.stop();
-        timeout_.start();
+    void spin(){
+        ros::Rate r(rate);
+        while (ros::ok()){
+            ros::spinOnce();
+            avoidance();
+            r.sleep();
+        }
     }
     
-    octomap_msgs::Octomap collision_map_;
-    ros::Publisher cmd_pub_, status_pub_;
-    ros::Subscriber obs_sub_, goal_sub_;
-    tf::TransformListener tf_listener_;
-    std::string base_link_, cmd_vel_topic_, goal_sub_topic_, obs_sub_topic_;
-    geometry_msgs::PointStamped goal_msg_gl_;
-    ros::Timer timeout_;
-    int rate;
 };
 
 int main(int argc, char *argv[]){
@@ -174,7 +190,9 @@ int main(int argc, char *argv[]){
     
     ros::NodeHandle node;
     ArtificialPotentialField apf(node);
-    apf.spin();
     
+    apf.initialize();
+    apf.spin();
+
     return 0;
 }
