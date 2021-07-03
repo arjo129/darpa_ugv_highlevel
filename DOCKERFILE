@@ -34,6 +34,7 @@ RUN apt-get -qq update && apt-get -q -y install \
   ros-melodic-apriltag-ros\ 
   ros-melodic-teleop-twist-keyboard\
   ros-melodic-move-base\
+  ros-melodic-tf2-sensor-msgs\
   libfftw3-dev\
   libqt5charts5-dev\
   ros-melodic-octomap\

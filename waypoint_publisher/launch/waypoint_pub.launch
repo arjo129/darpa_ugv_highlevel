@@ -1,0 +1,12 @@
+<launch>
+  <arg name="robot_name" default="X1" />
+
+  <node pkg="waypoint_publisher" type="waypointPub" name="waypointPub" output="screen" required="true">
+    <param name="odometry_topic" type="str" value="$(arg robot_name)/integrated_to_init" />
+    <param name="waypoint_topic" type="str" value="$(arg robot_name)/goal_to_explore" />
+    <param name="global_path_topic" type="str" value="$(arg robot_name)/global_path" />
+    <param name="waypointXYRadius" type="double" value="0.5" />
+    <param name="frameRate" type="double" value="5.0" />
+  </node>
+
+</launch>

@@ -10,6 +10,7 @@
 
 #include <std_msgs/Float32.h>
 #include <nav_msgs/Odometry.h>
+#include <nav_msgs/Path.h>
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/PolygonStamped.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -27,7 +28,7 @@ using namespace std;
 
 const double PI = 3.1415926;
 
-string odometry_topic, waypoint_topic, map_frame;
+string odometry_topic, waypoint_topic, map_frame, global_path_topic;
 double waypointXYRadius = 2.0;
 double waypointZBound = 5.0;
 double waitTime = 0;
@@ -92,7 +93,17 @@ void poseHandler(const nav_msgs::Odometry::ConstPtr& pose)
     vehicleZ = pose->pose.pose.position.z;
 }
 
-
+void pathCallback(const nav_msgs::Path::ConstPtr& msg){
+    pcl::PointXYZ point;
+    
+    for (int i=0; i< msg->poses.size(); ++i){
+        point.x = msg->poses[i].pose.position.x;
+        point.y = msg->poses[i].pose.position.y;
+        point.z = msg->poses[i].pose.position.z;
+        waypoints->push_back(point);
+        cout << msg->poses.size() << " waypoints received from A* planner." << endl;
+    }
+} 
 
 
 int main(int argc, char** argv)
@@ -103,22 +114,24 @@ int main(int argc, char** argv)
     
     nhPrivate.getParam("odometry_topic", odometry_topic);
     nhPrivate.getParam("waypoint_topic", waypoint_topic);
+    nhPrivate.getParam("global_path_topic", global_path_topic);
     nhPrivate.getParam("frameRate", frameRate);
 
     ros::Subscriber subPose = nh.subscribe<nav_msgs::Odometry> (odometry_topic, 10, poseHandler);
+    ros::Subscriber path_sub = nh.subscribe<nav_msgs::Path> (global_path_topic, 10, pathCallback);
     ros::Publisher pubWaypoint = nh.advertise<geometry_msgs::PointStamped>(waypoint_topic, 1);
 
 
-    create_path();
-    int waypointSize = waypoints->points.size();
+    // create_path(); // only designed for qualification purpose. fixed path
 
-    geometry_msgs::PointStamped waypointMsgs;
-    waypointMsgs.header.frame_id = map_frame;
 
     ros::Rate rate(100);
     while (ros::ok()){
         ros::spinOnce();
-        
+        int waypointSize = waypoints->points.size();
+        geometry_msgs::PointStamped waypointMsgs;
+        waypointMsgs.header.frame_id = map_frame;
+
         float disX = vehicleX - waypoints->points[wayPointID].x;
         float disY = vehicleY - waypoints->points[wayPointID].y;
         // float disZ = vehicleZ - waypoints->points[wayPointID].z;
