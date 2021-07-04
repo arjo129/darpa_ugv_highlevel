@@ -177,6 +177,7 @@ public:
             int p = node_indices.top(); 
             node_indices.pop(); 
 
+            pose.header.frame_id = graph_msg.header.frame_id;
             pose.pose.position = graph_msg.nodes[p];
             pose.pose.orientation.x = 0; 
             pose.pose.orientation.y = 0; 
