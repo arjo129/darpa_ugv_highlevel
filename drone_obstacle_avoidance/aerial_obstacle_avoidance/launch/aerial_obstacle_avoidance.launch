@@ -52,7 +52,7 @@
 		<param name="goal_sub_topic_" value="/$(arg robot_name)/goal_to_explore" />
 		<param name="obs_sub_topic_" value="/octomap_full" />
 		<param name="rate" value="10" />
-    <param name="distance_threshold" value="1" />
+    <param name="distance_threshold" value="0.5" />
 	</node>
 	
 </launch>

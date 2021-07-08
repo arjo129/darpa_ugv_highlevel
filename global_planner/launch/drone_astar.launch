@@ -1,0 +1,22 @@
+<launch>
+    <arg name="global_graph_topic" default="/output2" />
+	<arg name="goal_topic" default="/node_id_to_explore" />
+	<arg name="graph_vis" default="/graph_path_vis" />
+	<arg name="path_topic" default="/global_path" />
+    <arg name="rviz" default="false" />
+
+
+    <param name="/use_sim_time" value="true" />
+
+    <node pkg="global_planner" type="astar_drone" name="astar_drone" output="screen">
+        <param name="global_graph_topic" value="/$(arg global_graph_topic)" />
+        <param name="goal_topic" value="/$(arg goal_topic)" />
+        <param name="graph_vis" value="/$(arg graph_vis)" />
+        <param name="path_topic" value="/$(arg path_topic)" />    
+    </node>
+
+    <group if="$(arg rviz)">
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find global_planner)/rviz/path_planning.rviz" />
+    </group>
+
+</launch>

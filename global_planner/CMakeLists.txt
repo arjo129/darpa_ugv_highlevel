@@ -209,6 +209,20 @@ include_directories(
 add_executable(astar 
               src/astar.cpp)
 
+add_executable(astar_drone 
+              src/astar_drone.cpp)
+
+add_executable(goal_selection 
+              src/goal_selection.cpp)
+
 target_link_libraries(astar 
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(astar_drone
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(goal_selection
   ${catkin_LIBRARIES}
 )

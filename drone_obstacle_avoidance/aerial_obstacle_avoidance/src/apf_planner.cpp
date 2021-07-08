@@ -4,18 +4,23 @@
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <tf/transform_listener.h>
+#include <tf2/LinearMath/Quaternion.h>
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
 #include <octomap_msgs/Octomap.h>
 #include <octomap_msgs/conversions.h>
 #include <geometry_msgs/PointStamped.h>
+#include <nav_msgs/Odometry.h>
 #include <std_msgs/Int8.h>
+
 
 #include <string>
 #include <math.h>
 #include <vector>
 
 #include "dmath/geometry.h"
+
+#define PI 3.14159265
 
 class ArtificialPotentialField{
 
@@ -28,11 +33,13 @@ private:
     std_msgs::Int8 status;
     geometry_msgs::Twist cmd;
     geometry_msgs::PointStamped goal_msg_gl_;
+    geometry_msgs::PointStamped goal_msg_lc;
+    
     ros::Timer timeout_;
     int rate;
     const double force = 0.09;
     double distance_threshold;
-    bool goal_received;
+    bool goal_received, goal_reached, correct_heading;
 
 public:
     ArtificialPotentialField(ros::NodeHandle &node) {
@@ -50,8 +57,7 @@ public:
 
         status.data = -1; // initialized to -1, no goal set         
         collision_map_.header.stamp = ros::Time(0);
-        goal_received = false;
-        
+        goal_received = false;       
     }
 
     dmath::Vector3D get_potential_force(const dmath::Vector3D &dest_lc, double A = 1, double B = 1, double n = 1, double m = 1){
@@ -71,16 +77,43 @@ public:
         collision_map_ = *obs_msg;
     }
 
+    void odomCallback(const nav_msgs::Odometry::ConstPtr& goal_msg){
+        // lego-loam's odom frame
+    }
+
     void goalCallback(const geometry_msgs::PointStamped &goal_msg){
         goal_received = true;
+        correct_heading = false; 
         goal_msg_gl_ = goal_msg;
         ROS_INFO("GOAL recieved");
+    }
+
+    void turn(){
+
+        // std::cout << "goal_msg_lc.x: " << goal_msg_lc.point.x << ", " << "goal_msg_lc.y: " << goal_msg_lc.point.y << std::endl;
+        float deg_RHR = -(atan2(-goal_msg_lc.point.y,goal_msg_lc.point.x) * 180/PI);
+        std::cout << "Turning towards goal: " << deg_RHR << std::endl;
+
+        if(deg_RHR > 20){
+            cmd.angular.z = 0.8;
+            cmd_pub_.publish(cmd);
+            correct_heading = false; 
+        } else if (deg_RHR < -20){
+            cmd.angular.z = -0.8;
+            cmd_pub_.publish(cmd);
+            correct_heading = false; 
+        } else {
+            cmd.angular.z = 0;
+            cmd_pub_.publish(cmd);
+            correct_heading = true;    
+        } 
     }
 
     void avoidance(){
 
         if(collision_map_.header.stamp != ros::Time(0)){
             if(goal_received){
+
                 std::string map_frame = collision_map_.header.frame_id;
                 octomap::OcTree *tree = dynamic_cast<octomap::OcTree*>(octomap_msgs::msgToMap(collision_map_));
                 octomap::OcTree::leaf_iterator const end_it = tree->end_leafs();
@@ -117,7 +150,7 @@ public:
                 dmath::Vector3D Fs;
                 Fs += (get_potential_force(min_obs, 0, 3.0, 1.0, 4.0) * 5);
 
-                geometry_msgs::PointStamped goal_msg_lc;
+                
                 dmath::Vector3D goal_lc;
                 try{
                     tf_listener_.waitForTransform(goal_msg_gl_.header.frame_id, base_link_, now, ros::Duration(1));
@@ -127,11 +160,15 @@ public:
                 }catch(tf::TransformException &ex){
                     ROS_ERROR_STREAM("Exception trying to transform goal position: " << ex.what());
                     goal_lc = dmath::Vector3D();
-                }
-
+                } 
 
                 Fs += get_potential_force(goal_lc, 50, 0, 1, 1);
-                
+
+                // turn drone's heading toward goal before moving
+                if(!correct_heading){
+                        turn();
+                    }
+
                 if(magnitude(goal_lc) > distance_threshold){
 
                     dmath::Vector3D vel = Fs * force;
@@ -144,7 +181,7 @@ public:
                     if(vel.z < -max_speed) vel.z = -max_speed;
                     cmd.linear.x = vel.x;
                     cmd.linear.y = vel.y;
-                    cmd.linear.z = vel.z;
+                    cmd.linear.z = vel.z;          
                     status.data = 0;
                     ROS_INFO("Moving towards GOAL");
                 } else {
