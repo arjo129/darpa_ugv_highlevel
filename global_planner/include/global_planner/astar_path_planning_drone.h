@@ -88,9 +88,9 @@ void Astar::construct_graph_edges(const graph_msgs::GeometryGraph msg) {
             //     addEdge(i, msg.edges[i].node_ids[j], 2); // node is the lowest, hence add increased weights to prevent drone from taking these routes
             // }
             if (neighbour_node_z < parent_node_z){
-                addEdge(i, msg.edges[i].node_ids[j], 2); // node is the lowest, hence add increased weights to prevent drone from taking these routes
+                addEdge(i, msg.edges[i].node_ids[j], 1); // node is the lowest, hence add increased weights to prevent drone from taking these routes
             } else {
-                addEdge(i, msg.edges[i].node_ids[j], 1); // node not the lowest, hence add default weight of 1
+                addEdge(i, msg.edges[i].node_ids[j], 5); // node not the lowest, hence add default weight of 1
             }
             
         }

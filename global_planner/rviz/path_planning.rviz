@@ -7,6 +7,7 @@ Panels:
         - /Global Options1
         - /Status1
         - /MarkerArray1
+        - /MarkerArray2
       Splitter Ratio: 0.5
     Tree Height: 719
   - Class: rviz/Selection
@@ -55,10 +56,10 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /graph_path_vis
+      Marker Topic: /global_graph/vis
       Name: MarkerArray
       Namespaces:
-        path: true
+        edges: true
         vertices: true
       Queue Size: 100
       Value: true
@@ -85,11 +86,20 @@ Visualization Manager:
       Topic: /global_path
       Unreliable: false
       Value: false
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /graph_path_vis
+      Name: MarkerArray
+      Namespaces:
+        path: true
+        vertices: true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: X1/world
+    Fixed Frame: map
     Frame Rate: 30
   Name: root
   Tools:
@@ -113,25 +123,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 122.107666015625
+      Distance: 47.08953094482422
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 24.903228759765625
-        Y: -12.18785285949707
-        Z: -10.837943077087402
+        X: -4.78242826461792
+        Y: -8.538342475891113
+        Z: -0.4975323975086212
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7403979301452637
+      Pitch: 0.5953980684280396
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.1253982782363892
+      Yaw: 1.0053983926773071
     Saved: ~
 Window Geometry:
   Displays:
