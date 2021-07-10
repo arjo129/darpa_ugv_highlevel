@@ -15,6 +15,7 @@ private:
 
     typedef pair<int, int> Pair;
     list<Pair> *adjList;
+    int source;
     string GOAL_TOPIC, GLOBAL_GRAPH_TOPIC, GRAPH_VIS, PATH_TOPIC;
     
     visualization_msgs::MarkerArray marker_array;
@@ -35,6 +36,7 @@ public:
         goal_sub = nh.subscribe(GOAL_TOPIC, 1, &GlobalPlanner::goalCallback, this);
         vis_pub = nh.advertise<visualization_msgs::MarkerArray>(GRAPH_VIS, 10);
         waypoints_pub = nh.advertise<nav_msgs::Path>(PATH_TOPIC, 1);
+        source = 0; // first goal
     }
 
     // construct graph (adjaceny list)
@@ -63,12 +65,13 @@ public:
     void goalCallback(const std_msgs::Int16 &goal){
         stack <int> path;
 
-        path = astar.plan(0, goal.data, global_graph_msg);
+        path = astar.plan(source, goal.data, global_graph_msg);
 
         visualization_msgs::Marker path_marker = vis_Path(global_graph_msg, path);
         visualization_msgs::MarkerArray marker_array;
         marker_array.markers.push_back(path_marker); 
         vis_pub.publish(marker_array);   
+        source = goal.data;
 
         // Publishing planned path on PATH_TOPIC
         publishWaypoints(path, global_graph_msg);
@@ -180,7 +183,7 @@ public:
 
             pose.header.frame_id = graph_msg.header.frame_id;
             pose.pose.position = graph_msg.nodes[p];
-            // orientation not given 
+            // orientation not given. will be handed by local planner
             pose.pose.orientation.x = 0; 
             pose.pose.orientation.y = 0; 
             pose.pose.orientation.z = 0; 

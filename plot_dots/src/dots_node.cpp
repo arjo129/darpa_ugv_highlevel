@@ -408,7 +408,7 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 
 	geometry_msgs::TransformStamped transformStamped_local_to_global;
 	try {
-		transformStamped_local_to_global = tfBuffer.lookupTransform("map", "X1/base_link/front_laser", timeStamp); //ros::Time(0));//timeStamp);  //tfBuffer.lookupTransform(destFrame, originFrame, ... )
+		transformStamped_local_to_global = tfBuffer.lookupTransform("world", "X1/base_link/front_laser", timeStamp); //ros::Time(0));//timeStamp);  //tfBuffer.lookupTransform(destFrame, originFrame, ... )
 	} catch (tf2::TransformException &ex) {
 		ROS_WARN("%s", ex.what());
 		ros::Duration(1.0).sleep();
@@ -500,7 +500,7 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 	std::vector<uint8_t> arr(out_cloud_2.nodes.size());
 	out_cloud_2.explored = arr;
 	
-	out_cloud_2.header.frame_id = "map";
+	out_cloud_2.header.frame_id = "world";
 	out_cloud_2.header.stamp = pcl_conversions::fromPCL(original_cloud_msg.header.stamp);
 	pub2.publish(out_cloud_2);
 

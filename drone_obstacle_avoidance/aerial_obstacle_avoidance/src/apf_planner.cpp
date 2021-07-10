@@ -165,9 +165,9 @@ public:
                 Fs += get_potential_force(goal_lc, 50, 0, 1, 1);
 
                 // turn drone's heading toward goal before moving
-                if(!correct_heading){
-                        turn();
-                    }
+                // if(!correct_heading){
+                //         turn();
+                //     }
 
                 if(magnitude(goal_lc) > distance_threshold){
 
