@@ -8,7 +8,7 @@
 
 
     <node pkg="plot_dots" type="dots_node" name="dots_node" output="screen" >
-        <param name="world_frame" type="string" value="world" />
+        <param name="world_frame" type="string" value="map" />
     </node>
 
     <group if="$(arg rviz)">

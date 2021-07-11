@@ -34,6 +34,7 @@ And finally, 1 method to check the angular speed:
 #include <tuple>
 #include <unordered_map>
 #include <queue> 
+#include <string>
 
 #include <boost/functional/hash.hpp>
 #include <math.h> 
@@ -69,6 +70,7 @@ static pcl::PointXYZ origin;
 static bool origin_is_updated;
 static int index_global = -1;
 bool to_skip;
+std::string world_frame;
 
 tf2_ros::Buffer tfBuffer;
 
@@ -408,7 +410,7 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 
 	geometry_msgs::TransformStamped transformStamped_local_to_global;
 	try {
-		transformStamped_local_to_global = tfBuffer.lookupTransform("map", "X1/base_link/front_laser", timeStamp); //ros::Time(0));//timeStamp);  //tfBuffer.lookupTransform(destFrame, originFrame, ... )
+		transformStamped_local_to_global = tfBuffer.lookupTransform(world_frame, "X1/base_link/front_laser", timeStamp); //ros::Time(0));//timeStamp);  //tfBuffer.lookupTransform(destFrame, originFrame, ... )
 	} catch (tf2::TransformException &ex) {
 		ROS_WARN("%s", ex.what());
 		ros::Duration(1.0).sleep();
@@ -500,7 +502,7 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 	std::vector<uint8_t> arr(out_cloud_2.nodes.size());
 	out_cloud_2.explored = arr;
 	
-	out_cloud_2.header.frame_id = "map";
+	out_cloud_2.header.frame_id = world_frame;
 	out_cloud_2.header.stamp = pcl_conversions::fromPCL(original_cloud_msg.header.stamp);
 	pub2.publish(out_cloud_2);
 
@@ -544,6 +546,8 @@ void to_skip_or_not_to_skip(const sensor_msgs::Imu& imu_msg) {
 int main (int argc, char* argv[]) {
 	ros::init (argc, argv, "dots_node");
 	ros::NodeHandle nh;
+  	ros::NodeHandle nhPrivate = ros::NodeHandle("~");
+
 	tf2_ros::TransformListener tfListener(tfBuffer);
 
 	ros::Subscriber sub = nh.subscribe ("/X1/points/", 1, transform_the_cloud);
@@ -553,5 +557,8 @@ int main (int argc, char* argv[]) {
 	pub2 = nh.advertise<graph_msgs::GeometryGraph> (output_topic, 1);	
 	pub3 = nh.advertise<sensor_msgs::PointCloud2> ("transformed_point_cloud", 1);	
 	
+	nhPrivate.getParam("world_frame", world_frame);
+	// std::cout << "world frame: " << world_frame << std::endl;
+
 	ros::spin();
 }
