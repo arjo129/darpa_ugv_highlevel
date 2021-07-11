@@ -73,28 +73,32 @@ void Astar::addEdge(int u, int v, int w) {
 }
 
 void Astar::construct_graph_edges(const graph_msgs::GeometryGraph msg) {
+
     for (int i=0; i<msg.nodes.size(); ++i){
-        
-        float parent_node_z = msg.nodes[i].z;
+        float parent_node_z = msg.nodes[i].z;  
+        bool ground_node = true;
 
         // for every edge that a node has
         for (int j=0; j< msg.edges[i].node_ids.size() ; ++j){
             
             float neighbour_node_z = msg.nodes[msg.edges[i].node_ids[j]].z;
 
-            // if (parent_node_z >= neighbour_node_z){
-            //     addEdge(i, msg.edges[i].node_ids[j], 1); // node not the lowest, hence add default weight of 1
-            // } else {
-            //     addEdge(i, msg.edges[i].node_ids[j], 2); // node is the lowest, hence add increased weights to prevent drone from taking these routes
-            // }
-            if (neighbour_node_z < parent_node_z){
-                addEdge(i, msg.edges[i].node_ids[j], 1); // node is the lowest, hence add increased weights to prevent drone from taking these routes
+            if (neighbour_node_z < parent_node_z && ground_node){ // if not lowest node
+                ground_node = false;
+            } 
+
+            if (ground_node == false){
+                addEdge(i, msg.edges[i].node_ids[j], 1);       
             } else {
-                addEdge(i, msg.edges[i].node_ids[j], 10); // node not the lowest, hence add default weight of 1
-            }
-            
+                addEdge(i, msg.edges[i].node_ids[j], 5);    
+            }                    
+        
         }
+
+
     }
+
+    
 }
 
 bool Astar::isDestination(int current, int destination) {

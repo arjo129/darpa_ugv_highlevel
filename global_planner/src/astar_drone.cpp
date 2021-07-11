@@ -83,9 +83,12 @@ public:
     }
 
     visualization_msgs::Marker vis_VertexMarkers(const graph_msgs::GeometryGraph graph_msg)
-    {
+    {     
+        
         // Plot all vertices
         visualization_msgs::Marker vertex_marker;
+        std_msgs::ColorRGBA color_msg;
+
         vertex_marker.header.stamp = ros::Time::now();
         vertex_marker.header.seq = 0;
         vertex_marker.header.frame_id = graph_msg.header.frame_id;
@@ -103,31 +106,54 @@ public:
         vertex_marker.lifetime = ros::Duration(GRAPH_LIFETIME);
         vertex_marker.frame_locked = false;
 
-        for (int vertex_idx=0;vertex_idx<graph_msg.nodes.size();vertex_idx++)
-        {
-            vertex_marker.points.push_back(graph_msg.nodes[vertex_idx]);
+        
 
-            std_msgs::ColorRGBA color_msg;
-            if (graph_msg.explored[vertex_idx] == GraphNodeExploredState::NODE_UNEXPLORED)
-            {
-                color_msg.r = 1.0;color_msg.g = 1.0;color_msg.b = 1.0;color_msg.a = 1.0; // white
-            }
-            else if (graph_msg.explored[vertex_idx] == GraphNodeExploredState::NODE_EXPLORED)
-            {
-                color_msg.r = 1.0;color_msg.g = 0.0;color_msg.b = 0.0;color_msg.a = 1.0; // red
-            }
-            else if (graph_msg.explored[vertex_idx] == GraphNodeExploredState::NODE_EXPLORING)
-            {
-                color_msg.r = 0.0;color_msg.g = 1.0;color_msg.b = 0.0;color_msg.a = 1.0; // green
-            }
-            else if (graph_msg.explored[vertex_idx] == GraphNodeExploredState::NODE_UNEXPLORABLE)
-            {
-                color_msg.r = 0.1;color_msg.g = 0.1;color_msg.b = 0.1;color_msg.a = 1.0; // green
-            }
+        for (int i=0; i<graph_msg.nodes.size(); ++i){
+            vertex_marker.points.push_back(graph_msg.nodes[i]);
+            float parent_node_z = graph_msg.nodes[i].z;
+            bool ground_node = true; // default ground
+            color_msg.r = 1.0;color_msg.g = 0.0;color_msg.b = 0.0;color_msg.a = 1.0; // default red
 
+            // for every edge that a node has
+            for (int j=0; j< graph_msg.edges[i].node_ids.size() ; ++j){
+                
+                float neighbour_node_z = graph_msg.nodes[graph_msg.edges[i].node_ids[j]].z;
 
+                if (neighbour_node_z < parent_node_z){ // if not lowest node
+                    ground_node = false;
+                    color_msg.r = 0.0;color_msg.g = 1.0;color_msg.b = 0.0;color_msg.a = 1.0; // green
+                    break;
+                }              
+            }
+            
             vertex_marker.colors.push_back(color_msg);
         }
+
+        // for (int vertex_idx=0;vertex_idx<graph_msg.nodes.size();vertex_idx++)
+        // {
+        //     vertex_marker.points.push_back(graph_msg.nodes[vertex_idx]);
+
+        //     std_msgs::ColorRGBA color_msg;
+        //     if (graph_msg.explored[vertex_idx] == GraphNodeExploredState::NODE_UNEXPLORED)
+        //     {
+        //         color_msg.r = 1.0;color_msg.g = 1.0;color_msg.b = 1.0;color_msg.a = 1.0; // white
+        //     }
+        //     else if (graph_msg.explored[vertex_idx] == GraphNodeExploredState::NODE_EXPLORED)
+        //     {
+        //         color_msg.r = 1.0;color_msg.g = 0.0;color_msg.b = 0.0;color_msg.a = 1.0; // red
+        //     }
+        //     else if (graph_msg.explored[vertex_idx] == GraphNodeExploredState::NODE_EXPLORING)
+        //     {
+        //         color_msg.r = 0.0;color_msg.g = 1.0;color_msg.b = 0.0;color_msg.a = 1.0; // green
+        //     }
+        //     else if (graph_msg.explored[vertex_idx] == GraphNodeExploredState::NODE_UNEXPLORABLE)
+        //     {
+        //         color_msg.r = 0.1;color_msg.g = 0.1;color_msg.b = 0.1;color_msg.a = 1.0; // green
+        //     }
+
+
+        //     vertex_marker.colors.push_back(color_msg);
+        // }
             
         return vertex_marker;
     }

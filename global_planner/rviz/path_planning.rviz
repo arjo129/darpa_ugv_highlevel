@@ -55,14 +55,13 @@ Visualization Manager:
       Reference Frame: <Fixed Frame>
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /global_graph/vis
       Name: MarkerArray
       Namespaces:
-        edges: true
-        vertices: true
+        {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Alpha: 1
       Buffer Length: 1
       Class: rviz/Path
@@ -91,7 +90,6 @@ Visualization Manager:
       Marker Topic: /graph_path_vis
       Name: MarkerArray
       Namespaces:
-        path: true
         vertices: true
       Queue Size: 100
       Value: true
@@ -138,10 +136,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5953980684280396
+      Pitch: 0.445398211479187
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.0053983926773071
+      Yaw: 1.0953983068466187
     Saved: ~
 Window Geometry:
   Displays:
