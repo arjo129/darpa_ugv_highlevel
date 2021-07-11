@@ -14,7 +14,6 @@ Then there is 1 helper method:
 
 And finally, 1 method to check the angular speed:
 (1) to_skip_or_not_to_skip - line 533
-
 */
 
 #include <ros/ros.h>
@@ -104,9 +103,18 @@ struct key_equal : public std::binary_function<pcl::PointXYZ, pcl::PointXYZ, boo
 };
 
 static std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal> visited_map; //to keep throughout the run - the one keeping all the global points
+static std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal> explored_map; //to keep throughout the run - stores explored state of all points
 static graph_msgs::GeometryGraph out_cloud_2; // for visualisation - the overall structure
 
-
+int check_in_box(pcl::PointXYZ& local_point){
+	if (local_point.x >= 0.0 && local_point.x <= 9.0 &&
+		local_point.y >= -4.5 && local_point.y <= 4.5 &&
+		local_point.z >= -4.5 && local_point.z <= 4.5)
+	{
+		return 1;
+	}
+	return 0;
+}
 
 bool convert_local_to_global(pcl::PointXYZ& global_point, pcl::PointXYZ& local_point, ros::Time& timeStamp, geometry_msgs::TransformStamped& transformStamped_local_to_global) { 
 	geometry_msgs::PoseStamped global_point_stamped, local_point_stamped;
@@ -438,6 +446,7 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 	std::tuple<pcl::PointXYZ, pcl::PointXYZ, bool> temp_tuple; //declare a tuple - to keep the tuple I'll dequeue later
 	pcl::PointXYZ temp_global, temp_local; //declare a point - to keep the point from within the de-queued tuple
 	bool to_add; //declare a boolean - to keep the boolean value from within the de-queued tuple
+    int explored_check;
 	std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal> visited_map_2; //per call back - to keep track of my locally visited BFS points, etc
 	
 	
@@ -475,12 +484,22 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 		temp_global = std::get<1>(temp_tuple);
 		to_add = std::get<2>(temp_tuple);
 
+		// Check if local point was explored in this round. update global explored state of the point
+		explored_check = check_in_box(temp_local);
+		if (explored_map.find(temp_global) == explored_map.end()){ // Not found in the explored map yet.
+			explored_map[temp_global] = explored_check;
+		}
+		else if (explored_check == 1){		// Always update when it is recently in the explored zone
+			explored_map[temp_global] = 1;
+		}
+
 		if (to_add) { //check if true or false from the tuple
 			geometry_msgs::Point out_cloud_2_point; // the individual point within the visualisation
 			out_cloud_2_point.x = temp_global.x;
 			out_cloud_2_point.y = temp_global.y;
 			out_cloud_2_point.z = temp_global.z;
 			out_cloud_2.nodes.push_back(out_cloud_2_point);
+			out_cloud_2.explored.push_back(explored_map[temp_global]);
 		}
 		
 		graph_msgs::Edges e;
@@ -488,7 +507,7 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 		debug_bool = false;
 
 		if (to_add) {
-			out_cloud_2.edges.push_back(e);	
+			out_cloud_2.edges.push_back(e);
 		}
 		if (index_local > 100000) {
 			std::cout << "INDEX_LOCAL EXCEEDED" << "\n";
