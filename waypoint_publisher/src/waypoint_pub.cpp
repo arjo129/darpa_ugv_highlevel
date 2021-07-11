@@ -133,16 +133,37 @@ public:
         waypoints -> clear();
         pcl::PointXYZ point;
         waypoints_initialized = true;
-        
+        wayPointID = 0;
         map_frame = msg->header.frame_id;
+        int path_size = msg->poses.size();
 
-        for (int i=0; i< msg->poses.size(); ++i){
+        cout << msg->poses.size() << " waypoints received from A* planner." << endl;
+
+        // for (int i=0; i< msg->poses.size(); ++i){
+        //     point.x = msg->poses[i].pose.position.x;
+        //     point.y = msg->poses[i].pose.position.y;
+        //     point.z = msg->poses[i].pose.position.z;
+        //     waypoints->push_back(point);
+        // }
+
+        for (int i= 1; i< path_size; i+=2){
+
             point.x = msg->poses[i].pose.position.x;
             point.y = msg->poses[i].pose.position.y;
             point.z = msg->poses[i].pose.position.z;
             waypoints->push_back(point);
         }
-        cout << msg->poses.size() << " waypoints received from A* planner." << endl;
+
+        // include last waypoint if array is odd
+        if (path_size % 2 != 0){
+            point.x = msg->poses[path_size-1].pose.position.x;
+            point.y = msg->poses[path_size-1].pose.position.y;
+            point.z = msg->poses[path_size-1].pose.position.z;
+            waypoints->push_back(point);
+        }
+
+        cout << waypoints->size() << " waypoints after trimming." << endl;
+        
 
     } 
 

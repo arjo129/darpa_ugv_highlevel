@@ -17,7 +17,8 @@ private:
     list<Pair> *adjList;
     int source;
     string GOAL_TOPIC, GLOBAL_GRAPH_TOPIC, GRAPH_VIS, PATH_TOPIC;
-    
+    bool new_goal;
+
     visualization_msgs::MarkerArray marker_array;
     graph_msgs::GeometryGraph global_graph_msg;
 
@@ -36,7 +37,9 @@ public:
         goal_sub = nh.subscribe(GOAL_TOPIC, 1, &GlobalPlanner::goalCallback, this);
         vis_pub = nh.advertise<visualization_msgs::MarkerArray>(GRAPH_VIS, 10);
         waypoints_pub = nh.advertise<nav_msgs::Path>(PATH_TOPIC, 1);
-        source = 0; // first goal
+        source = 0; 
+        new_goal = true;
+        
     }
 
     // construct graph (adjaceny list)
@@ -44,9 +47,10 @@ public:
         int graph_size = graph_msg.nodes.size();
         global_graph_msg = graph_msg;
 
-        // temp method to work with the first local scan (which has >150 nodes) graph msg
-        if (first_local_graph_msg && graph_size > 150){
-            
+        // update global graph only when new goal has been assigned.
+        // if (first_local_graph_msg && graph_size > 150){
+        if (new_goal){
+            new_goal = false;
             first_local_graph_msg = false;
             cout << "Graph (" << graph_size << " nodes) receieved." << endl;
 
@@ -62,9 +66,9 @@ public:
     }
 
     // plan global path to goal using A* algorithm
-    void goalCallback(const std_msgs::Int16 &goal){
+    void goalCallback(const std_msgs::Int16 &goal){ //node_to_explore
         stack <int> path;
-
+        new_goal = true;
         path = astar.plan(source, goal.data, global_graph_msg);
 
         visualization_msgs::Marker path_marker = vis_Path(global_graph_msg, path);
