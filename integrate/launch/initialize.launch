@@ -1,0 +1,7 @@
+<launch>
+
+  <include file="$(find lego_loam)/launch/run.launch" />
+
+  <include file="$(find aerial_obstacle_avoidance)/launch/aerial_obstacle_avoidance.launch" />
+
+</launch>

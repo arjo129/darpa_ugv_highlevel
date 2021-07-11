@@ -1,0 +1,9 @@
+<launch>
+
+  <include file="$(find exploration_goal)/launch/exploration_goal.launch" />
+
+  <include file="$(find global_planner)/launch/drone_astar.launch" />
+
+  <include file="$(find waypoint_publisher)/launch/waypoint_pub.launch" />
+
+</launch>
