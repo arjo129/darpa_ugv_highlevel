@@ -78,27 +78,27 @@ void Astar::construct_graph_edges(const graph_msgs::GeometryGraph msg) {
         float parent_node_z = msg.nodes[i].z;  
         bool ground_node = true;
 
-        // for every edge that a node has
+        // look at all edges of a node to determine if its a ground node. 
         for (int j=0; j< msg.edges[i].node_ids.size() ; ++j){
             
             float neighbour_node_z = msg.nodes[msg.edges[i].node_ids[j]].z;
 
-            if (neighbour_node_z < parent_node_z && ground_node){ // if not lowest node
+            if (neighbour_node_z < parent_node_z){ // if not lowest node
                 ground_node = false;
             } 
-
-            if (ground_node == false){
-                addEdge(i, msg.edges[i].node_ids[j], 1);       
-            } else {
-                addEdge(i, msg.edges[i].node_ids[j], 5);    
-            }                    
-        
         }
 
-
-    }
-
-    
+        // if node is ground node, all its edges' weights are increased
+        if (ground_node == true){
+            for (int j=0; j< msg.edges[i].node_ids.size() ; ++j){
+                addEdge(i, msg.edges[i].node_ids[j], 5); 
+            }
+        } else {
+            for (int j=0; j< msg.edges[i].node_ids.size() ; ++j){
+                addEdge(i, msg.edges[i].node_ids[j], 1); 
+            }
+        }
+    }    
 }
 
 bool Astar::isDestination(int current, int destination) {

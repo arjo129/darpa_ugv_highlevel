@@ -108,26 +108,50 @@ public:
 
         
 
+        // for (int i=0; i<graph_msg.nodes.size(); ++i){
+        //     vertex_marker.points.push_back(graph_msg.nodes[i]);
+        //     float parent_node_z = graph_msg.nodes[i].z;
+        //     bool ground_node = true; // default ground
+        //     color_msg.r = 1.0;color_msg.g = 0.0;color_msg.b = 0.0;color_msg.a = 1.0; // default red
+
+        //     // for every edge that a node has
+        //     for (int j=0; j< graph_msg.edges[i].node_ids.size() ; ++j){
+                
+        //         float neighbour_node_z = graph_msg.nodes[graph_msg.edges[i].node_ids[j]].z;
+
+        //         if (neighbour_node_z < parent_node_z){ // if not lowest node
+        //             ground_node = false;
+        //             color_msg.r = 0.0;color_msg.g = 1.0;color_msg.b = 0.0;color_msg.a = 1.0; // green
+        //             break;
+        //         }              
+        //     }
+            
+        //     vertex_marker.colors.push_back(color_msg);
+        // }
+
         for (int i=0; i<graph_msg.nodes.size(); ++i){
             vertex_marker.points.push_back(graph_msg.nodes[i]);
-            float parent_node_z = graph_msg.nodes[i].z;
-            bool ground_node = true; // default ground
-            color_msg.r = 1.0;color_msg.g = 0.0;color_msg.b = 0.0;color_msg.a = 1.0; // default red
+            float parent_node_z = graph_msg.nodes[i].z;  
+            bool ground_node = true;
 
-            // for every edge that a node has
+            // look at all edges of a node to determine if its a ground node. 
             for (int j=0; j< graph_msg.edges[i].node_ids.size() ; ++j){
                 
                 float neighbour_node_z = graph_msg.nodes[graph_msg.edges[i].node_ids[j]].z;
 
                 if (neighbour_node_z < parent_node_z){ // if not lowest node
                     ground_node = false;
-                    color_msg.r = 0.0;color_msg.g = 1.0;color_msg.b = 0.0;color_msg.a = 1.0; // green
-                    break;
-                }              
+                } 
             }
-            
+
+            // if node is ground node, all its edges' weights are increased
+            if (ground_node == true){
+                color_msg.r = 1.0;color_msg.g = 0.0;color_msg.b = 0.0;color_msg.a = 1.0; // default red
+            } else {
+                color_msg.r = 0.0;color_msg.g = 1.0;color_msg.b = 0.0;color_msg.a = 1.0; // green
+            }
             vertex_marker.colors.push_back(color_msg);
-        }
+        } 
 
         // for (int vertex_idx=0;vertex_idx<graph_msg.nodes.size();vertex_idx++)
         // {
