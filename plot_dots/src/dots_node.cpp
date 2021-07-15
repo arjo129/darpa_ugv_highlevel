@@ -14,7 +14,6 @@ Then there is 1 helper method:
 
 And finally, 1 method to check the angular speed:
 (1) to_skip_or_not_to_skip - line 533
-
 */
 
 #include <ros/ros.h>
@@ -34,7 +33,6 @@ And finally, 1 method to check the angular speed:
 #include <tuple>
 #include <unordered_map>
 #include <queue> 
-#include <string>
 
 #include <boost/functional/hash.hpp>
 #include <math.h> 
@@ -70,7 +68,6 @@ static pcl::PointXYZ origin;
 static bool origin_is_updated;
 static int index_global = -1;
 bool to_skip;
-std::string world_frame;
 
 tf2_ros::Buffer tfBuffer;
 
@@ -108,7 +105,15 @@ struct key_equal : public std::binary_function<pcl::PointXYZ, pcl::PointXYZ, boo
 static std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal> visited_map; //to keep throughout the run - the one keeping all the global points
 static graph_msgs::GeometryGraph out_cloud_2; // for visualisation - the overall structure
 
-
+int check_in_box(pcl::PointXYZ& local_point){
+	if (local_point.x >= 0.0 && local_point.x <= 9.0 &&
+		local_point.y >= -4.5 && local_point.y <= 4.5 &&
+		local_point.z >= -4.5 && local_point.z <= 4.5)
+	{
+		return 1;
+	}
+	return 0;
+}
 
 bool convert_local_to_global(pcl::PointXYZ& global_point, pcl::PointXYZ& local_point, ros::Time& timeStamp, geometry_msgs::TransformStamped& transformStamped_local_to_global) { 
 	geometry_msgs::PoseStamped global_point_stamped, local_point_stamped;
@@ -410,7 +415,7 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 
 	geometry_msgs::TransformStamped transformStamped_local_to_global;
 	try {
-		transformStamped_local_to_global = tfBuffer.lookupTransform(world_frame, "X1/base_link/front_laser", timeStamp); //ros::Time(0));//timeStamp);  //tfBuffer.lookupTransform(destFrame, originFrame, ... )
+		transformStamped_local_to_global = tfBuffer.lookupTransform("world", "X1/base_link/front_laser", timeStamp); //ros::Time(0));//timeStamp);  //tfBuffer.lookupTransform(destFrame, originFrame, ... )
 	} catch (tf2::TransformException &ex) {
 		ROS_WARN("%s", ex.what());
 		ros::Duration(1.0).sleep();
@@ -441,7 +446,6 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 	pcl::PointXYZ temp_global, temp_local; //declare a point - to keep the point from within the de-queued tuple
 	bool to_add; //declare a boolean - to keep the boolean value from within the de-queued tuple
 	std::unordered_map<pcl::PointXYZ, int, key_hash, key_equal> visited_map_2; //per call back - to keep track of my locally visited BFS points, etc
-	
 	
 	int index_local = 0;
 
@@ -483,6 +487,12 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 			out_cloud_2_point.y = temp_global.y;
 			out_cloud_2_point.z = temp_global.z;
 			out_cloud_2.nodes.push_back(out_cloud_2_point);
+			out_cloud_2.explored.push_back(0);		// Pushes in a value that can be editted if we explore that point later
+		}
+
+		// Check if local point is explored in this frame, update the global value to 1
+		if (check_in_box(temp_local)){
+			out_cloud_2.explored[visited_map[temp_global]] = 1;
 		}
 		
 		graph_msgs::Edges e;
@@ -490,7 +500,7 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 		debug_bool = false;
 
 		if (to_add) {
-			out_cloud_2.edges.push_back(e);	
+			out_cloud_2.edges.push_back(e);
 		}
 		if (index_local > 100000) {
 			std::cout << "INDEX_LOCAL EXCEEDED" << "\n";
@@ -502,7 +512,7 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 	std::vector<uint8_t> arr(out_cloud_2.nodes.size());
 	out_cloud_2.explored = arr;
 	
-	out_cloud_2.header.frame_id = world_frame;
+	out_cloud_2.header.frame_id = "world";
 	out_cloud_2.header.stamp = pcl_conversions::fromPCL(original_cloud_msg.header.stamp);
 	pub2.publish(out_cloud_2);
 
@@ -546,8 +556,6 @@ void to_skip_or_not_to_skip(const sensor_msgs::Imu& imu_msg) {
 int main (int argc, char* argv[]) {
 	ros::init (argc, argv, "dots_node");
 	ros::NodeHandle nh;
-  	ros::NodeHandle nhPrivate = ros::NodeHandle("~");
-
 	tf2_ros::TransformListener tfListener(tfBuffer);
 
 	ros::Subscriber sub = nh.subscribe ("/X1/points/", 1, transform_the_cloud);
@@ -557,8 +565,5 @@ int main (int argc, char* argv[]) {
 	pub2 = nh.advertise<graph_msgs::GeometryGraph> (output_topic, 1);	
 	pub3 = nh.advertise<sensor_msgs::PointCloud2> ("transformed_point_cloud", 1);	
 	
-	nhPrivate.getParam("world_frame", world_frame);
-	// std::cout << "world frame: " << world_frame << std::endl;
-
 	ros::spin();
 }
