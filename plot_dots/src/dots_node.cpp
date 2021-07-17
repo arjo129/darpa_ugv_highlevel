@@ -174,238 +174,224 @@ void add_to_queue(  geometry_msgs::TransformStamped& transformStamped_local_to_g
 	///////////////
 	//Upwards Point
 	///////////////
-	if (pointUp.z < max_z) {
-		transformed_pt_up.x = local_point.x;
-		transformed_pt_up.y = local_point.y;
-		transformed_pt_up.z = local_point.z  + dot_distance;
-		bool y = convert_local_to_global(pointUp, transformed_pt_up, timeStamp, transformStamped_local_to_global);
-		if (isPointInside(scan, transformed_pt_up)) { //if neighbouring point is still inside of scan, we just add it to the list of points to visit	
-			search = visited_map_2.find(transformed_pt_up);
-			search_global = visited_map.find(pointUp);
-			if (search == visited_map_2.end()) { //if locally, have not visited the point yet
-				++index_local;
-				visited_map_2.insert({transformed_pt_up, index_local}); //add it to locally visited points
-				if (search_global == visited_map.end()) {//cannnot find global point -> if we have not visited this point globally yet, we add it to geometry message
-					std::cout << "global_point: "  << pointUp << std::endl;
-					q.push(std::make_tuple(transformed_pt_up, pointUp, true)); //add it to the queue
-					++index_global;
-					visited_map.insert({pointUp, index_global}); //add it to globally visited points
-				} else { //have visited this neighbouring point before
-					std::cout << "GLOBALLY - FALSE Up:  have visited this neighbouring point before: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << std::endl;	
-					q.push(std::make_tuple(transformed_pt_up, pointUp, false)); //add it to the queue
-				}
-			} else {
-				// std::cout << "LOCALLY Up: have visited this neighbouring point before: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << std::endl;	
+	transformed_pt_up.x = local_point.x;
+	transformed_pt_up.y = local_point.y;
+	transformed_pt_up.z = local_point.z  + dot_distance;
+	bool y = convert_local_to_global(pointUp, transformed_pt_up, timeStamp, transformStamped_local_to_global);
+	if (isPointInside(scan, transformed_pt_up)) { //if neighbouring point is still inside of scan, we just add it to the list of points to visit	
+		search = visited_map_2.find(transformed_pt_up);
+		search_global = visited_map.find(pointUp);
+		if (search == visited_map_2.end()) { //if locally, have not visited the point yet
+			++index_local;
+			visited_map_2.insert({transformed_pt_up, index_local}); //add it to locally visited points
+			if (search_global == visited_map.end()) {//cannnot find global point -> if we have not visited this point globally yet, we add it to geometry message
+				std::cout << "global_point: "  << pointUp << std::endl;
+				q.push(std::make_tuple(transformed_pt_up, pointUp, true)); //add it to the queue
+				++index_global;
+				visited_map.insert({pointUp, index_global}); //add it to globally visited points
+			} else { //have visited this neighbouring point before
+				std::cout << "GLOBALLY - FALSE Up:  have visited this neighbouring point before: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << std::endl;	
+				q.push(std::make_tuple(transformed_pt_up, pointUp, false)); //add it to the queue
 			}
-
-			if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
-				e.node_ids.push_back(index_global); //index_global should be referring to pointUp
-			} else {
-				e.node_ids.push_back(visited_map[pointUp]);
-			}
-
 		} else {
-			// std::cout << "OUTSIDE of laserScan Up: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << std::endl;	
+			// std::cout << "LOCALLY Up: have visited this neighbouring point before: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << std::endl;	
 		}
+
+		if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
+			e.node_ids.push_back(index_global); //index_global should be referring to pointUp
+		} else {
+			e.node_ids.push_back(visited_map[pointUp]);
+		}
+
 	} else {
-		// std::cout << "exceed max_z: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << " || max_z: " << max_z << std::endl;	
+		// std::cout << "OUTSIDE of laserScan Up: " << pointUp.x << ", " << pointUp.y << ", " << pointUp.z << std::endl;	
 	}
 
 	///////////////
 	//Downwards Point
 	///////////////
-	if (pointDown.z < max_z) {
-		transformed_pt_down.x = local_point.x;
-		transformed_pt_down.y = local_point.y;
-		transformed_pt_down.z = local_point.z  - dot_distance;
-		bool y = convert_local_to_global(pointDown, transformed_pt_down, timeStamp, transformStamped_local_to_global);
-		if (isPointInside(scan, transformed_pt_down)) { //if neighbouring point is still inside of scan 
-			search = visited_map_2.find(transformed_pt_down);
-			search_global = visited_map.find(pointDown);
-			if ( search == visited_map_2.end() ) { //if locally, I have not visited the point yet
-				++index_local;
-				visited_map_2.insert({transformed_pt_down, index_local}); //add it to locally visited points
-				if (search_global == visited_map.end()) {
-					// std::cout << "GLOBALLY - TRUE: pushed into queue Down: " << pointDown.x << ", " << pointDown.y << ", " << pointDown.z  << std::endl;	
-					q.push(std::make_tuple(transformed_pt_down, pointDown, true));
-					++index_global;
-					visited_map.insert({pointDown, index_global}); //add it to globally visited points
-				} else { //globally, I have visited this point before, so add the index_global of pointDown to the the edge list of the original point
-					std::cout << "GLOBALLY - FALSE Down: have visited this neighbouring point before: " << pointDown.x << ", " << pointDown.y << ", " << pointDown.z << std::endl;	
-					q.push(std::make_tuple(transformed_pt_down, pointDown, false));
-				}
-			} else {
-				// std::cout << "LOCALLY Down: have visited this neighbouring point before: " << pointDown.x << ", " << pointDown.y << ", " << pointDown.z << std::endl;	
+	transformed_pt_down.x = local_point.x;
+	transformed_pt_down.y = local_point.y;
+	transformed_pt_down.z = local_point.z  - dot_distance;
+	convert_local_to_global(pointDown, transformed_pt_down, timeStamp, transformStamped_local_to_global);
+	if (isPointInside(scan, transformed_pt_down)) { //if neighbouring point is still inside of scan 
+		search = visited_map_2.find(transformed_pt_down);
+		search_global = visited_map.find(pointDown);
+		if ( search == visited_map_2.end() ) { //if locally, I have not visited the point yet
+			++index_local;
+			visited_map_2.insert({transformed_pt_down, index_local}); //add it to locally visited points
+			if (search_global == visited_map.end()) {
+				// std::cout << "GLOBALLY - TRUE: pushed into queue Down: " << pointDown.x << ", " << pointDown.y << ", " << pointDown.z  << std::endl;	
+				q.push(std::make_tuple(transformed_pt_down, pointDown, true));
+				++index_global;
+				visited_map.insert({pointDown, index_global}); //add it to globally visited points
+			} else { //globally, I have visited this point before, so add the index_global of pointDown to the the edge list of the original point
+				std::cout << "GLOBALLY - FALSE Down: have visited this neighbouring point before: " << pointDown.x << ", " << pointDown.y << ", " << pointDown.z << std::endl;	
+				q.push(std::make_tuple(transformed_pt_down, pointDown, false));
 			}
-
-			if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
-				e.node_ids.push_back(index_global); //index_global should be referring to pointDown
-			} else {
-				e.node_ids.push_back(visited_map[pointDown]);
-			}
-
 		} else {
-			// std::cout << "OUTSIDE of laserScan Down: " << pointDown.x << ", " << pointDown.y << ", " << pointDown.z << std::endl;	
+			// std::cout << "LOCALLY Down: have visited this neighbouring point before: " << pointDown.x << ", " << pointDown.y << ", " << pointDown.z << std::endl;	
 		}
+
+		if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
+			e.node_ids.push_back(index_global); //index_global should be referring to pointDown
+		} else {
+			e.node_ids.push_back(visited_map[pointDown]);
+		}
+
+	} else {
+		// std::cout << "OUTSIDE of laserScan Down: " << pointDown.x << ", " << pointDown.y << ", " << pointDown.z << std::endl;	
 	}
 	
 	///////////////
 	//Left Point
 	///////////////
-	if (pointLeft.z < max_z) {		
-		transformed_pt_left.x = local_point.x;
-		transformed_pt_left.y = local_point.y - dot_distance;
-		transformed_pt_left.z = local_point.z;
-		if (isPointInside(scan, transformed_pt_left)) { 
-			convert_local_to_global(pointLeft, transformed_pt_left, timeStamp, transformStamped_local_to_global);
-			// std::cout << "pointLeft global_point: "  << pointLeft << std::endl;
-			search = visited_map_2.find(transformed_pt_left);
-			search_global = visited_map.find(pointLeft);
-			if (search == visited_map_2.end()) {
-				++index_local;	
-				visited_map_2.insert({transformed_pt_left, index_local}); //add it to locally visited points
-				if (search_global == visited_map.end()) {
-					// std::cout << "GLOBALLY - TRUE: pushed into queue Left: " << pointLeft.x << ", " << pointLeft.y << ", " << pointLeft.z << std::endl;
-					q.push(std::make_tuple(transformed_pt_left, pointLeft, true));
-					++index_global;
-					visited_map.insert({pointLeft, index_global}); //add it to visited points
-				} else { //if i have visited pointLeft before
-					std::cout << "GLOBALLY - FALSE Left: have visited this neighbouring point before: " << pointLeft.x << ", " << pointLeft.y << ", " << pointLeft.z << std::endl;	
-					q.push(std::make_tuple(transformed_pt_left, pointLeft, false));
-				}
-			} else {
-				// std::cout << "OUTSIDE of laserScan Left: " << pointLeft.x << ", " << pointLeft.y << ", " << pointLeft.z << std::endl;	
+	transformed_pt_left.x = local_point.x;
+	transformed_pt_left.y = local_point.y - dot_distance;
+	transformed_pt_left.z = local_point.z;
+	if (isPointInside(scan, transformed_pt_left)) { 
+		convert_local_to_global(pointLeft, transformed_pt_left, timeStamp, transformStamped_local_to_global);
+		// std::cout << "pointLeft global_point: "  << pointLeft << std::endl;
+		search = visited_map_2.find(transformed_pt_left);
+		search_global = visited_map.find(pointLeft);
+		if (search == visited_map_2.end()) {
+			++index_local;	
+			visited_map_2.insert({transformed_pt_left, index_local}); //add it to locally visited points
+			if (search_global == visited_map.end()) {
+				// std::cout << "GLOBALLY - TRUE: pushed into queue Left: " << pointLeft.x << ", " << pointLeft.y << ", " << pointLeft.z << std::endl;
+				q.push(std::make_tuple(transformed_pt_left, pointLeft, true));
+				++index_global;
+				visited_map.insert({pointLeft, index_global}); //add it to visited points
+			} else { //if i have visited pointLeft before
+				std::cout << "GLOBALLY - FALSE Left: have visited this neighbouring point before: " << pointLeft.x << ", " << pointLeft.y << ", " << pointLeft.z << std::endl;	
+				q.push(std::make_tuple(transformed_pt_left, pointLeft, false));
 			}
-
-			if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
-				e.node_ids.push_back(index_global); //index_global should be referring to pointLeft
-			} else {
-				e.node_ids.push_back(visited_map[pointLeft]);
-			}
-
 		} else {
-			// std::cout << "LOCALLY Left: have visited this neighbouring point before: " << pointLeft.x << ", " << pointLeft.y << ", " << pointLeft.z << std::endl;	
+			// std::cout << "OUTSIDE of laserScan Left: " << pointLeft.x << ", " << pointLeft.y << ", " << pointLeft.z << std::endl;	
 		}
+
+		if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
+			e.node_ids.push_back(index_global); //index_global should be referring to pointLeft
+		} else {
+			e.node_ids.push_back(visited_map[pointLeft]);
+		}
+
+	} else {
+		// std::cout << "LOCALLY Left: have visited this neighbouring point before: " << pointLeft.x << ", " << pointLeft.y << ", " << pointLeft.z << std::endl;	
 	}
 
 	
 	///////////////
 	//Right Point
 	///////////////
-	if (pointRight.z < max_z) {		
-		transformed_pt_right.x = local_point.x;
-		transformed_pt_right.y = local_point.y + dot_distance;
-		transformed_pt_right.z = local_point.z;
-		if (isPointInside(scan, transformed_pt_right)) { 
-			convert_local_to_global(pointRight, transformed_pt_right, timeStamp, transformStamped_local_to_global);
-			search = visited_map_2.find(transformed_pt_right);
-			search_global = visited_map.find(pointRight);
-			if (search == visited_map_2.end()) {
-				// std::cout << "GLOBALLY - TRUE : pushed into queue Right: " << pointRight.x << ", " << pointRight.y << ", " << pointRight.z << std::endl;
-				++index_local;	
-				visited_map_2.insert({transformed_pt_right, index_local}); //add it to locally visited points
-				if (search_global == visited_map.end()) {
-					q.push(std::make_tuple(transformed_pt_right, pointRight, true));
-					++index_global;
-					visited_map.insert({pointRight, index_global}); //add it to visited points
-				} else { //if i have visited pointRight before
-					std::cout << "GLOBALLY - FALSE Right: have visited this neighbouring point before: " << pointRight.x << ", " << pointRight.y << ", " << pointRight.z << std::endl;	
-					q.push(std::make_tuple(transformed_pt_right, pointRight, false));
-				}
-			} else {
-				// std::cout << "LOCALLY Right: have visited this neighbouring point before: " << pointRight.x << ", " << pointRight.y << ", " << pointRight.z << std::endl;	
-			} 
-
-			if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
-				e.node_ids.push_back(index_global); //index_global should be referring to pointRight
-			} else {
-				e.node_ids.push_back(visited_map[pointRight]);
+	transformed_pt_right.x = local_point.x;
+	transformed_pt_right.y = local_point.y + dot_distance;
+	transformed_pt_right.z = local_point.z;
+	if (isPointInside(scan, transformed_pt_right)) { 
+		convert_local_to_global(pointRight, transformed_pt_right, timeStamp, transformStamped_local_to_global);
+		search = visited_map_2.find(transformed_pt_right);
+		search_global = visited_map.find(pointRight);
+		if (search == visited_map_2.end()) {
+			// std::cout << "GLOBALLY - TRUE : pushed into queue Right: " << pointRight.x << ", " << pointRight.y << ", " << pointRight.z << std::endl;
+			++index_local;	
+			visited_map_2.insert({transformed_pt_right, index_local}); //add it to locally visited points
+			if (search_global == visited_map.end()) {
+				q.push(std::make_tuple(transformed_pt_right, pointRight, true));
+				++index_global;
+				visited_map.insert({pointRight, index_global}); //add it to visited points
+			} else { //if i have visited pointRight before
+				std::cout << "GLOBALLY - FALSE Right: have visited this neighbouring point before: " << pointRight.x << ", " << pointRight.y << ", " << pointRight.z << std::endl;	
+				q.push(std::make_tuple(transformed_pt_right, pointRight, false));
 			}
-
 		} else {
-			// std::cout << "OUTSIDE of laserScan Right: " << pointRight.x << ", " << pointRight.y << ", " << pointRight.z << std::endl;	
+			// std::cout << "LOCALLY Right: have visited this neighbouring point before: " << pointRight.x << ", " << pointRight.y << ", " << pointRight.z << std::endl;	
+		} 
+
+		if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
+			e.node_ids.push_back(index_global); //index_global should be referring to pointRight
+		} else {
+			e.node_ids.push_back(visited_map[pointRight]);
 		}
+
+	} else {
+		// std::cout << "OUTSIDE of laserScan Right: " << pointRight.x << ", " << pointRight.y << ", " << pointRight.z << std::endl;	
 	}
 	
 	
 	///////////////
 	//Forwards Point
 	///////////////
-	if (pointForward.z < max_z) {		
-		transformed_pt_forward.x = local_point.x + dot_distance;
-		transformed_pt_forward.y = local_point.y;
-		transformed_pt_forward.z = local_point.z;
-		// std::cout << "5. isPointInside: "  << isPointInside(scan, transformed_pt_forward) << std::endl; 
-		if (isPointInside(scan, transformed_pt_forward)) { 
-			convert_local_to_global(pointForward, transformed_pt_forward, timeStamp, transformStamped_local_to_global);
-			search = visited_map_2.find(transformed_pt_forward);
-			search_global = visited_map.find(pointForward);
-			if (search == visited_map_2.end()) {
-				//std::cout << "pushed into queue Left: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;
-				++index_local;	
-				visited_map_2.insert({transformed_pt_forward, index_local}); //add it to locally visited points
-				if (search_global == visited_map.end()) {
-					// std::cout << "GLOBALLY - TRUE pushed into queue Forward: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;	
-					q.push(std::make_tuple(transformed_pt_forward, pointForward, true));
-					++index_global;
-					visited_map.insert({pointForward, index_global}); //add it to visited points
-				} else { //if i have visited pointForward before
-					std::cout << "GLOBALLY - FALSE Forward: have visited this neighbouring point before: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;	
-					q.push(std::make_tuple(transformed_pt_forward, pointForward, false));
-				}
-			} else {
-				// std::cout << "LOCALLY Forward: have visited this neighbouring point before: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;	
+	transformed_pt_forward.x = local_point.x + dot_distance;
+	transformed_pt_forward.y = local_point.y;
+	transformed_pt_forward.z = local_point.z;
+	// std::cout << "5. isPointInside: "  << isPointInside(scan, transformed_pt_forward) << std::endl; 
+	if (isPointInside(scan, transformed_pt_forward)) { 
+		convert_local_to_global(pointForward, transformed_pt_forward, timeStamp, transformStamped_local_to_global);
+		search = visited_map_2.find(transformed_pt_forward);
+		search_global = visited_map.find(pointForward);
+		if (search == visited_map_2.end()) {
+			//std::cout << "pushed into queue Left: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;
+			++index_local;	
+			visited_map_2.insert({transformed_pt_forward, index_local}); //add it to locally visited points
+			if (search_global == visited_map.end()) {
+				// std::cout << "GLOBALLY - TRUE pushed into queue Forward: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;	
+				q.push(std::make_tuple(transformed_pt_forward, pointForward, true));
+				++index_global;
+				visited_map.insert({pointForward, index_global}); //add it to visited points
+			} else { //if i have visited pointForward before
+				std::cout << "GLOBALLY - FALSE Forward: have visited this neighbouring point before: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;	
+				q.push(std::make_tuple(transformed_pt_forward, pointForward, false));
 			}
-
-			if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
-				e.node_ids.push_back(index_global); //index_global should be referring to pointForward
-			} else {
-				e.node_ids.push_back(visited_map[pointForward]);
-			}
-
 		} else {
-			// std::cout << "OUTSIDE of laserScan Forward: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;	
+			// std::cout << "LOCALLY Forward: have visited this neighbouring point before: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;	
 		}
+
+		if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
+			e.node_ids.push_back(index_global); //index_global should be referring to pointForward
+		} else {
+			e.node_ids.push_back(visited_map[pointForward]);
+		}
+
+	} else {
+		// std::cout << "OUTSIDE of laserScan Forward: " << pointForward.x << ", " << pointForward.y << ", " << pointForward.z << std::endl;	
 	}
 	
 
 	///////////////
 	//Backwards Point
 	///////////////
-	if (pointBackward.z < max_z) {
-		transformed_pt_backward.x = local_point.x - dot_distance;
-		transformed_pt_backward.y = local_point.y;
-		transformed_pt_backward.z = local_point.z;
-		// std::cout << "6. isPointInside: "  << isPointInside(scan, transformed_pt_backward) << std::endl; 
-		if (isPointInside(scan, transformed_pt_backward)) { //if pointBackward is still inside of scan, we add it to the list of points to visit
-			convert_local_to_global(pointBackward, transformed_pt_backward, timeStamp, transformStamped_local_to_global);
-			search = visited_map_2.find(transformed_pt_backward);
-			search_global = visited_map.find(pointBackward);
-			if (search == visited_map_2.end()) { //if locally, have not visited pointBackward yet
-				++index_local;
-				visited_map_2.insert({transformed_pt_backward, index_local}); //add it to locally visited points
-				if (search_global == visited_map.end()) {//if we have not visited this point globally yet, we add it to geometry message
-					// std::cout << "GLOBALLY - TRUE pushed into queue Backward: " << pointBackward.x << ", " << pointBackward.y << ", " << pointBackward.z << std::endl;	
-					q.push(std::make_tuple(transformed_pt_backward, pointBackward, true));
-					++index_global;
-					visited_map.insert({pointBackward, index_global}); //add it to globally visited points
-				} else { //have visited this neighbouring point before
-					std::cout << "GLOBALLY - FALSE Backward: have visited this neighbouring point before: " << pointBackward.x << ", " << pointBackward.y << ", " << pointBackward.z << std::endl;	
-					q.push(std::make_tuple(transformed_pt_backward, pointBackward, false));
-				}
-			} else {
-					// std::cout << "LOCALLY Backward: have visited this neighbouring point before: " << pointBackward.x << ", " << pointBackward.y << ", " << pointBackward.z << std::endl;	
+	transformed_pt_backward.x = local_point.x - dot_distance;
+	transformed_pt_backward.y = local_point.y;
+	transformed_pt_backward.z = local_point.z;
+	// std::cout << "6. isPointInside: "  << isPointInside(scan, transformed_pt_backward) << std::endl; 
+	if (isPointInside(scan, transformed_pt_backward)) { //if pointBackward is still inside of scan, we add it to the list of points to visit
+		convert_local_to_global(pointBackward, transformed_pt_backward, timeStamp, transformStamped_local_to_global);
+		search = visited_map_2.find(transformed_pt_backward);
+		search_global = visited_map.find(pointBackward);
+		if (search == visited_map_2.end()) { //if locally, have not visited pointBackward yet
+			++index_local;
+			visited_map_2.insert({transformed_pt_backward, index_local}); //add it to locally visited points
+			if (search_global == visited_map.end()) {//if we have not visited this point globally yet, we add it to geometry message
+				// std::cout << "GLOBALLY - TRUE pushed into queue Backward: " << pointBackward.x << ", " << pointBackward.y << ", " << pointBackward.z << std::endl;	
+				q.push(std::make_tuple(transformed_pt_backward, pointBackward, true));
+				++index_global;
+				visited_map.insert({pointBackward, index_global}); //add it to globally visited points
+			} else { //have visited this neighbouring point before
+				std::cout << "GLOBALLY - FALSE Backward: have visited this neighbouring point before: " << pointBackward.x << ", " << pointBackward.y << ", " << pointBackward.z << std::endl;	
+				q.push(std::make_tuple(transformed_pt_backward, pointBackward, false));
 			}
-
-			if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
-				e.node_ids.push_back(index_global); //index_global should be referring to pointBackward
-			} else {
-				e.node_ids.push_back(visited_map[pointBackward]);
-			}
-
 		} else {
-			// std::cout << "OUTSIDE of laserScan Backward: " << pointBackward.x << ", " << pointBackward.y << ", " << pointBackward.z << std::endl;
+				// std::cout << "LOCALLY Backward: have visited this neighbouring point before: " << pointBackward.x << ", " << pointBackward.y << ", " << pointBackward.z << std::endl;	
 		}
+
+		if (search_global == visited_map.end()) {//as long as we this point is a valid point, we need to add to the main point's neighbours. if we have not visited this point globally yet
+			e.node_ids.push_back(index_global); //index_global should be referring to pointBackward
+		} else {
+			e.node_ids.push_back(visited_map[pointBackward]);
+		}
+
+	} else {
+		// std::cout << "OUTSIDE of laserScan Backward: " << pointBackward.x << ", " << pointBackward.y << ", " << pointBackward.z << std::endl;
 	}
 }
 
