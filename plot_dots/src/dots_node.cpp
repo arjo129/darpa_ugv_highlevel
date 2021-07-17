@@ -1,19 +1,19 @@
 /*
-You can just copy and paste this into the src folder of the plot_dots folder. 
+You can just copy and paste this into the src folder of the plot_dots folder. (update: 17 Jul)
 
 The first 107 lines are imports and declaration of variables. 
 
 Total of 4 impt methods: 
-(1) main -                line 544
-(2) transform_the_cloud - line 509
-(3) cloud_cb -            line 406
-(4) add_to_queue -        line 150
+(1) main -                line 549
+(2) transform_the_cloud - line 514
+(3) cloud_cb -            line 400
+(4) add_to_queue -        line 158
 
 Then there is 1 helper method: 
-(1) convert_local_to_global - line 111
+(1) convert_local_to_global - line 119
 
 And finally, 1 method to check the angular speed:
-(1) to_skip_or_not_to_skip - line 533
+(1) to_skip_or_not_to_skip - line 538
 */
 
 #include <ros/ros.h>
