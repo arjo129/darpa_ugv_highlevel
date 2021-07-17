@@ -509,8 +509,8 @@ void cloud_cb(ros::Time& timeStamp, pcl::PointCloud<pcl::PointXYZ>& original_clo
 		
 	}
 	std::cout << "out_cloud_2.nodes.size(): " << out_cloud_2.nodes.size() << std::endl;
-	std::vector<uint8_t> arr(out_cloud_2.nodes.size());
-	out_cloud_2.explored = arr;
+	// std::vector<uint8_t> arr(out_cloud_2.nodes.size());
+	// out_cloud_2.explored = arr;
 	
 	out_cloud_2.header.frame_id = "world";
 	out_cloud_2.header.stamp = pcl_conversions::fromPCL(original_cloud_msg.header.stamp);
